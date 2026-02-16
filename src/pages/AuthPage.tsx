@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Activity } from 'lucide-react';
+import logoDama from '@/assets/logo-dama.png';
 
 export default function AuthPage() {
   const { signIn, signUp } = useAuth();
@@ -43,9 +43,11 @@ export default function AuthPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm animate-fade-in">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl gradient-primary">
-            <Activity className="h-7 w-7 text-primary-foreground" />
-          </div>
+          <img
+            src={logoDama}
+            alt="DAMA - Time Estratégico Comercial para Médicos"
+            className="mx-auto mb-4 h-28 w-28 object-contain rounded-2xl"
+          />
           <h1 className="text-2xl font-bold tracking-tight text-foreground">DAMA</h1>
           <p className="text-sm text-muted-foreground">Copiloto da Agenda</p>
         </div>
