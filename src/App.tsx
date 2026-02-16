@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { SubscriptionProvider, useSubscription } from "@/hooks/useSubscription";
 import AppLayout from "@/components/AppLayout";
 import AuthPage from "@/pages/AuthPage";
 import Dashboard from "@/pages/Dashboard";
@@ -11,14 +12,16 @@ import CheckinPage from "@/pages/CheckinPage";
 import LossReasonsPage from "@/pages/LossReasonsPage";
 import WeeklyReportPage from "@/pages/WeeklyReportPage";
 import SettingsPage from "@/pages/SettingsPage";
+import SubscriptionPage from "@/pages/SubscriptionPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoutes() {
   const { user, loading } = useAuth();
+  const { subscribed, loading: subLoading } = useSubscription();
 
-  if (loading) {
+  if (loading || subLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -27,6 +30,8 @@ function ProtectedRoutes() {
   }
 
   if (!user) return <Navigate to="/auth" replace />;
+
+  if (!subscribed) return <Navigate to="/assinatura" replace />;
 
   return (
     <AppLayout>
@@ -40,6 +45,15 @@ function ProtectedRoutes() {
       </Routes>
     </AppLayout>
   );
+}
+
+function SubscriptionRoute() {
+  const { user, loading } = useAuth();
+  const { subscribed, loading: subLoading } = useSubscription();
+  if (loading || subLoading) return null;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (subscribed) return <Navigate to="/" replace />;
+  return <SubscriptionPage />;
 }
 
 function AuthRoute() {
@@ -56,10 +70,13 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/auth" element={<AuthRoute />} />
-            <Route path="/*" element={<ProtectedRoutes />} />
-          </Routes>
+          <SubscriptionProvider>
+            <Routes>
+              <Route path="/auth" element={<AuthRoute />} />
+              <Route path="/assinatura" element={<SubscriptionRoute />} />
+              <Route path="/*" element={<ProtectedRoutes />} />
+            </Routes>
+          </SubscriptionProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
