@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, Shield, BarChart3, Zap, Sparkles, AlertTriangle, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
-import logoDama from '@/assets/logo-dama.png';
+import logoTagline from '@/assets/logo-dama-tagline.png';
+import authBg from '@/assets/auth-bg.png';
 
 const benefits = [
   { icon: BarChart3, text: 'Dashboard completo com métricas em tempo real' },
@@ -58,7 +59,6 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
         window.location.href = data.url;
       }
     } catch {
-      // If no Stripe customer yet, just show checkout
       handleCheckout();
     } finally {
       setLoading(false);
@@ -66,45 +66,54 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-10">
-      <div className="mx-auto w-full max-w-md space-y-6">
+    <div
+      className="flex min-h-screen flex-col items-center justify-center px-4 py-10"
+      style={{
+        backgroundImage: `url(${authBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="mx-auto w-full max-w-sm space-y-6 animate-fade-in">
         <div className="flex flex-col items-center gap-3 text-center">
-          <img src={logoDama} alt="DAMA" className="h-12" />
-          <h1 className="text-2xl font-bold text-foreground">
+          <img
+            src={logoTagline}
+            alt="DAMA - Time Estratégico Comercial para Médicos"
+            className="h-32 w-auto object-contain drop-shadow-lg"
+          />
+          <h1 className="text-2xl font-bold text-white">
             {reasonInfo ? reasonInfo.title : 'Comece a transformar sua clínica'}
           </h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-white/70 text-sm">
             {reasonInfo ? reasonInfo.description : 'Teste grátis por 15 dias. Sem compromisso.'}
           </p>
         </div>
 
         {/* Warning banner for blocked users */}
         {reasonInfo && (
-          <Card className="border-destructive/30 bg-destructive/5">
-            <CardContent className="flex items-start gap-3 p-4">
-              <AlertTriangle className="h-5 w-5 shrink-0 text-destructive mt-0.5" />
-              <p className="text-sm text-foreground">{reasonInfo.description}</p>
-            </CardContent>
-          </Card>
+          <div className="flex items-start gap-3 rounded-lg border border-red-400/30 bg-red-500/10 backdrop-blur-sm p-4">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-red-400 mt-0.5" />
+            <p className="text-sm text-white/90">{reasonInfo.description}</p>
+          </div>
         )}
 
-        <Card className="border-primary/20 shadow-elevated">
+        <Card className="border-white/10 bg-white/10 backdrop-blur-md shadow-elevated">
           <CardContent className="space-y-5 p-6">
             <div className="space-y-3">
               {benefits.map((b, i) => (
                 <div key={i} className="flex items-start gap-3">
-                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <b.icon className="h-3.5 w-3.5 text-primary" />
+                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/15">
+                    <b.icon className="h-3.5 w-3.5 text-white/80" />
                   </div>
-                  <span className="text-sm text-foreground">{b.text}</span>
+                  <span className="text-sm text-white/90">{b.text}</span>
                 </div>
               ))}
             </div>
 
-            <div className="rounded-xl bg-secondary p-4 text-center">
+            <div className="rounded-xl bg-white/10 p-4 text-center">
               <div className="flex items-baseline justify-center gap-1">
-                <span className="text-3xl font-bold text-foreground">R$ 29,90</span>
-                <span className="text-sm text-muted-foreground">/mês</span>
+                <span className="text-3xl font-bold text-white">R$ 29,90</span>
+                <span className="text-sm text-white/60">/mês</span>
               </div>
             </div>
 
@@ -112,7 +121,7 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
               <Button
                 onClick={handleManageSubscription}
                 disabled={loading}
-                className="w-full h-12 text-base font-semibold"
+                className="w-full h-12 text-base font-semibold bg-white text-blue-900 hover:bg-white/90"
                 size="lg"
               >
                 {loading ? 'Redirecionando...' : reason === 'vencido' ? 'Atualizar pagamento' : 'Reativar assinatura'}
@@ -121,7 +130,7 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
               <Button
                 onClick={handleCheckout}
                 disabled={loading}
-                className="w-full h-12 text-base font-semibold gradient-primary"
+                className="w-full h-12 text-base font-semibold bg-white text-blue-900 hover:bg-white/90"
                 size="lg"
               >
                 <Sparkles className="h-5 w-5 mr-2" />
@@ -130,7 +139,7 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
             )}
 
             {!(reason === 'vencido' || reason === 'cancelado') && (
-              <p className="text-center text-xs text-muted-foreground leading-relaxed">
+              <p className="text-center text-xs text-white/50 leading-relaxed">
                 Você terá 15 dias de acesso grátis. Depois, será cobrado R$ 29,90/mês.
                 Você pode cancelar a qualquer momento.
               </p>
@@ -138,10 +147,13 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
           </CardContent>
         </Card>
 
-        <Button variant="ghost" className="w-full text-muted-foreground text-sm" onClick={signOut}>
-          <LogOut className="h-4 w-4 mr-2" />
+        <button
+          onClick={signOut}
+          className="flex w-full items-center justify-center gap-2 text-sm text-white/50 hover:text-white/80 transition-colors"
+        >
+          <LogOut className="h-4 w-4" />
           Sair da conta
-        </Button>
+        </button>
       </div>
     </div>
   );
