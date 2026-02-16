@@ -30,7 +30,6 @@ function ProtectedRoutes() {
   }
 
   if (!user) return <Navigate to="/auth" replace />;
-
   if (!subscribed) return <Navigate to="/assinatura" replace />;
 
   return (
@@ -49,11 +48,11 @@ function ProtectedRoutes() {
 
 function SubscriptionRoute() {
   const { user, loading } = useAuth();
-  const { subscribed, loading: subLoading } = useSubscription();
+  const { subscribed, subscriptionStatus, loading: subLoading } = useSubscription();
   if (loading || subLoading) return null;
   if (!user) return <Navigate to="/auth" replace />;
   if (subscribed) return <Navigate to="/" replace />;
-  return <SubscriptionPage />;
+  return <SubscriptionPage reason={subscriptionStatus} />;
 }
 
 function AuthRoute() {
