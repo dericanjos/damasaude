@@ -33,8 +33,9 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .single();
 
-    const status = profile?.subscription_status ?? "inactive";
-    const subscribed = status === "trialing" || status === "active";
+    // Status values: inativo, testando, ativo, vencido, cancelado
+    const status = profile?.subscription_status ?? "inativo";
+    const subscribed = status === "testando" || status === "ativo";
 
     return new Response(JSON.stringify({
       subscribed,

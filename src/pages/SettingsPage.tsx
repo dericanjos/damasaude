@@ -13,21 +13,19 @@ import { toast } from 'sonner';
 import { Settings, LogOut, CreditCard, ExternalLink } from 'lucide-react';
 
 const statusLabels: Record<string, string> = {
-  trialing: 'Período de teste',
-  active: 'Ativa',
-  past_due: 'Pagamento pendente',
-  canceled: 'Cancelada',
-  vencido: 'Vencida',
-  inactive: 'Inativa',
+  testando: 'Período de teste',
+  ativo: 'Ativa',
+  vencido: 'Pagamento pendente',
+  cancelado: 'Cancelada',
+  inativo: 'Inativa',
 };
 
 const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  trialing: 'secondary',
-  active: 'default',
-  past_due: 'destructive',
-  canceled: 'destructive',
+  testando: 'secondary',
+  ativo: 'default',
   vencido: 'destructive',
-  inactive: 'outline',
+  cancelado: 'destructive',
+  inativo: 'outline',
 };
 
 export default function SettingsPage() {

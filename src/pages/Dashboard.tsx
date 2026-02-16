@@ -2,13 +2,14 @@ import { useNavigate } from 'react-router-dom';
 import { useTodayCheckin, useYesterdayCheckin } from '@/hooks/useCheckin';
 import { useTodayActions, useCompleteAction, useGenerateActions } from '@/hooks/useActions';
 import { useClinic } from '@/hooks/useClinic';
+import { useSubscription } from '@/hooks/useSubscription';
 import { calculateIDEA, generateInsight, type CheckinData } from '@/lib/idea';
 import IdeaScoreCard from '@/components/IdeaScoreCard';
 import MetricCard from '@/components/MetricCard';
 import ActionsList from '@/components/ActionsList';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { CalendarCheck, Users, UserX, XCircle, SquareDashed, Lightbulb, BarChart3 } from 'lucide-react';
+import { CalendarCheck, Users, UserX, XCircle, SquareDashed, Lightbulb, BarChart3, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -21,8 +22,24 @@ export default function Dashboard() {
   const { data: actions = [] } = useTodayActions();
   const completeAction = useCompleteAction();
   const generateActionsM = useGenerateActions();
+  const { subscriptionStatus, subscriptionEnd } = useSubscription();
 
   const doctorName = user?.user_metadata?.doctor_name || 'Doutor(a)';
+
+  // Renewal warning: 3 days or less
+  const showRenewalBanner = (() => {
+    if (!subscriptionEnd) return false;
+    if (subscriptionStatus !== 'testando' && subscriptionStatus !== 'ativo') return false;
+    const endDate = new Date(subscriptionEnd);
+    const now = new Date();
+    const diffMs = endDate.getTime() - now.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    return diffDays <= 3 && diffDays >= 0;
+  })();
+
+  const renewalDate = subscriptionEnd
+    ? new Date(subscriptionEnd).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+    : '';
 
   const checkinData: CheckinData | null = todayCheckin
     ? {
@@ -75,6 +92,18 @@ export default function Dashboard() {
         <p className="text-sm text-muted-foreground">Hoje em 30 segundos</p>
       </div>
 
+      {/* Renewal Banner */}
+      {showRenewalBanner && (
+        <Card className="border-idea-attention/30 bg-idea-attention/5">
+          <CardContent className="flex items-start gap-3 p-4">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-idea-attention mt-0.5" style={{ color: 'hsl(var(--idea-attention))' }} />
+            <p className="text-sm text-foreground">
+              Seu acesso renova em <strong>{renewalDate}</strong>. Verifique se o pagamento está ok.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* IDEA Score */}
       {todayScore != null ? (
         <IdeaScoreCard score={todayScore} comparison={yesterdayScore} />
@@ -84,11 +113,7 @@ export default function Dashboard() {
             <CalendarCheck className="mx-auto h-8 w-8 text-primary/60 mb-2" />
             <p className="text-sm font-medium text-foreground">Faça o check-in de 1 minuto</p>
             <p className="text-xs text-muted-foreground mt-1">para atualizar o IDEA</p>
-            <Button
-              size="sm"
-              className="mt-3"
-              onClick={() => navigate('/checkin')}
-            >
+            <Button size="sm" className="mt-3" onClick={() => navigate('/checkin')}>
               Fazer check-in
             </Button>
           </CardContent>

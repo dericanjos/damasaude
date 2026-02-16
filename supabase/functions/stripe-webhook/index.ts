@@ -11,6 +11,17 @@ const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
 };
 
+// Stripe status → DB status (Portuguese)
+const STATUS_MAP: Record<string, string> = {
+  trialing: "testando",
+  active: "ativo",
+  past_due: "vencido",
+  unpaid: "vencido",
+  canceled: "cancelado",
+  incomplete: "inativo",
+  incomplete_expired: "inativo",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -34,7 +45,7 @@ serve(async (req) => {
       event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
     } else {
       event = JSON.parse(body) as Stripe.Event;
-      logStep("WARNING: No webhook secret configured, processing without signature verification");
+      logStep("WARNING: No webhook secret configured");
     }
 
     logStep("Event received", { type: event.type, id: event.id });
@@ -47,7 +58,7 @@ serve(async (req) => {
         .single();
 
       if (findErr || !profile) {
-        logStep("Profile not found for email", { customerEmail, error: findErr });
+        logStep("Profile not found", { customerEmail, error: findErr });
         return;
       }
 
@@ -69,12 +80,12 @@ serve(async (req) => {
         const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id;
         const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
 
-        let status = "active";
+        let status = "ativo";
         let periodEnd: string | null = null;
 
         if (subscriptionId) {
           const sub = await stripe.subscriptions.retrieve(subscriptionId);
-          status = sub.status === "trialing" ? "trialing" : "active";
+          status = STATUS_MAP[sub.status] || "inativo";
           periodEnd = new Date(sub.current_period_end * 1000).toISOString();
         }
 
@@ -91,16 +102,8 @@ serve(async (req) => {
         const customer = await stripe.customers.retrieve(subscription.customer as string) as Stripe.Customer;
         if (!customer.email) break;
 
-        const statusMap: Record<string, string> = {
-          trialing: "trialing",
-          active: "active",
-          past_due: "past_due",
-          canceled: "canceled",
-          unpaid: "vencido",
-        };
-
         await updateProfile(customer.email, {
-          subscription_status: statusMap[subscription.status] || subscription.status,
+          subscription_status: STATUS_MAP[subscription.status] || "inativo",
           current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
         });
         break;
@@ -118,7 +121,7 @@ serve(async (req) => {
         const subscription = event.data.object as Stripe.Subscription;
         const customer = await stripe.customers.retrieve(subscription.customer as string) as Stripe.Customer;
         if (!customer.email) break;
-        await updateProfile(customer.email, { subscription_status: "canceled" });
+        await updateProfile(customer.email, { subscription_status: "cancelado" });
         break;
       }
 
