@@ -188,6 +188,39 @@ export type Database = {
           },
         ]
       }
+      news: {
+        Row: {
+          active: boolean
+          content: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          published_at: string
+          summary: string
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          published_at?: string
+          summary: string
+          title: string
+        }
+        Update: {
+          active?: boolean
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          published_at?: string
+          summary?: string
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
