@@ -18,19 +18,12 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function ProtectedRoutes() {
-  const { user, loading } = useAuth();
-  const { subscribed, loading: subLoading } = useSubscription();
-
-  if (loading || subLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (!user) return <Navigate to="/auth" replace />;
-  if (!subscribed) return <Navigate to="/assinatura" replace />;
+  // TODO: Re-enable auth & subscription guards later
+  // const { user, loading } = useAuth();
+  // const { subscribed, loading: subLoading } = useSubscription();
+  // if (loading || subLoading) return <LoadingSpinner />;
+  // if (!user) return <Navigate to="/auth" replace />;
+  // if (!subscribed) return <Navigate to="/assinatura" replace />;
 
   return (
     <AppLayout>
