@@ -93,8 +93,7 @@ export default function Dashboard() {
         <p className="text-sm text-muted-foreground">Hoje em 30 segundos</p>
       </div>
 
-      {/* News Banner */}
-      <NewsBanner />
+      {/* Renewal Banner */}
 
       {/* Renewal Banner */}
       {showRenewalBanner && (
@@ -123,6 +122,9 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* News Banner */}
+      <NewsBanner />
 
       {/* Metrics Grid */}
       {checkinData && (
