@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CalendarCheck, Users, UserX, XCircle, SquareDashed, Lightbulb, BarChart3, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import NewsBanner from '@/components/NewsBanner';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -91,6 +92,9 @@ export default function Dashboard() {
         <h1 className="text-xl font-bold text-foreground">Olá, {doctorName.split(' ')[0]} 👋</h1>
         <p className="text-sm text-muted-foreground">Hoje em 30 segundos</p>
       </div>
+
+      {/* News Banner */}
+      <NewsBanner />
 
       {/* Renewal Banner */}
       {showRenewalBanner && (
