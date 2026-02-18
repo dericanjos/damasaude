@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useClinic, useUpdateClinic } from '@/hooks/useClinic';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -6,11 +6,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Settings, LogOut, CreditCard, ExternalLink } from 'lucide-react';
+import { Settings, LogOut, CreditCard, ExternalLink, ShieldCheck } from 'lucide-react';
 
 const statusLabels: Record<string, string> = {
   testando: 'Período de teste',
@@ -35,17 +34,19 @@ export default function SettingsPage() {
   const { subscriptionStatus, subscriptionEnd } = useSubscription();
   const [portalLoading, setPortalLoading] = useState(false);
 
-  const [name, setName] = useState(clinic?.name ?? '');
-  const [fillRate, setFillRate] = useState((clinic?.target_fill_rate ?? 0.85) * 100);
-  const [noshowRate, setNoshowRate] = useState((clinic?.target_noshow_rate ?? 0.05) * 100);
-  const [timezone, setTimezone] = useState(clinic?.timezone ?? 'America/Sao_Paulo');
+  const [name, setName] = useState('');
+  const [fillRate, setFillRate] = useState(85);
+  const [noshowRate, setNoshowRate] = useState(5);
+  const [timezone, setTimezone] = useState('America/Sao_Paulo');
 
-  if (clinic && name === '' && clinic.name) {
-    setName(clinic.name);
-    setFillRate(Number(clinic.target_fill_rate) * 100);
-    setNoshowRate(Number(clinic.target_noshow_rate) * 100);
-    setTimezone(clinic.timezone);
-  }
+  useEffect(() => {
+    if (clinic) {
+      setName(clinic.name);
+      setFillRate(Math.round(Number(clinic.target_fill_rate) * 100));
+      setNoshowRate(Math.round(Number(clinic.target_noshow_rate) * 100));
+      setTimezone(clinic.timezone);
+    }
+  }, [clinic?.id]);
 
   const handleSave = async () => {
     try {
@@ -66,9 +67,7 @@ export default function SettingsPage() {
     try {
       const { data, error } = await supabase.functions.invoke('customer-portal');
       if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      }
+      if (data?.url) window.location.href = data.url;
     } catch (err: any) {
       toast.error(err.message || 'Erro ao abrir portal');
     } finally {
@@ -77,69 +76,81 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6 space-y-5">
+    <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
+      {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary">
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary">
           <Settings className="h-5 w-5 text-secondary-foreground" />
         </div>
         <h1 className="text-lg font-bold text-foreground">Configurações</h1>
       </div>
 
-      {/* Minha Assinatura */}
-      <Card className="shadow-card border-border/50">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-base">Minha Assinatura</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      {/* Subscription */}
+      <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+        <div className="px-4 pt-4 pb-3 border-b border-border/50">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Status</span>
-            <Badge variant={statusVariants[subscriptionStatus] || 'outline'}>
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm font-bold text-foreground">DAMA Premium</p>
+            </div>
+            <Badge variant={statusVariants[subscriptionStatus] || 'outline'} className="text-[10px]">
               {statusLabels[subscriptionStatus] || subscriptionStatus}
             </Badge>
           </div>
+        </div>
+        <div className="px-4 py-3 space-y-3">
           {subscriptionEnd && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Fim do período</span>
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-sm font-semibold text-foreground">
                 {new Date(subscriptionEnd).toLocaleDateString('pt-BR')}
               </span>
             </div>
           )}
+          <div className="rounded-xl bg-primary/5 border border-primary/15 p-3">
+            <div className="flex items-start gap-2">
+              <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <p className="text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">Clínicas que usam DAMA</span> reduzem até 27% de no-show e recuperam em média R$ 1.200/mês em receita perdida.
+              </p>
+            </div>
+          </div>
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full rounded-xl"
             onClick={handleManageSubscription}
             disabled={portalLoading}
           >
             <ExternalLink className="h-4 w-4 mr-2" />
             {portalLoading ? 'Abrindo...' : 'Gerenciar assinatura'}
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Clínica */}
-      <Card className="shadow-card border-border/50">
-        <CardHeader className="pb-3"><CardTitle className="text-base">Clínica</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
+      {/* Clinic settings */}
+      <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+        <div className="px-4 pt-4 pb-2">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Dados da Clínica</p>
+        </div>
+        <div className="px-4 pb-4 space-y-4">
           <div className="space-y-1.5">
-            <Label>Nome da clínica</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} />
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome da clínica</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta ocupação (%)</Label>
+              <Input type="number" min={0} max={100} value={fillRate} onChange={(e) => setFillRate(Number(e.target.value))} className="rounded-xl" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta no-show (%)</Label>
+              <Input type="number" min={0} max={100} value={noshowRate} onChange={(e) => setNoshowRate(Number(e.target.value))} className="rounded-xl" />
+            </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Meta de ocupação (%)</Label>
-            <Input type="number" min={0} max={100} value={fillRate} onChange={(e) => setFillRate(Number(e.target.value))} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Meta de no-show (%)</Label>
-            <Input type="number" min={0} max={100} value={noshowRate} onChange={(e) => setNoshowRate(Number(e.target.value))} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Fuso horário</Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fuso horário</Label>
             <Select value={timezone} onValueChange={setTimezone}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="America/Sao_Paulo">São Paulo (BRT)</SelectItem>
                 <SelectItem value="America/Manaus">Manaus (AMT)</SelectItem>
@@ -149,15 +160,19 @@ export default function SettingsPage() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleSave} className="w-full" disabled={updateClinic.isPending}>
+          <Button onClick={handleSave} className="w-full rounded-xl" disabled={updateClinic.isPending}>
             Salvar configurações
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Button variant="outline" className="w-full text-destructive" onClick={signOut}>
+      <Button
+        variant="outline"
+        className="w-full rounded-xl border-destructive/30 text-destructive hover:bg-destructive/5"
+        onClick={signOut}
+      >
         <LogOut className="h-4 w-4 mr-2" />
-        Sair
+        Sair da conta
       </Button>
     </div>
   );
