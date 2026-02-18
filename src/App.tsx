@@ -13,6 +13,7 @@ import LossReasonsPage from "@/pages/LossReasonsPage";
 import WeeklyReportPage from "@/pages/WeeklyReportPage";
 import SettingsPage from "@/pages/SettingsPage";
 import SubscriptionPage from "@/pages/SubscriptionPage";
+import InsightsPage from "@/pages/InsightsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ function ProtectedRoutes() {
         <Route path="/checkin" element={<CheckinPage />} />
         <Route path="/motivos" element={<LossReasonsPage />} />
         <Route path="/relatorio" element={<WeeklyReportPage />} />
+        <Route path="/insights" element={<InsightsPage />} />
         <Route path="/config" element={<SettingsPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
