@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import logoDama from '@/assets/logo-dama.png';
 import { useTodayCheckin, useYesterdayCheckin } from '@/hooks/useCheckin';
 import { useTodayActions, useCompleteAction } from '@/hooks/useActions';
 import { useClinic } from '@/hooks/useClinic';
@@ -113,12 +114,17 @@ export default function Dashboard() {
           <h1 className="text-xl font-bold text-foreground">Olá, {firstName} 👋</h1>
           <p className="text-sm text-muted-foreground">Visão do dia</p>
         </div>
-      {showRenewalBanner && (
-          <div className="flex items-center gap-1.5 rounded-full bg-idea-attention/10 border border-idea-attention/30 px-2.5 py-1">
-            <Bell className="h-3 w-3 text-idea-attention" />
-            <span className="text-[11px] font-medium text-idea-attention">Renova {renewalDate}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {showRenewalBanner && (
+            <div className="flex items-center gap-1.5 rounded-full bg-idea-attention/10 border border-idea-attention/30 px-2.5 py-1">
+              <Bell className="h-3 w-3 text-idea-attention" />
+              <span className="text-[11px] font-medium text-idea-attention">Renova {renewalDate}</span>
+            </div>
+          )}
+          <Link to="/institucional">
+            <img src={logoDama} alt="DAMA" className="h-7 w-auto opacity-80 hover:opacity-100 transition-opacity" />
+          </Link>
+        </div>
       </div>
 
       {/* ── CHECK-IN PROMPT or IDEA SCORE ── */}
