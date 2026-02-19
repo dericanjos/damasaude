@@ -48,6 +48,27 @@ export function useYesterdayCheckin() {
   });
 }
 
+export function useLastCheckin() {
+  const { data: clinic } = useClinic();
+
+  return useQuery({
+    queryKey: ['checkin-last', clinic?.id],
+    queryFn: async () => {
+      if (!clinic) return null;
+      const { data, error } = await supabase
+        .from('daily_checkins')
+        .select('*')
+        .eq('clinic_id', clinic.id)
+        .order('date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!clinic,
+  });
+}
+
 export function useWeekCheckins(weekStart?: Date) {
   const { data: clinic } = useClinic();
   const start = weekStart || startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -86,6 +107,7 @@ export function useSaveCheckin() {
       empty_slots: number;
       followup_done: boolean;
       notes?: string;
+      insight_text?: string;
     }) => {
       if (!user || !clinic) throw new Error('Not authenticated');
       const today = format(new Date(), 'yyyy-MM-dd');

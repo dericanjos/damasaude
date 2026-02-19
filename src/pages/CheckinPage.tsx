@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTodayCheckin, useSaveCheckin } from '@/hooks/useCheckin';
+import { useLastCheckin } from '@/hooks/useCheckin';
 import { useGenerateActions } from '@/hooks/useActions';
-import { calculateIDEA, getIdeaStatus, getIdeaLabel } from '@/lib/idea';
-import { calculateRevenue, formatBRL, formatPercent } from '@/lib/revenue';
+import { useClinic } from '@/hooks/useClinic';
+import { calculateIDEA, generateInsightText, getIdeaStatus, getIdeaLabel, getTopLossSources } from '@/lib/idea';
+import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY } from '@/lib/revenue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { ClipboardCheck, CheckCircle2, TrendingDown, TrendingUp, ChevronRight } from 'lucide-react';
+import {
+  ClipboardCheck, CheckCircle2, TrendingDown, TrendingUp, ChevronRight,
+  Minus, Plus, Zap
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type FormData = {
@@ -29,28 +33,79 @@ type RewardData = {
   estimated: number;
   lost: number;
   occupancyRate: number;
+  insightText: string;
+  lossSources: string[];
 };
+
+const EMPTY_FORM: FormData = {
+  appointments_scheduled: 0,
+  appointments_done: 0,
+  no_show: 0,
+  cancellations: 0,
+  new_appointments: 0,
+  empty_slots: 0,
+  followup_done: false,
+  notes: '',
+};
+
+function Stepper({
+  value,
+  onChange,
+  label,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  label: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider text-center">{label}</p>
+      <div className="flex items-center justify-center gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(0, value - 1))}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+        <input
+          type="number"
+          min={0}
+          value={value}
+          onChange={e => onChange(Math.max(0, parseInt(e.target.value) || 0))}
+          className="w-14 text-center text-2xl font-bold bg-transparent border-none outline-none text-foreground"
+        />
+        <button
+          type="button"
+          onClick={() => onChange(value + 1)}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function CheckinPage() {
   const navigate = useNavigate();
   const { data: existing } = useTodayCheckin();
+  const { data: lastCheckin } = useLastCheckin();
+  const { data: clinic } = useClinic();
   const saveCheckin = useSaveCheckin();
   const generateActions = useGenerateActions();
+
+  const [quickMode, setQuickMode] = useState(false);
+  const [quickHasBuracos, setQuickHasBuracos] = useState(false);
+  const [quickHasNoShow, setQuickHasNoShow] = useState(false);
+  const [quickFollowup, setQuickFollowup] = useState(false);
 
   const [showReward, setShowReward] = useState(false);
   const [reward, setReward] = useState<RewardData | null>(null);
 
-  const [form, setForm] = useState<FormData>({
-    appointments_scheduled: 0,
-    appointments_done: 0,
-    no_show: 0,
-    cancellations: 0,
-    new_appointments: 0,
-    empty_slots: 0,
-    followup_done: false,
-    notes: '',
-  });
+  const [form, setForm] = useState<FormData>(EMPTY_FORM);
 
+  // Pre-fill from today's existing checkin or last checkin
   useEffect(() => {
     if (existing) {
       setForm({
@@ -63,44 +118,71 @@ export default function CheckinPage() {
         followup_done: existing.followup_done,
         notes: existing.notes ?? '',
       });
+    } else if (lastCheckin) {
+      setForm({
+        appointments_scheduled: lastCheckin.appointments_scheduled,
+        appointments_done: lastCheckin.appointments_done,
+        no_show: lastCheckin.no_show,
+        cancellations: lastCheckin.cancellations,
+        new_appointments: lastCheckin.new_appointments,
+        empty_slots: lastCheckin.empty_slots,
+        followup_done: false,
+        notes: '',
+      });
     }
-  }, [existing?.id]);
+  }, [existing?.id, lastCheckin?.id]);
+
+  const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await saveCheckin.mutateAsync(form);
-      await generateActions.mutateAsync(form);
 
-      // Calculate reward data
-      const score = calculateIDEA(form);
-      const rev = calculateRevenue(form);
-      setReward({ score, estimated: rev.estimated, lost: rev.lost, occupancyRate: rev.occupancyRate });
+    let submitData = { ...form };
+
+    if (quickMode) {
+      // Build from quick toggles, keeping last values for other fields
+      submitData = {
+        ...form,
+        no_show: quickHasNoShow ? (lastCheckin?.no_show || 1) : 0,
+        empty_slots: quickHasBuracos ? (lastCheckin?.empty_slots || 1) : 0,
+        followup_done: quickFollowup,
+      };
+    }
+
+    try {
+      const ideaScore = calculateIDEA(submitData, dailyCapacity);
+      const insightText = generateInsightText(submitData, ideaScore);
+      const lossSources = getTopLossSources(submitData);
+
+      await saveCheckin.mutateAsync({ ...submitData, insight_text: insightText });
+      await generateActions.mutateAsync(submitData);
+
+      const rev = calculateRevenue({
+        ...submitData,
+        daily_capacity: dailyCapacity,
+      });
+      setReward({
+        score: ideaScore,
+        estimated: rev.estimated,
+        lost: rev.lost,
+        occupancyRate: rev.occupancyRate,
+        insightText,
+        lossSources,
+      });
       setShowReward(true);
     } catch (err: any) {
       toast.error(err.message || 'Erro ao salvar');
     }
   };
 
-  const numField = (key: keyof FormData, label: string) => (
-    <div className="space-y-1.5">
-      <Label htmlFor={key} className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</Label>
-      <Input
-        id={key}
-        type="number"
-        min={0}
-        value={form[key] as number}
-        onChange={(e) => setForm(prev => ({ ...prev, [key]: parseInt(e.target.value) || 0 }))}
-        className="text-center text-lg font-bold h-12 rounded-xl border-border/70 bg-background"
-      />
-    </div>
-  );
+  const setField = (key: keyof FormData, value: number | boolean | string) =>
+    setForm(prev => ({ ...prev, [key]: value }));
 
   // ── REWARD SCREEN ──
   if (showReward && reward) {
     const status = getIdeaStatus(reward.score);
     return (
-      <div className="mx-auto max-w-lg px-4 py-8 flex flex-col items-center space-y-6 min-h-[70vh] justify-center">
+      <div className="mx-auto max-w-lg px-4 py-8 flex flex-col items-center space-y-5 min-h-[80vh] justify-center">
         {/* Big score */}
         <div className={cn(
           'w-full rounded-3xl p-8 text-center shadow-elevated',
@@ -108,42 +190,53 @@ export default function CheckinPage() {
           status === 'attention' && 'idea-attention',
           status === 'stable' && 'idea-stable',
         )}>
-          <CheckCircle2 className="mx-auto h-10 w-10 text-white/80 mb-3" />
-          <p className="text-sm font-bold text-white/75 uppercase tracking-widest">Check-in salvo!</p>
-          <p className="text-7xl font-extrabold text-white tracking-tight mt-2">{reward.score}</p>
+          <CheckCircle2 className="mx-auto h-9 w-9 text-white/80 mb-2" />
+          <p className="text-xs font-bold text-white/70 uppercase tracking-widest">Check-in salvo</p>
+          <p className="text-7xl font-extrabold text-white tracking-tight mt-1">{reward.score}</p>
           <p className="text-base font-semibold text-white/90 mt-1">Performance {getIdeaLabel(status)}</p>
-          <p className="text-sm text-white/65 mt-1">
-            {status === 'stable' && 'Excelente! Continue assim.'}
-            {status === 'attention' && 'Atenção aos cancelamentos e buracos.'}
-            {status === 'critical' && 'Foco em confirmações e lista de espera.'}
-          </p>
+          {/* Insight text */}
+          <p className="text-sm text-white/80 mt-3 font-medium italic">"{reward.insightText}"</p>
         </div>
+
+        {/* Top loss sources */}
+        {reward.lossSources.length > 0 && (
+          <div className="w-full rounded-2xl bg-card border border-border/60 p-4 shadow-card">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5">O que puxou o score hoje</p>
+            <div className="space-y-1.5">
+              {reward.lossSources.map((s, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm text-foreground">
+                  <span className="text-destructive font-bold">↓</span> {s}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Revenue summary */}
         <div className="w-full grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-card border border-border/60 p-4 text-center shadow-card">
-            <TrendingUp className="mx-auto h-5 w-5 text-emerald-600 mb-1.5" />
-            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Receita estimada</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{formatBRL(reward.estimated)}</p>
+            <TrendingUp className="mx-auto h-5 w-5 text-revenue-gain mb-1.5" />
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Receita estimada</p>
+            <p className="text-xl font-bold text-foreground mt-1">{formatBRL(reward.estimated)}</p>
           </div>
           <div className="rounded-2xl bg-card border border-border/60 p-4 text-center shadow-card">
-            <TrendingDown className="mx-auto h-5 w-5 text-destructive mb-1.5" />
-            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Receita perdida</p>
-            <p className={cn('text-2xl font-bold mt-1', reward.lost > 0 ? 'text-destructive' : 'text-foreground')}>
+            <TrendingDown className="mx-auto h-5 w-5 text-revenue-loss mb-1.5" />
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Receita perdida</p>
+            <p className={cn('text-xl font-bold mt-1', reward.lost > 0 ? 'text-revenue-loss' : 'text-foreground')}>
               {formatBRL(reward.lost)}
             </p>
           </div>
         </div>
 
-        {/* Occupancy */}
+        {/* Occupancy bar */}
         <div className="w-full rounded-2xl bg-card border border-border/60 p-4 shadow-card">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-foreground">Ocupação da agenda</p>
+            <p className="text-sm font-medium text-foreground">Ocupação</p>
             <p className="text-sm font-bold text-foreground">{formatPercent(reward.occupancyRate)}</p>
           </div>
           <div className="h-2 rounded-full bg-muted overflow-hidden">
             <div
-              className={cn('h-full rounded-full transition-all', reward.occupancyRate >= 0.85 ? 'bg-emerald-500' : 'bg-amber-500')}
+              className={cn('h-full rounded-full transition-all', reward.occupancyRate >= 0.85 ? 'bg-revenue-gain' : 'bg-idea-attention')}
               style={{ width: `${Math.min(100, reward.occupancyRate * 100)}%` }}
             />
           </div>
@@ -167,56 +260,99 @@ export default function CheckinPage() {
         </div>
         <div>
           <h1 className="text-lg font-bold text-foreground">Check-in Diário</h1>
-          <p className="text-xs text-muted-foreground">Menos de 1 minuto • Clareza total</p>
+          <p className="text-xs text-muted-foreground">Menos de 1 minuto · Clareza total</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Grid inputs */}
-        <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-4">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Agenda de hoje</p>
-          <div className="grid grid-cols-2 gap-3">
-            {numField('appointments_scheduled', 'Agendados')}
-            {numField('appointments_done', 'Atendidos')}
-            {numField('no_show', 'No-show')}
-            {numField('cancellations', 'Cancelamentos')}
-            {numField('new_appointments', 'Novos agend.')}
-            {numField('empty_slots', 'Buracos')}
-          </div>
-        </div>
-
-        {/* Follow-up toggle */}
-        <div className="flex items-center justify-between rounded-2xl bg-card border border-border/60 p-4 shadow-card">
+      {/* Quick mode toggle */}
+      <div className="mb-4 flex items-center justify-between rounded-2xl bg-card border border-border/60 p-3.5 shadow-card">
+        <div className="flex items-center gap-2">
+          <Zap className="h-4 w-4 text-primary" />
           <div>
-            <p className="text-sm font-semibold text-foreground">Follow-up executado</p>
-            <p className="text-xs text-muted-foreground">Confirmações e reativações feitas hoje?</p>
+            <p className="text-sm font-semibold text-foreground">Check-in em 10 segundos</p>
+            <p className="text-xs text-muted-foreground">Apenas 3 perguntas</p>
           </div>
-          <Switch
-            id="followup"
-            checked={form.followup_done}
-            onCheckedChange={(checked) => setForm(prev => ({ ...prev, followup_done: checked }))}
-          />
         </div>
+        <Switch checked={quickMode} onCheckedChange={setQuickMode} />
+      </div>
 
-        {/* Notes */}
-        <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-2">
-          <Label htmlFor="notes" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Observações (opcional)
-          </Label>
-          <Textarea
-            id="notes"
-            value={form.notes}
-            onChange={(e) => setForm(prev => ({ ...prev, notes: e.target.value }))}
-            placeholder="Alguma observação sobre o dia..."
-            rows={2}
-            className="border-border/50 rounded-xl resize-none"
-          />
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {quickMode ? (
+          /* ── QUICK MODE ── */
+          <div className="rounded-2xl bg-card border border-border/60 p-5 shadow-card space-y-5">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Responda rapidamente</p>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Teve buracos hoje?</p>
+                <p className="text-xs text-muted-foreground">Horários vazios na agenda</p>
+              </div>
+              <Switch checked={quickHasBuracos} onCheckedChange={setQuickHasBuracos} />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Teve no-show hoje?</p>
+                <p className="text-xs text-muted-foreground">Paciente que não compareceu</p>
+              </div>
+              <Switch checked={quickHasNoShow} onCheckedChange={setQuickHasNoShow} />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Follow-up foi feito hoje?</p>
+                <p className="text-xs text-muted-foreground">Confirmações e reativações</p>
+              </div>
+              <Switch checked={quickFollowup} onCheckedChange={setQuickFollowup} />
+            </div>
+          </div>
+        ) : (
+          /* ── FULL MODE ── */
+          <>
+            <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Agenda de hoje</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-5">
+                <Stepper label="Agendados" value={form.appointments_scheduled} onChange={v => setField('appointments_scheduled', v)} />
+                <Stepper label="Atendidos" value={form.appointments_done} onChange={v => setField('appointments_done', v)} />
+                <Stepper label="No-show" value={form.no_show} onChange={v => setField('no_show', v)} />
+                <Stepper label="Cancelamentos" value={form.cancellations} onChange={v => setField('cancellations', v)} />
+                <Stepper label="Novos agend." value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
+                <Stepper label="Buracos" value={form.empty_slots} onChange={v => setField('empty_slots', v)} />
+              </div>
+            </div>
+
+            {/* Follow-up toggle */}
+            <div className="flex items-center justify-between rounded-2xl bg-card border border-border/60 p-4 shadow-card">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Follow-up executado</p>
+                <p className="text-xs text-muted-foreground">Confirmações e reativações feitas hoje?</p>
+              </div>
+              <Switch
+                checked={form.followup_done}
+                onCheckedChange={(c) => setField('followup_done', c)}
+              />
+            </div>
+
+            {/* Notes */}
+            <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-2">
+              <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Observações (opcional)
+              </Label>
+              <Textarea
+                value={form.notes}
+                onChange={(e) => setField('notes', e.target.value)}
+                placeholder="Alguma observação sobre o dia..."
+                rows={2}
+                className="border-border/50 rounded-xl resize-none"
+              />
+            </div>
+          </>
+        )}
 
         <Button
           type="submit"
           className="w-full h-12 rounded-xl text-sm font-semibold shadow-premium"
-          disabled={saveCheckin.isPending}
+          disabled={saveCheckin.isPending || generateActions.isPending}
         >
           {saveCheckin.isPending ? 'Salvando...' : 'Salvar check-in'}
         </Button>
