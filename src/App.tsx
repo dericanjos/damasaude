@@ -14,18 +14,12 @@ import WeeklyReportPage from "@/pages/WeeklyReportPage";
 import SettingsPage from "@/pages/SettingsPage";
 import SubscriptionPage from "@/pages/SubscriptionPage";
 import InsightsPage from "@/pages/InsightsPage";
+import InstitucionalPage from "@/pages/InstitucionalPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoutes() {
-  // TODO: Re-enable auth & subscription guards later
-  // const { user, loading } = useAuth();
-  // const { subscribed, loading: subLoading } = useSubscription();
-  // if (loading || subLoading) return <LoadingSpinner />;
-  // if (!user) return <Navigate to="/auth" replace />;
-  // if (!subscribed) return <Navigate to="/assinatura" replace />;
-
   return (
     <AppLayout>
       <Routes>
@@ -68,6 +62,7 @@ const App = () => (
             <Routes>
               <Route path="/auth" element={<AuthRoute />} />
               <Route path="/assinatura" element={<SubscriptionRoute />} />
+              <Route path="/institucional" element={<InstitucionalPage />} />
               <Route path="/*" element={<ProtectedRoutes />} />
             </Routes>
           </SubscriptionProvider>
@@ -78,3 +73,4 @@ const App = () => (
 );
 
 export default App;
+

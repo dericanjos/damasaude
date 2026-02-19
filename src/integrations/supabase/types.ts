@@ -17,6 +17,7 @@ export type Database = {
       clinics: {
         Row: {
           created_at: string
+          daily_capacity: number
           id: string
           name: string
           target_fill_rate: number
@@ -26,6 +27,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          daily_capacity?: number
           id?: string
           name: string
           target_fill_rate?: number
@@ -35,6 +37,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          daily_capacity?: number
           id?: string
           name?: string
           target_fill_rate?: number
@@ -102,6 +105,7 @@ export type Database = {
           empty_slots: number
           followup_done: boolean
           id: string
+          insight_text: string | null
           new_appointments: number
           no_show: number
           notes: string | null
@@ -117,6 +121,7 @@ export type Database = {
           empty_slots?: number
           followup_done?: boolean
           id?: string
+          insight_text?: string | null
           new_appointments?: number
           no_show?: number
           notes?: string | null
@@ -132,6 +137,7 @@ export type Database = {
           empty_slots?: number
           followup_done?: boolean
           id?: string
+          insight_text?: string | null
           new_appointments?: number
           no_show?: number
           notes?: string | null

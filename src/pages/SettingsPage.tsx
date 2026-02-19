@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Settings, LogOut, CreditCard, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Settings, LogOut, CreditCard, ExternalLink } from 'lucide-react';
 
 const statusLabels: Record<string, string> = {
   testando: 'Período de teste',
@@ -38,6 +38,7 @@ export default function SettingsPage() {
   const [fillRate, setFillRate] = useState(85);
   const [noshowRate, setNoshowRate] = useState(5);
   const [timezone, setTimezone] = useState('America/Sao_Paulo');
+  const [dailyCapacity, setDailyCapacity] = useState(16);
 
   useEffect(() => {
     if (clinic) {
@@ -45,6 +46,7 @@ export default function SettingsPage() {
       setFillRate(Math.round(Number(clinic.target_fill_rate) * 100));
       setNoshowRate(Math.round(Number(clinic.target_noshow_rate) * 100));
       setTimezone(clinic.timezone);
+      setDailyCapacity((clinic as any).daily_capacity ?? 16);
     }
   }, [clinic?.id]);
 
@@ -55,6 +57,7 @@ export default function SettingsPage() {
         target_fill_rate: fillRate / 100,
         target_noshow_rate: noshowRate / 100,
         timezone,
+        daily_capacity: dailyCapacity,
       });
       toast.success('Configurações salvas!');
     } catch (err: any) {
@@ -91,7 +94,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm font-bold text-foreground">DAMA Premium</p>
+              <p className="text-sm font-bold text-foreground">Plano</p>
             </div>
             <Badge variant={statusVariants[subscriptionStatus] || 'outline'} className="text-[10px]">
               {statusLabels[subscriptionStatus] || subscriptionStatus}
@@ -107,14 +110,6 @@ export default function SettingsPage() {
               </span>
             </div>
           )}
-          <div className="rounded-xl bg-primary/5 border border-primary/15 p-3">
-            <div className="flex items-start gap-2">
-              <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-              <p className="text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground">Clínicas que usam DAMA</span> reduzem até 27% de no-show e recuperam em média R$ 1.200/mês em receita perdida.
-              </p>
-            </div>
-          </div>
           <Button
             variant="outline"
             className="w-full rounded-xl"
@@ -130,13 +125,31 @@ export default function SettingsPage() {
       {/* Clinic settings */}
       <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
         <div className="px-4 pt-4 pb-2">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Dados da Clínica</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Clínica</p>
         </div>
         <div className="px-4 pb-4 space-y-4">
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome da clínica</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl" />
           </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Capacidade diária (consultas/dia)
+            </Label>
+            <Input
+              type="number"
+              min={1}
+              max={100}
+              value={dailyCapacity}
+              onChange={(e) => setDailyCapacity(Number(e.target.value))}
+              className="rounded-xl"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Usado para calcular ocupação e o Índice IDEA. Padrão: 16.
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta ocupação (%)</Label>
@@ -147,6 +160,7 @@ export default function SettingsPage() {
               <Input type="number" min={0} max={100} value={noshowRate} onChange={(e) => setNoshowRate(Number(e.target.value))} className="rounded-xl" />
             </div>
           </div>
+
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fuso horário</Label>
             <Select value={timezone} onValueChange={setTimezone}>
@@ -160,6 +174,7 @@ export default function SettingsPage() {
               </SelectContent>
             </Select>
           </div>
+
           <Button onClick={handleSave} className="w-full rounded-xl" disabled={updateClinic.isPending}>
             Salvar configurações
           </Button>

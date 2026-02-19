@@ -8,18 +8,31 @@ export interface CheckinData {
   followup_done: boolean;
 }
 
-export function calculateIDEA(data: CheckinData): number {
-  const scheduled = Math.max(data.appointments_scheduled, 1);
-  const noShowRate = data.no_show / scheduled;
-  const cancellationRate = data.cancellations / scheduled;
-  const emptySlotsRate = data.empty_slots / scheduled;
+const DEFAULT_DAILY_CAPACITY = 16;
+export const TICKET = 250;
 
-  const base = 100;
-  const penalty = (noShowRate * 40 + cancellationRate * 20 + emptySlotsRate * 30) * 100;
-  const bonus = data.followup_done ? 10 : 0;
-  const idea = base - penalty + bonus;
+export function calculateRevenueLost(data: CheckinData): number {
+  return (data.no_show + data.cancellations + data.empty_slots) * TICKET;
+}
 
-  return Math.max(0, Math.min(100, Math.round(idea)));
+export function calculateRevenueEstimated(data: CheckinData): number {
+  return data.appointments_done * TICKET;
+}
+
+/**
+ * IDEA Score – simplified, explainable formula:
+ * Base 100
+ * penalty = (revenue_lost / revenue_potential) * 100
+ * bonus = followup_done ? +5 : 0
+ * Clamp 0–100
+ */
+export function calculateIDEA(data: CheckinData, dailyCapacity?: number): number {
+  const capacity = dailyCapacity ?? DEFAULT_DAILY_CAPACITY;
+  const revenuePotential = capacity * TICKET;
+  const revenueLost = calculateRevenueLost(data);
+  const penalty = (revenueLost / revenuePotential) * 100;
+  const bonus = data.followup_done ? 5 : 0;
+  return Math.max(0, Math.min(100, Math.round(100 - penalty + bonus)));
 }
 
 export function getIdeaStatus(score: number): 'critical' | 'attention' | 'stable' {
@@ -36,6 +49,41 @@ export function getIdeaLabel(status: 'critical' | 'attention' | 'stable'): strin
   }
 }
 
+/**
+ * Returns the top 2 loss sources for "O que puxou o score hoje"
+ */
+export function getTopLossSources(data: CheckinData): string[] {
+  const sources = [
+    { label: 'No-show', value: data.no_show },
+    { label: 'Cancelamentos', value: data.cancellations },
+    { label: 'Buracos na agenda', value: data.empty_slots },
+  ]
+    .filter(s => s.value > 0)
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 2);
+  return sources.map(s => `${s.label}: ${s.value}`);
+}
+
+/**
+ * Generates 1 short insight phrase (no imperative, no teaching)
+ */
+export function generateInsightText(data: CheckinData, ideaScore: number): string {
+  if (ideaScore >= 80) return 'Agenda dentro das metas.';
+
+  const items = [
+    { label: 'no-show', value: data.no_show },
+    { label: 'cancelamentos', value: data.cancellations },
+    { label: 'buracos na agenda', value: data.empty_slots },
+  ].sort((a, b) => b.value - a.value);
+
+  const top = items[0];
+  if (!top || top.value === 0) return 'Agenda dentro das metas.';
+
+  if (top.label === 'no-show') return 'Hoje o no-show foi o maior vazamento.';
+  if (top.label === 'buracos na agenda') return 'Ocupação abaixo da meta.';
+  return 'Cancelamentos puxaram a receita para baixo hoje.';
+}
+
 export interface ActionRule {
   action_type: string;
   title: string;
@@ -50,7 +98,7 @@ export function generateActions(data: CheckinData, targetNoshowRate: number, ide
   if (data.empty_slots > 0) {
     actions.push({
       action_type: 'fix_empty_slots',
-      title: `Preencher ${data.empty_slots} buraco${data.empty_slots > 1 ? 's' : ''} na agenda hoje`,
+      title: `Preencher ${data.empty_slots} buraco${data.empty_slots > 1 ? 's' : ''} na agenda`,
       description: 'Ative lista de espera e reative contatos para ocupar os horários vazios.',
     });
   }
@@ -74,7 +122,7 @@ export function generateActions(data: CheckinData, targetNoshowRate: number, ide
   if (ideaScore >= 80 && actions.length === 0) {
     actions.push({
       action_type: 'collect_nps',
-      title: 'Pedir avaliações/NPS hoje',
+      title: 'Pedir avaliações hoje',
       description: 'Aproveite o bom dia para fortalecer reputação e indicações.',
     });
   }
@@ -83,35 +131,14 @@ export function generateActions(data: CheckinData, targetNoshowRate: number, ide
     actions.push({
       action_type: 'schedule_admin_block',
       title: 'Bloquear 30 min para gestão',
-      description: 'Separe 30 min hoje para ver números e ajustar agenda.',
+      description: 'Separe 30 min para ver números e ajustar agenda.',
     });
   }
 
   return actions.slice(0, 3);
 }
 
+// Legacy alias kept for compatibility
 export function generateInsight(data: CheckinData, ideaScore: number): string {
-  const scheduled = Math.max(data.appointments_scheduled, 1);
-  const noShowRate = data.no_show / scheduled;
-  const emptySlotsRate = data.empty_slots / scheduled;
-  const cancellationRate = data.cancellations / scheduled;
-
-  if (ideaScore >= 80) {
-    return 'Bom dia: aproveite para pedir avaliações e fortalecer indicações.';
-  }
-
-  const impacts = [
-    { label: 'buracos na agenda', value: emptySlotsRate * 30 },
-    { label: 'no-show', value: noShowRate * 40 },
-    { label: 'cancelamentos', value: cancellationRate * 20 },
-  ].sort((a, b) => b.value - a.value);
-
-  if (impacts[0].value > 0) {
-    if (impacts[0].label === 'no-show') {
-      return 'Seu no-show está acima da meta. Priorize confirmações.';
-    }
-    return `Hoje o maior impacto no seu IDEA foram os ${impacts[0].label}.`;
-  }
-
-  return 'Continue monitorando sua agenda para manter a estabilidade.';
+  return generateInsightText(data, ideaScore);
 }
