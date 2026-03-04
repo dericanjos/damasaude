@@ -39,6 +39,7 @@ export default function SettingsPage() {
   const [noshowRate, setNoshowRate] = useState(5);
   const [timezone, setTimezone] = useState('America/Sao_Paulo');
   const [dailyCapacity, setDailyCapacity] = useState(16);
+  const [ticketMedio, setTicketMedio] = useState(250);
 
   useEffect(() => {
     if (clinic) {
@@ -47,6 +48,7 @@ export default function SettingsPage() {
       setNoshowRate(Math.round(Number(clinic.target_noshow_rate) * 100));
       setTimezone(clinic.timezone);
       setDailyCapacity((clinic as any).daily_capacity ?? 16);
+      setTicketMedio((clinic as any).ticket_medio ?? 250);
     }
   }, [clinic?.id]);
 
@@ -58,6 +60,7 @@ export default function SettingsPage() {
         target_noshow_rate: noshowRate / 100,
         timezone,
         daily_capacity: dailyCapacity,
+        ticket_medio: ticketMedio,
       });
       toast.success('Configurações salvas!');
     } catch (err: any) {
@@ -147,6 +150,22 @@ export default function SettingsPage() {
             />
             <p className="text-[11px] text-muted-foreground">
               Usado para calcular ocupação e o Índice IDEA. Padrão: 16.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Ticket médio por consulta (R$)
+            </Label>
+            <Input
+              type="number"
+              min={1}
+              value={ticketMedio}
+              onChange={(e) => setTicketMedio(Number(e.target.value))}
+              className="rounded-xl"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Valor médio cobrado por consulta. Usado no cálculo de receita e perda. Padrão: R$ 250.
             </p>
           </div>
 

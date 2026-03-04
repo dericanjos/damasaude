@@ -1,0 +1,1 @@
+ALTER TABLE public.clinics ADD COLUMN ticket_medio numeric NOT NULL DEFAULT 250;

@@ -22,6 +22,7 @@ export type Database = {
           name: string
           target_fill_rate: number
           target_noshow_rate: number
+          ticket_medio: number
           timezone: string
           user_id: string
         }
@@ -32,6 +33,7 @@ export type Database = {
           name: string
           target_fill_rate?: number
           target_noshow_rate?: number
+          ticket_medio?: number
           timezone?: string
           user_id: string
         }
@@ -42,6 +44,7 @@ export type Database = {
           name?: string
           target_fill_rate?: number
           target_noshow_rate?: number
+          ticket_medio?: number
           timezone?: string
           user_id?: string
         }

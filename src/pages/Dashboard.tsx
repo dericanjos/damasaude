@@ -5,7 +5,7 @@ import { useTodayActions, useCompleteAction } from '@/hooks/useActions';
 import { useClinic } from '@/hooks/useClinic';
 import { useSubscription } from '@/hooks/useSubscription';
 import { calculateIDEA, getIdeaStatus, getIdeaLabel, type CheckinData } from '@/lib/idea';
-import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY } from '@/lib/revenue';
+import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET } from '@/lib/revenue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import SuccessChecklistCard from '@/components/SuccessChecklistCard';
@@ -35,6 +35,7 @@ export default function Dashboard() {
   const targetFillRate = clinic?.target_fill_rate ?? 0.85;
   const targetNoShowRate = clinic?.target_noshow_rate ?? 0.05;
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
+  const ticketMedio = (clinic as any)?.ticket_medio ?? DEFAULT_TICKET;
 
   // Renewal warning
   const showRenewalBanner = (() => {
@@ -74,7 +75,7 @@ export default function Dashboard() {
     : null;
 
   const revenue = checkinData
-    ? calculateRevenue({ ...checkinData, daily_capacity: dailyCapacity })
+    ? calculateRevenue({ ...checkinData, daily_capacity: dailyCapacity, ticket: ticketMedio })
     : null;
   const ideaStatus = todayScore != null ? getIdeaStatus(todayScore) : null;
 
@@ -149,6 +150,11 @@ export default function Dashboard() {
               <p className="text-xs font-medium text-white/75 uppercase tracking-wider">Check-in do dia pendente</p>
               <p className="mt-1 text-lg font-bold text-white">Fazer Check-in Agora</p>
               <p className="text-sm text-white/75 mt-0.5">Leve 60 segundos para ter clareza sobre sua agenda e receita de hoje.</p>
+              {yesterdayScore != null && (
+                <p className="text-xs text-white/65 mt-1.5 border-t border-white/15 pt-1.5">
+                  Ontem seu Índice IDEA foi <span className="font-bold text-white/90">{yesterdayScore} ({getIdeaLabel(getIdeaStatus(yesterdayScore))})</span>. Faça o check-in para ver o de hoje.
+                </p>
+              )}
             </div>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15">
               <ClipboardCheck className="h-6 w-6 text-white" />
