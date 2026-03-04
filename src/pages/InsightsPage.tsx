@@ -8,7 +8,7 @@ import { startOfWeek, subWeeks } from 'date-fns';
 import { Sparkles, TrendingDown, TrendingUp, Zap, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const TICKET = 250;
+const DEFAULT_TICKET = 250;
 
 export default function InsightsPage() {
   const { data: clinic } = useClinic();
@@ -18,6 +18,8 @@ export default function InsightsPage() {
 
   const { data: thisWeek = [] } = useWeekCheckins(thisWeekStart);
   const { data: lastWeek = [] } = useWeekCheckins(lastWeekStart);
+
+  const TICKET = (clinic as any)?.ticket_medio ?? DEFAULT_TICKET;
 
   const calcWeek = (checkins: typeof thisWeek) => {
     const totalDone = checkins.reduce((s, c) => s + c.appointments_done, 0);
@@ -84,8 +86,8 @@ export default function InsightsPage() {
       {noData ? (
         <div className="rounded-2xl bg-card border border-border/60 shadow-card py-12 text-center px-6">
           <Sparkles className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
-          <p className="text-sm font-semibold text-foreground">Faça check-ins diários</p>
-          <p className="text-xs text-muted-foreground mt-1">Insights e previsões aparecem após alguns dias de dados.</p>
+          <p className="text-sm font-semibold text-foreground">Seus insights estão sendo construídos</p>
+          <p className="text-xs text-muted-foreground mt-1">Continue fazendo check-ins diários para desbloquear previsões de receita, simulações de impacto e análises de tendência.</p>
         </div>
       ) : (
         <>

@@ -32,6 +32,7 @@ export function useUpdateClinic() {
       target_noshow_rate?: number;
       timezone?: string;
       daily_capacity?: number;
+      ticket_medio?: number;
     }) => {
       if (!user) throw new Error('Not authenticated');
       const { data, error } = await supabase

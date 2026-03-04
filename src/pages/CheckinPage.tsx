@@ -6,7 +6,7 @@ import { useGenerateActions } from '@/hooks/useActions';
 import { useClinic } from '@/hooks/useClinic';
 import { useCheckinStreak } from '@/hooks/useChecklist';
 import { calculateIDEA, generateInsightText, getIdeaStatus, getIdeaLabel, getTopLossSources } from '@/lib/idea';
-import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY } from '@/lib/revenue';
+import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET } from '@/lib/revenue';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
@@ -126,6 +126,7 @@ export default function CheckinPage() {
   }, [existing?.id, lastCheckin?.id]);
 
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
+  const ticketMedio = (clinic as any)?.ticket_medio ?? DEFAULT_TICKET;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,6 +153,7 @@ export default function CheckinPage() {
       const rev = calculateRevenue({
         ...submitData,
         daily_capacity: dailyCapacity,
+        ticket: ticketMedio,
       });
       setReward({
         score: ideaScore,
