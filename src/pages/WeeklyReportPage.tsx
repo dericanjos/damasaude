@@ -55,12 +55,20 @@ export default function WeeklyReportPage() {
 
   const ideaMedio = avgScore ?? 0;
 
-  const recommendation = (() => {
+  // Main bottleneck
+  const bottleneck = (() => {
     if (!checkins.length) return null;
-    if (totalNoShow > 0) return 'Reforce confirmações para reduzir no-show.';
-    if (totalEmptySlots > 0) return 'Ative lista de espera para preencher buracos.';
-    if (totalCancellations > 0) return 'Investigue motivos de cancelamento e ofereça reagendamento imediato.';
-    return 'Semana estável. Continue monitorando.';
+    const issues = [
+      { label: 'No-show', value: totalNoShow },
+      { label: 'Cancelamentos', value: totalCancellations },
+      { label: 'Buracos na agenda', value: totalEmptySlots },
+    ].sort((a, b) => b.value - a.value);
+    return issues[0]?.value > 0 ? issues[0].label : null;
+  })();
+
+  const recommendation = (() => {
+    if (!checkins.length || !bottleneck) return null;
+    return `Com base nos dados, focar em **${bottleneck}** é a forma mais rápida de melhorar seu resultado.`;
   })();
 
   return (
@@ -71,7 +79,7 @@ export default function WeeklyReportPage() {
           <BarChart3 className="h-5 w-5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-bold text-foreground">Relatório Semanal</h1>
+          <h1 className="text-lg font-bold text-foreground">Relatório de Performance Semanal</h1>
           <p className="text-xs text-muted-foreground capitalize">{weekLabel}</p>
         </div>
       </div>
@@ -123,10 +131,10 @@ export default function WeeklyReportPage() {
             <div className="rounded-2xl bg-card border border-revenue-loss/40 p-4 shadow-card">
               <div className="flex items-center gap-1.5 mb-2">
                 <TrendingDown className="h-3.5 w-3.5 text-revenue-loss" />
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Perda total</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Vazamento de receita</span>
               </div>
               <p className="text-xl font-bold text-revenue-loss">{formatBRL(totalRevenueLost)}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{totalNoShow + totalCancellations + totalEmptySlots} perdas</p>
+              <p className="text-xs text-muted-foreground mt-0.5">O valor que deixou de ser faturado por ineficiências operacionais.</p>
             </div>
           </div>
 
@@ -163,10 +171,20 @@ export default function WeeklyReportPage() {
             </div>
           </div>
 
+          {/* Bottleneck */}
+          {bottleneck && (
+            <div className="rounded-2xl bg-idea-attention/10 border border-idea-attention/30 p-4">
+              <p className="text-xs font-bold text-idea-attention uppercase tracking-wider mb-1">Principal Gargalo da Semana</p>
+              <p className="text-sm font-semibold text-foreground">{bottleneck}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Este foi o fator que mais impactou seu Índice IDEA.</p>
+            </div>
+          )}
+
           {/* Recommendation */}
           {recommendation && (
             <div className="rounded-2xl bg-muted/60 border border-border/60 p-4">
-              <p className="text-sm text-foreground">→ {recommendation}</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Ponto de Alavancagem para a Próxima Semana</p>
+              <p className="text-sm text-foreground">{recommendation}</p>
             </div>
           )}
 

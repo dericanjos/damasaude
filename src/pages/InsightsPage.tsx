@@ -1,14 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useWeekCheckins } from '@/hooks/useCheckin';
 import { useClinic } from '@/hooks/useClinic';
 import { calculateIDEA, getIdeaStatus, type CheckinData } from '@/lib/idea';
 import { formatBRL, formatPercent } from '@/lib/revenue';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { startOfWeek, subWeeks, format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Sparkles, TrendingDown, TrendingUp, DollarSign, Zap, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { startOfWeek, subWeeks } from 'date-fns';
+import { Sparkles, TrendingDown, TrendingUp, Zap, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const TICKET = 250;
@@ -16,10 +13,8 @@ const TICKET = 250;
 export default function InsightsPage() {
   const { data: clinic } = useClinic();
 
-  // Last 4 weeks of data
   const thisWeekStart = useMemo(() => startOfWeek(new Date(), { weekStartsOn: 1 }), []);
   const lastWeekStart = useMemo(() => subWeeks(thisWeekStart, 1), [thisWeekStart]);
-  const twoWeeksStart = useMemo(() => subWeeks(thisWeekStart, 2), [thisWeekStart]);
 
   const { data: thisWeek = [] } = useWeekCheckins(thisWeekStart);
   const { data: lastWeek = [] } = useWeekCheckins(lastWeekStart);
@@ -54,20 +49,17 @@ export default function InsightsPage() {
   const tw = calcWeek(thisWeek);
   const lw = calcWeek(lastWeek);
 
-  // Projections
   const hasData = thisWeek.length > 0;
   const daysInWeek = 5;
   const daysWithData = thisWeek.length;
   const projectedWeekRevenue = daysWithData > 0 ? (tw.revenue / daysWithData) * daysInWeek : 0;
   const projectedMonthRevenue = projectedWeekRevenue * 4.3;
 
-  // What-if: if no-show reduced by 5pp
   const monthlyLost = tw.lost * 4.3;
   const potentialGain = daysWithData > 0
     ? (tw.totalNoShow / daysWithData) * daysInWeek * 0.5 * TICKET * 4.3
     : 0;
 
-  // Trend vs last week
   const revenueTrend = lw.revenue > 0 ? ((tw.revenue - lw.revenue) / lw.revenue) : 0;
   const lostTrend = lw.lost > 0 ? ((tw.lost - lw.lost) / lw.lost) : 0;
 
@@ -112,7 +104,7 @@ export default function InsightsPage() {
                   <span className="text-2xl font-extrabold text-white">{formatBRL(projectedMonthRevenue)}</span>
                   {revenueTrend !== 0 && (
                     <div className={cn('flex items-center justify-end gap-1 mt-0.5', revenueTrend > 0 ? 'text-revenue-gain' : 'text-revenue-loss')}>
-                  {revenueTrend > 0
+                      {revenueTrend > 0
                         ? <ArrowUpRight className="h-3 w-3" />
                         : <ArrowDownRight className="h-3 w-3" />
                       }
@@ -128,10 +120,10 @@ export default function InsightsPage() {
           <div className="rounded-2xl bg-card border border-revenue-loss shadow-card p-5">
             <div className="flex items-center gap-2 mb-3">
               <TrendingDown className="h-4 w-4 text-revenue-loss" />
-              <p className="text-sm font-bold text-foreground">Receita perdida no mês</p>
+              <p className="text-sm font-bold text-foreground">Vazamento de receita no mês</p>
             </div>
             <p className="text-3xl font-extrabold text-revenue-loss">{formatBRL(monthlyLost)}</p>
-            <p className="text-xs text-muted-foreground mt-1">Em faltas e cancelamentos (projeção)</p>
+            <p className="text-xs text-muted-foreground mt-1">O valor que deixou de ser faturado por ineficiências operacionais.</p>
             {lostTrend !== 0 && (
               <div className={cn('flex items-center gap-1 mt-2', lostTrend < 0 ? 'text-revenue-gain' : 'text-destructive')}>
                 {lostTrend < 0
@@ -205,10 +197,10 @@ export default function InsightsPage() {
             </div>
           )}
 
-          {/* Value proposition */}
+          {/* Value insight - no brand mention */}
           <div className="rounded-2xl bg-muted/40 border border-border/40 p-4 text-center">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Clínicas que usam DAMA diariamente reduzem até <span className="font-bold text-foreground">27% do no-show</span> e recuperam em média <span className="font-bold text-foreground">R$ 1.200/mês</span> em receita perdida.
+              Clínicas que fazem check-in diário reduzem até <span className="font-bold text-foreground">27% do no-show</span> e recuperam em média <span className="font-bold text-foreground">R$ 1.200/mês</span> em receita perdida.
             </p>
           </div>
         </>
