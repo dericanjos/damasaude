@@ -76,17 +76,23 @@ export default function SuccessChecklistCard() {
 
       <div className="px-4 pb-3 space-y-3">
         {category.items.map((item, i) => (
-          <div key={i} className="flex items-center justify-between gap-3">
-            <p className={cn(
-              'text-sm text-foreground flex-1',
-              saved && answers[i] && 'text-muted-foreground line-through'
-            )}>
-              {item.question}
-            </p>
+          <div key={i} className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className={cn(
+                'text-sm text-foreground leading-snug',
+                saved && answers[i] && 'text-muted-foreground line-through'
+              )}>
+                {item.question}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                💡 {item.tip}
+              </p>
+            </div>
             <Switch
               checked={answers[i] ?? false}
               onCheckedChange={(v) => handleToggle(i, v)}
               disabled={saved}
+              className="mt-0.5 shrink-0"
             />
           </div>
         ))}
