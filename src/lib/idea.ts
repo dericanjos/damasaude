@@ -98,24 +98,24 @@ export function generateActions(data: CheckinData, targetNoshowRate: number, ide
   if (data.empty_slots > 0) {
     actions.push({
       action_type: 'fix_empty_slots',
-      title: `Preencher ${data.empty_slots} buraco${data.empty_slots > 1 ? 's' : ''} na agenda`,
-      description: 'Ative lista de espera e reative contatos para ocupar os horários vazios.',
+      title: 'Ativar preenchimento de buracos',
+      description: 'Sua ocupação está baixa. Acione a lista de espera ou antecipe consultas para preencher as vagas de hoje.',
     });
   }
 
   if (noShowRate >= targetNoshowRate) {
     actions.push({
       action_type: 'confirmations',
-      title: 'Reforçar confirmações para reduzir faltas',
-      description: 'Confirmar pacientes e reforçar orientação/horário para reduzir no-show.',
+      title: 'Revisar protocolo de confirmação',
+      description: 'O no-show está alto. Garanta que a confirmação em duas etapas (D-1 e D-0) seja executada sem falhas.',
     });
   }
 
   if (!data.followup_done) {
     actions.push({
       action_type: 'reactivation',
-      title: 'Executar follow-up e reativação',
-      description: 'Reativar contatos que pediram informação e não agendaram.',
+      title: 'Executar rotina de follow-up',
+      description: 'Execute a rotina de contato com pacientes que necessitam de acompanhamento para não perder o timing.',
     });
   }
 
@@ -131,7 +131,7 @@ export function generateActions(data: CheckinData, targetNoshowRate: number, ide
     actions.push({
       action_type: 'schedule_admin_block',
       title: 'Bloquear 30 min para gestão',
-      description: 'Separe 30 min para ver números e ajustar agenda.',
+      description: 'Separe 30 min para ver números e ajustar a agenda da semana.',
     });
   }
 

@@ -8,6 +8,7 @@ import { calculateIDEA, getIdeaStatus, getIdeaLabel, type CheckinData } from '@/
 import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY } from '@/lib/revenue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import SuccessChecklistCard from '@/components/SuccessChecklistCard';
 import {
   TrendingDown, TrendingUp, AlertCircle, CheckCircle2,
   ClipboardCheck, ArrowRight, Bell
@@ -77,21 +78,31 @@ export default function Dashboard() {
     : null;
   const ideaStatus = todayScore != null ? getIdeaStatus(todayScore) : null;
 
-  // Single priority alert
-  type Alert = { type: 'warn' | 'ok'; message: string; action?: string };
+  // IDEA status description
+  const ideaDescription = (() => {
+    if (!ideaStatus) return '';
+    switch (ideaStatus) {
+      case 'stable': return '🟢 Agenda estável e sob controle. Mantenha a consistência.';
+      case 'attention': return '🟡 Sua agenda requer atenção. Existem pontos de melhoria claros.';
+      case 'critical': return '🔴 Risco operacional. Sua agenda e receita estão vulneráveis hoje.';
+    }
+  })();
+
+  // Single priority alert with premium copy
+  type Alert = { type: 'warn' | 'ok'; label: string; message: string; action?: string };
   const alert: Alert = (() => {
-    if (!checkinData || !revenue) return { type: 'ok', message: 'Faça o check-in para ver seus alertas.' };
+    if (!checkinData || !revenue) return { type: 'ok', label: 'STATUS', message: 'Faça o check-in para ver seus alertas.' };
 
     if (revenue.lost > 500)
-      return { type: 'warn', message: `${formatBRL(revenue.lost)} perdidos em faltas e buracos.`, action: 'Revise motivos no Relatório' };
+      return { type: 'warn', label: 'ALERTA FINANCEIRO', message: `Você tem um vazamento de receita de ${formatBRL(revenue.lost)} hoje. A causa principal é faltas e buracos na agenda.`, action: 'Revise motivos no Relatório' };
     if (revenue.noShowRate > targetNoShowRate)
-      return { type: 'warn', message: `No-show em ${formatPercent(revenue.noShowRate)} — acima da meta.`, action: 'Reforce confirmações amanhã' };
+      return { type: 'warn', label: 'ALERTA DE AGENDA', message: `Sua taxa de no-show (${formatPercent(revenue.noShowRate)}) está acima da meta (${formatPercent(targetNoShowRate)}). É crucial reforçar a consistência das confirmações.` };
     if (revenue.occupancyRate < targetFillRate)
-      return { type: 'warn', message: `Ocupação em ${formatPercent(revenue.occupancyRate)} — agenda com buracos.`, action: 'Ative lista de espera' };
+      return { type: 'warn', label: 'ALERTA DE OCUPAÇÃO', message: `Sua ocupação (${formatPercent(revenue.occupancyRate)}) está abaixo da meta (${formatPercent(targetFillRate)}). Existem buracos na agenda que precisam ser preenchidos.` };
     if (!checkinData.followup_done)
-      return { type: 'warn', message: 'Follow-up não executado hoje.', action: 'Dedique 15 min para reativar contatos' };
+      return { type: 'warn', label: 'ALERTA DE PROCESSO', message: 'O follow-up não foi executado hoje. Isso aumenta o risco de perder oportunidades de reagendamento e retorno.' };
 
-    return { type: 'ok', message: 'Agenda dentro das metas.' };
+    return { type: 'ok', label: 'STATUS ESTÁVEL', message: 'Sua operação está alinhada com as metas. Ótimo trabalho mantendo a disciplina.' };
   })();
 
   const handleComplete = (id: string) => {
@@ -111,7 +122,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between pt-1">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Olá, {firstName} 👋</h1>
+          <h1 className="text-xl font-bold text-foreground">Olá, Dr(a). {firstName} 👋</h1>
           <p className="text-sm text-muted-foreground">Visão do dia</p>
         </div>
         <div className="flex items-center gap-2">
@@ -135,9 +146,9 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-white/75 uppercase tracking-wider">Check-in pendente</p>
-              <p className="mt-1 text-lg font-bold text-white">Faça o check-in de hoje</p>
-              <p className="text-sm text-white/75 mt-0.5">Menos de 1 minuto</p>
+              <p className="text-xs font-medium text-white/75 uppercase tracking-wider">Check-in do dia pendente</p>
+              <p className="mt-1 text-lg font-bold text-white">Fazer Check-in Agora</p>
+              <p className="text-sm text-white/75 mt-0.5">Leve 60 segundos para ter clareza sobre sua agenda e receita de hoje.</p>
             </div>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15">
               <ClipboardCheck className="h-6 w-6 text-white" />
@@ -153,7 +164,7 @@ export default function Dashboard() {
         )}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-white/70 uppercase tracking-wider">Índice IDEA</p>
+              <p className="text-xs font-semibold text-white/70 uppercase tracking-wider">Seu Índice IDEA de hoje</p>
               <p className="text-5xl font-extrabold text-white tracking-tight mt-0.5">{todayScore}</p>
               <p className="text-sm font-semibold text-white/90 mt-0.5">{getIdeaLabel(ideaStatus!)}</p>
               {yesterdayScore != null && (
@@ -166,12 +177,9 @@ export default function Dashboard() {
               <p className="text-sm text-white font-bold">{todayScore}<span className="text-base text-white/60">/100</span></p>
             </div>
           </div>
-          {/* Today's insight */}
-          {(todayCheckin as any)?.insight_text && (
-            <p className="mt-3 text-xs text-white/75 italic border-t border-white/20 pt-2">
-              "{(todayCheckin as any).insight_text}"
-            </p>
-          )}
+          <p className="mt-3 text-xs text-white/80 border-t border-white/20 pt-2">
+            {ideaDescription}
+          </p>
         </div>
       )}
 
@@ -244,6 +252,9 @@ export default function Dashboard() {
             : <AlertCircle className="h-4 w-4 shrink-0 text-idea-attention mt-0.5" />
           }
           <div>
+            <p className={cn('text-[10px] font-bold uppercase tracking-wider mb-0.5', alert.type === 'ok' ? 'text-idea-stable' : 'text-idea-attention')}>
+              {alert.label}
+            </p>
             <p className={cn('text-sm font-medium', alert.type === 'ok' ? 'text-idea-stable' : 'text-idea-attention')}>
               {alert.message}
             </p>
@@ -254,11 +265,15 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* ── SUCCESS CHECKLIST ── */}
+      <SuccessChecklistCard />
+
       {/* ── CRITICAL ACTION ── */}
       {criticalAction && (
         <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
           <div className="px-4 pt-3 pb-1">
-            <p className="text-[10px] font-bold text-primary uppercase tracking-widest">1 ação crítica agora</p>
+            <p className="text-[10px] font-bold text-primary uppercase tracking-widest">⚡ Ação Crítica de Hoje</p>
+            <p className="text-[10px] text-muted-foreground">Esta é a ação com maior potencial de impacto no seu resultado de hoje.</p>
           </div>
           <div className="flex items-start gap-3 px-4 pb-4 pt-2">
             <button
@@ -277,7 +292,10 @@ export default function Dashboard() {
       {nextActions.length > 0 && (
         <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
           <div className="flex items-center justify-between px-4 pt-4 pb-2">
-            <p className="text-sm font-semibold text-foreground">Próximas ações</p>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Próximas Ações do Dia</p>
+              <p className="text-xs text-muted-foreground">Complete estas ações para otimizar sua operação.</p>
+            </div>
             <Badge variant="secondary" className="text-xs">{nextActions.length}</Badge>
           </div>
           <div className="divide-y divide-border/50">

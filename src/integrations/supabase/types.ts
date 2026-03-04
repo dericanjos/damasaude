@@ -153,6 +153,50 @@ export type Database = {
           },
         ]
       }
+      daily_checklist_answers: {
+        Row: {
+          answers: Json
+          clinic_id: string
+          completed: boolean
+          created_at: string
+          date: string
+          day_of_week: number
+          id: string
+          points_earned: number
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          clinic_id: string
+          completed?: boolean
+          created_at?: string
+          date: string
+          day_of_week: number
+          id?: string
+          points_earned?: number
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          clinic_id?: string
+          completed?: boolean
+          created_at?: string
+          date?: string
+          day_of_week?: number
+          id?: string
+          points_earned?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_checklist_answers_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loss_reasons: {
         Row: {
           clinic_id: string

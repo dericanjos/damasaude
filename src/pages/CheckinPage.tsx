@@ -4,6 +4,7 @@ import { useTodayCheckin, useSaveCheckin } from '@/hooks/useCheckin';
 import { useLastCheckin } from '@/hooks/useCheckin';
 import { useGenerateActions } from '@/hooks/useActions';
 import { useClinic } from '@/hooks/useClinic';
+import { useCheckinStreak } from '@/hooks/useChecklist';
 import { calculateIDEA, generateInsightText, getIdeaStatus, getIdeaLabel, getTopLossSources } from '@/lib/idea';
 import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY } from '@/lib/revenue';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import {
   ClipboardCheck, CheckCircle2, TrendingDown, TrendingUp, ChevronRight,
-  Minus, Plus, Zap
+  Minus, Plus, Zap, Flame
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -48,15 +49,7 @@ const EMPTY_FORM: FormData = {
   notes: '',
 };
 
-function Stepper({
-  value,
-  onChange,
-  label,
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  label: string;
-}) {
+function Stepper({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
   return (
     <div className="space-y-2">
       <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider text-center">{label}</p>
@@ -92,6 +85,7 @@ export default function CheckinPage() {
   const { data: existing } = useTodayCheckin();
   const { data: lastCheckin } = useLastCheckin();
   const { data: clinic } = useClinic();
+  const { data: streak = 0 } = useCheckinStreak();
   const saveCheckin = useSaveCheckin();
   const generateActions = useGenerateActions();
 
@@ -105,7 +99,6 @@ export default function CheckinPage() {
 
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
 
-  // Pre-fill from today's existing checkin or last checkin
   useEffect(() => {
     if (existing) {
       setForm({
@@ -140,7 +133,6 @@ export default function CheckinPage() {
     let submitData = { ...form };
 
     if (quickMode) {
-      // Build from quick toggles, keeping last values for other fields
       submitData = {
         ...form,
         no_show: quickHasNoShow ? (lastCheckin?.no_show || 1) : 0,
@@ -181,6 +173,7 @@ export default function CheckinPage() {
   // ── REWARD SCREEN ──
   if (showReward && reward) {
     const status = getIdeaStatus(reward.score);
+    const newStreak = streak + (existing ? 0 : 1);
     return (
       <div className="mx-auto max-w-lg px-4 py-8 flex flex-col items-center space-y-5 min-h-[80vh] justify-center">
         {/* Big score */}
@@ -191,12 +184,24 @@ export default function CheckinPage() {
           status === 'stable' && 'idea-stable',
         )}>
           <CheckCircle2 className="mx-auto h-9 w-9 text-white/80 mb-2" />
-          <p className="text-xs font-bold text-white/70 uppercase tracking-widest">Check-in salvo</p>
+          <p className="text-xs font-bold text-white/70 uppercase tracking-widest">Diagnóstico do Dia Concluído!</p>
           <p className="text-7xl font-extrabold text-white tracking-tight mt-1">{reward.score}</p>
           <p className="text-base font-semibold text-white/90 mt-1">Performance {getIdeaLabel(status)}</p>
-          {/* Insight text */}
           <p className="text-sm text-white/80 mt-3 font-medium italic">"{reward.insightText}"</p>
         </div>
+
+        {/* Streak */}
+        {newStreak > 1 && (
+          <div className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary/10 border border-primary/20 p-3">
+            <Flame className="h-5 w-5 text-primary" />
+            <p className="text-sm font-semibold text-foreground">
+              Você está há <span className="text-primary font-bold">{newStreak} dias</span> seguidos fazendo o check-in.
+            </p>
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground text-center">
+          Você acaba de transformar dados em inteligência. Consistência é a chave para a previsibilidade.
+        </p>
 
         {/* Top loss sources */}
         {reward.lossSources.length > 0 && (
@@ -259,8 +264,8 @@ export default function CheckinPage() {
           <ClipboardCheck className="h-5 w-5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-bold text-foreground">Check-in Diário</h1>
-          <p className="text-xs text-muted-foreground">Menos de 1 minuto · Clareza total</p>
+          <h1 className="text-lg font-bold text-foreground">Check-in Operacional</h1>
+          <p className="text-xs text-muted-foreground">Dados rápidos para um diagnóstico preciso do seu dia.</p>
         </div>
       </div>
 
@@ -269,7 +274,7 @@ export default function CheckinPage() {
         <div className="flex items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
           <div>
-            <p className="text-sm font-semibold text-foreground">Check-in em 10 segundos</p>
+            <p className="text-sm font-semibold text-foreground">Ativar modo ultra-rápido (10s)</p>
             <p className="text-xs text-muted-foreground">Apenas 3 perguntas</p>
           </div>
         </div>
@@ -278,7 +283,6 @@ export default function CheckinPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {quickMode ? (
-          /* ── QUICK MODE ── */
           <div className="rounded-2xl bg-card border border-border/60 p-5 shadow-card space-y-5">
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Responda rapidamente</p>
 
@@ -307,7 +311,6 @@ export default function CheckinPage() {
             </div>
           </div>
         ) : (
-          /* ── FULL MODE ── */
           <>
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Agenda de hoje</p>
@@ -321,7 +324,6 @@ export default function CheckinPage() {
               </div>
             </div>
 
-            {/* Follow-up toggle */}
             <div className="flex items-center justify-between rounded-2xl bg-card border border-border/60 p-4 shadow-card">
               <div>
                 <p className="text-sm font-semibold text-foreground">Follow-up executado</p>
@@ -333,7 +335,6 @@ export default function CheckinPage() {
               />
             </div>
 
-            {/* Notes */}
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-2">
               <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 Observações (opcional)
