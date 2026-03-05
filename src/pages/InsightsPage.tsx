@@ -1,39 +1,43 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useWeekCheckins } from '@/hooks/useCheckin';
 import { useClinic } from '@/hooks/useClinic';
+import { useGenerateInsight } from '@/hooks/useInsights';
 import { calculateIDEA, type CheckinData } from '@/lib/idea';
 import { formatBRL, formatPercent } from '@/lib/revenue';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
-import { startOfWeek, subWeeks } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { startOfWeek, subWeeks, format } from 'date-fns';
 import {
-  Sparkles, TrendingDown, TrendingUp, Zap, ArrowUpRight, ArrowDownRight,
-  Users, FileText, AlertTriangle, UserPlus
+  Sparkles, TrendingDown, Zap, ArrowUpRight, ArrowDownRight,
+  AlertTriangle, UserPlus, FileText, Wand2, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   ChartContainer, ChartTooltip, ChartTooltipContent,
 } from '@/components/ui/chart';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, Area, AreaChart,
-  ResponsiveContainer, Cell,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, AreaChart, Area,
 } from 'recharts';
 
 const DEFAULT_TICKET = 250;
-
 const WEEKDAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
 
 export default function InsightsPage() {
   const { data: clinic } = useClinic();
   const [simNoShow, setSimNoShow] = useState(50);
   const [simCancel, setSimCancel] = useState(30);
+  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
 
   const thisWeekStart = useMemo(() => startOfWeek(new Date(), { weekStartsOn: 1 }), []);
   const lastWeekStart = useMemo(() => subWeeks(thisWeekStart, 1), [thisWeekStart]);
 
   const { data: thisWeek = [] } = useWeekCheckins(thisWeekStart);
   const { data: lastWeek = [] } = useWeekCheckins(lastWeekStart);
+
+  const { generate, insight: aiInsight, loading: aiLoading, error: aiError } = useGenerateInsight();
 
   const TICKET = (clinic as any)?.ticket_medio ?? DEFAULT_TICKET;
 
@@ -71,7 +75,16 @@ export default function InsightsPage() {
   const hasData = thisWeek.length > 0;
   const noData = thisWeek.length === 0 && lastWeek.length === 0;
 
-  // Mock data for charts when real data exists
+  // Auto-generate AI insight when resumo tab has data
+  const [aiRequested, setAiRequested] = useState(false);
+  useEffect(() => {
+    if (hasData && thisWeek.length >= 2 && !aiRequested && !aiInsight) {
+      setAiRequested(true);
+      generate(thisWeek, 'weekly');
+    }
+  }, [hasData, thisWeek.length]);
+
+  // Chart data
   const revenueCompareData = useMemo(() => {
     if (!hasData) return [];
     return WEEKDAYS.map((day, i) => {
@@ -79,11 +92,7 @@ export default function InsightsPage() {
       const done = checkin?.appointments_done ?? 0;
       const noshow = checkin?.no_show ?? 0;
       const cancel = checkin?.cancellations ?? 0;
-      return {
-        day,
-        recuperada: done * TICKET,
-        perdida: (noshow + cancel) * TICKET,
-      };
+      return { day, recuperada: done * TICKET, perdida: (noshow + cancel) * TICKET };
     });
   }, [thisWeek, TICKET, hasData]);
 
@@ -93,29 +102,26 @@ export default function InsightsPage() {
       const checkin = thisWeek[i];
       const scheduled = checkin?.appointments_scheduled ?? 0;
       const done = checkin?.appointments_done ?? 0;
-      const occ = scheduled > 0 ? Math.round((done / scheduled) * 100) : 0;
-      return { day, ocupacao: occ };
+      return { day, ocupacao: scheduled > 0 ? Math.round((done / scheduled) * 100) : 0 };
     });
   }, [thisWeek, hasData]);
 
   const ideaEvolution = useMemo(() => {
     if (!hasData) return [];
     return WEEKDAYS.map((day, i) => ({
-      day,
-      idea: tw.scores[i] ?? null,
+      day, idea: tw.scores[i] ?? null,
     })).filter(d => d.idea !== null);
   }, [tw.scores, hasData]);
 
-  // Simulador
   const daysWithData = thisWeek.length || 1;
   const weekDays = 5;
+
   const simGain = useMemo(() => {
     const noShowReduction = (tw.totalNoShow / daysWithData) * weekDays * (simNoShow / 100) * TICKET * 4.3;
     const cancelReduction = (tw.totalCancellations / daysWithData) * weekDays * (simCancel / 100) * TICKET * 4.3;
     return noShowReduction + cancelReduction;
   }, [tw.totalNoShow, tw.totalCancellations, simNoShow, simCancel, TICKET, daysWithData]);
 
-  // Forecast area chart
   const forecastData = useMemo(() => {
     if (!hasData) return [];
     const dailyAvg = tw.revenue / daysWithData;
@@ -126,24 +132,13 @@ export default function InsightsPage() {
     }));
   }, [tw.revenue, daysWithData, hasData]);
 
-  // Mock: app average comparison
-  const appAvg = {
-    occupancy: 0.72,
-    noShowRate: 0.12,
-    score: 68,
-  };
-
-  // Mock: patients at risk
+  const appAvg = { occupancy: 0.72, noShowRate: 0.12, score: 68 };
   const patientsAtRisk = hasData ? Math.max(1, Math.round(tw.totalNoShow * 0.6)) : 0;
   const riskValue = patientsAtRisk * TICKET * 3;
 
-  // Mock: new patients
   const newPatientsData = useMemo(() => {
     if (!hasData) return [];
-    return WEEKDAYS.map((day, i) => ({
-      day,
-      novos: thisWeek[i]?.new_appointments ?? 0,
-    }));
+    return WEEKDAYS.map((day, i) => ({ day, novos: thisWeek[i]?.new_appointments ?? 0 }));
   }, [thisWeek, hasData]);
 
   const chartConfig = {
@@ -155,6 +150,20 @@ export default function InsightsPage() {
     projecao: { label: 'Projeção', color: 'hsl(221, 83%, 55%)' },
     novos: { label: 'Novos Pacientes', color: 'hsl(221, 83%, 45%)' },
   };
+
+  // Month options for reports
+  const monthOptions = useMemo(() => {
+    const months = [];
+    const now = new Date();
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        value: format(d, 'yyyy-MM'),
+        label: format(d, 'MMMM yyyy').replace(/^\w/, c => c.toUpperCase()),
+      });
+    }
+    return months;
+  }, []);
 
   return (
     <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
@@ -189,6 +198,35 @@ export default function InsightsPage() {
 
           {/* ── ABA 1: RESUMO SEMANAL ── */}
           <TabsContent value="resumo" className="space-y-4 mt-4">
+            {/* Consultor IA */}
+            <div className="rounded-2xl bg-card border border-primary/30 shadow-card overflow-hidden">
+              <div className="px-4 pt-4 pb-2 flex items-center gap-2">
+                <Wand2 className="h-4 w-4 text-primary" />
+                <p className="text-xs font-bold text-primary uppercase tracking-wider">Análise do seu Consultor IA</p>
+              </div>
+              <div className="px-4 pb-4">
+                {aiLoading ? (
+                  <div className="flex items-center gap-2 py-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Analisando seus dados...</p>
+                  </div>
+                ) : aiError ? (
+                  <div className="py-3">
+                    <p className="text-xs text-muted-foreground">{aiError}</p>
+                    <Button variant="outline" size="sm" className="mt-2 rounded-xl text-xs" onClick={() => generate(thisWeek, 'weekly')}>
+                      Tentar novamente
+                    </Button>
+                  </div>
+                ) : aiInsight ? (
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{aiInsight}</p>
+                ) : (
+                  <div className="py-3">
+                    <p className="text-xs text-muted-foreground">Faça pelo menos 2 check-ins esta semana para desbloquear a análise da IA.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Card 1: Receita Perdida vs Recuperada */}
             <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
               <div className="px-4 pt-4 pb-2">
@@ -247,13 +285,10 @@ export default function InsightsPage() {
                     <span className="text-sm text-foreground">{row.label}</span>
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-muted-foreground">Média: {row.avg}</span>
-                      <span className={cn('text-sm font-bold', row.better ? 'text-revenue-gain' : 'text-revenue-loss')}>
-                        {row.yours}
-                      </span>
+                      <span className={cn('text-sm font-bold', row.better ? 'text-revenue-gain' : 'text-revenue-loss')}>{row.yours}</span>
                       {row.better
                         ? <ArrowUpRight className="h-3.5 w-3.5 text-revenue-gain" />
-                        : <ArrowDownRight className="h-3.5 w-3.5 text-revenue-loss" />
-                      }
+                        : <ArrowDownRight className="h-3.5 w-3.5 text-revenue-loss" />}
                     </div>
                   </div>
                 ))}
@@ -283,7 +318,6 @@ export default function InsightsPage() {
 
           {/* ── ABA 2: ANÁLISE FINANCEIRA ── */}
           <TabsContent value="financeiro" className="space-y-4 mt-4">
-            {/* Previsão de Faturamento */}
             <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
               <div className="px-4 pt-4 pb-2">
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Previsão de Faturamento Mensal</p>
@@ -302,7 +336,6 @@ export default function InsightsPage() {
               </div>
             </div>
 
-            {/* Simulador de Cenários */}
             <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
               <div className="px-4 pt-4 pb-2">
                 <div className="flex items-center gap-2">
@@ -316,14 +349,14 @@ export default function InsightsPage() {
                     <span className="text-sm text-foreground">Reduzir no-show em</span>
                     <span className="text-sm font-bold text-primary">{simNoShow}%</span>
                   </div>
-                  <Slider value={[simNoShow]} onValueChange={(v) => setSimNoShow(v[0])} min={0} max={100} step={10} className="w-full" />
+                  <Slider value={[simNoShow]} onValueChange={(v) => setSimNoShow(v[0])} min={0} max={100} step={10} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-foreground">Reduzir cancelamento em</span>
                     <span className="text-sm font-bold text-primary">{simCancel}%</span>
                   </div>
-                  <Slider value={[simCancel]} onValueChange={(v) => setSimCancel(v[0])} min={0} max={100} step={10} className="w-full" />
+                  <Slider value={[simCancel]} onValueChange={(v) => setSimCancel(v[0])} min={0} max={100} step={10} />
                 </div>
                 <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 text-center">
                   <p className="text-xs text-muted-foreground">Ganho mensal estimado</p>
@@ -333,9 +366,8 @@ export default function InsightsPage() {
             </div>
           </TabsContent>
 
-          {/* ── ABA 3: PACIENTES (placeholder) ── */}
+          {/* ── ABA 3: PACIENTES ── */}
           <TabsContent value="pacientes" className="space-y-4 mt-4">
-            {/* Pacientes em Risco */}
             <div className="rounded-2xl bg-card border border-revenue-loss shadow-card overflow-hidden p-5">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="h-4 w-4 text-revenue-loss" />
@@ -350,7 +382,6 @@ export default function InsightsPage() {
               </p>
             </div>
 
-            {/* Novos Pacientes */}
             <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
               <div className="px-4 pt-4 pb-2">
                 <div className="flex items-center gap-2">
@@ -372,15 +403,38 @@ export default function InsightsPage() {
             </div>
           </TabsContent>
 
-          {/* ── ABA 4: RELATÓRIOS (placeholder) ── */}
+          {/* ── ABA 4: RELATÓRIOS ── */}
           <TabsContent value="relatorios" className="space-y-4 mt-4">
-            <div className="rounded-2xl bg-card border border-border/60 shadow-card py-12 text-center px-6">
-              <FileText className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
-              <p className="text-sm font-semibold text-foreground">Gerador de Relatórios</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Em breve você poderá gerar relatórios mensais em PDF com todos os dados da sua clínica.
-              </p>
-              <Badge variant="secondary" className="mt-3 text-[10px]">Em breve</Badge>
+            <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+              <div className="px-4 pt-4 pb-2">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary" />
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Gerador de Relatório Mensal</p>
+                </div>
+              </div>
+              <div className="px-4 pb-4 space-y-4">
+                <div className="space-y-1.5">
+                  <p className="text-sm text-foreground">Selecione o mês</p>
+                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {monthOptions.map((m) => (
+                        <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button variant="outline" className="w-full rounded-xl" disabled>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Gerar relatório PDF
+                  <Badge variant="secondary" className="ml-2 text-[9px]">Em breve</Badge>
+                </Button>
+                <p className="text-[11px] text-muted-foreground text-center">
+                  O gerador de relatórios em PDF estará disponível em breve com dados consolidados do mês.
+                </p>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
