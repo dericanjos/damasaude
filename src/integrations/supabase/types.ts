@@ -25,6 +25,7 @@ export type Database = {
           ticket_medio: number
           timezone: string
           user_id: string
+          working_days: Json
         }
         Insert: {
           created_at?: string
@@ -36,6 +37,7 @@ export type Database = {
           ticket_medio?: number
           timezone?: string
           user_id: string
+          working_days?: Json
         }
         Update: {
           created_at?: string
@@ -47,6 +49,7 @@ export type Database = {
           ticket_medio?: number
           timezone?: string
           user_id?: string
+          working_days?: Json
         }
         Relationships: []
       }

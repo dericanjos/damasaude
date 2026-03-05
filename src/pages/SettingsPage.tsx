@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Settings, LogOut, CreditCard, ExternalLink } from 'lucide-react';
 
 const statusLabels: Record<string, string> = {
@@ -40,6 +41,7 @@ export default function SettingsPage() {
   const [timezone, setTimezone] = useState('America/Sao_Paulo');
   const [dailyCapacity, setDailyCapacity] = useState(16);
   const [ticketMedio, setTicketMedio] = useState(250);
+  const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
 
   useEffect(() => {
     if (clinic) {
@@ -49,6 +51,7 @@ export default function SettingsPage() {
       setTimezone(clinic.timezone);
       setDailyCapacity((clinic as any).daily_capacity ?? 16);
       setTicketMedio((clinic as any).ticket_medio ?? 250);
+      setWorkingDays((clinic as any).working_days ?? ['seg', 'ter', 'qua', 'qui', 'sex']);
     }
   }, [clinic?.id]);
 
@@ -61,6 +64,7 @@ export default function SettingsPage() {
         timezone,
         daily_capacity: dailyCapacity,
         ticket_medio: ticketMedio,
+        working_days: workingDays,
       });
       toast.success('Configurações salvas!');
     } catch (err: any) {
@@ -192,6 +196,38 @@ export default function SettingsPage() {
                 <SelectItem value="America/Cuiaba">Cuiabá (AMT)</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Working Days */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dias de Atendimento</Label>
+            <div className="flex flex-wrap gap-3">
+              {[
+                { value: 'seg', label: 'Seg' },
+                { value: 'ter', label: 'Ter' },
+                { value: 'qua', label: 'Qua' },
+                { value: 'qui', label: 'Qui' },
+                { value: 'sex', label: 'Sex' },
+                { value: 'sab', label: 'Sáb' },
+              ].map((day) => (
+                <label key={day.value} className="flex items-center gap-1.5 cursor-pointer">
+                  <Checkbox
+                    checked={workingDays.includes(day.value)}
+                    onCheckedChange={(checked) => {
+                      setWorkingDays(prev =>
+                        checked
+                          ? [...prev, day.value]
+                          : prev.filter(d => d !== day.value)
+                      );
+                    }}
+                  />
+                  <span className="text-sm text-foreground">{day.label}</span>
+                </label>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Marque apenas os dias que você atende. O app se adaptará à sua rotina.
+            </p>
           </div>
 
           <Button onClick={handleSave} className="w-full rounded-xl" disabled={updateClinic.isPending}>

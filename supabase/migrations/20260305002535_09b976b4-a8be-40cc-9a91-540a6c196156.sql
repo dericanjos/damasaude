@@ -1,0 +1,1 @@
+ALTER TABLE public.clinics ADD COLUMN working_days jsonb NOT NULL DEFAULT '["seg","ter","qua","qui","sex"]'::jsonb;
