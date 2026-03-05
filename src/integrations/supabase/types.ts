@@ -373,6 +373,41 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_reports: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          id: string
+          report_text: string
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          id?: string
+          report_text: string
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          id?: string
+          report_text?: string
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_reports_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

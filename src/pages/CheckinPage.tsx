@@ -170,7 +170,7 @@ export default function CheckinPage() {
       // Fire micro-insight in background
       generateMicroInsight([submitData], 'micro').then((micro) => {
         if (micro) {
-          toast.info(micro, { duration: 6000, icon: '💡' });
+          toast.success(`Check-in salvo! ✨ Dica do dia: ${micro}`, { duration: 8000 });
         }
       });
     } catch (err: any) {
