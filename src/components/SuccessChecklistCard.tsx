@@ -35,8 +35,7 @@ export default function SuccessChecklistCard() {
     }
   }, [existingAnswer?.id]);
 
-  // Don't show on non-working days
-  if (!isWorkDay) return null;
+  // Show always - even on non-working days, show next day's checklist
   // No checklist available
   if (!checklist) return null;
 

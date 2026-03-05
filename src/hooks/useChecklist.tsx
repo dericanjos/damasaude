@@ -108,7 +108,7 @@ export function useTodayChecklist() {
   if (existingAnswer?.answers?.checklist_id && allChecklists) {
     // Already answered today - find the checklist used
     todayChecklist = allChecklists.find(c => c.id === existingAnswer.answers.checklist_id) || null;
-  } else if (allChecklists && isWorkDay) {
+  } else if (allChecklists) {
     // Pick a random one not done in last 2 weeks, at the right level
     const eligible = allChecklists.filter(c => 
       c.level <= unlockedLevel && 
