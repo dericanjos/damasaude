@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useClinic, useUpdateClinic } from '@/hooks/useClinic';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -10,8 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Settings, LogOut, CreditCard, ExternalLink } from 'lucide-react';
+import { Settings, LogOut, CreditCard, ExternalLink, Minus, Plus, Percent } from 'lucide-react';
 
 const statusLabels: Record<string, string> = {
   testando: 'Período de teste',
@@ -35,6 +34,15 @@ const SPECIALTIES = [
   'Psiquiatria', 'Outra',
 ];
 
+const WEEK_DAYS = [
+  { value: 'seg', label: 'S' },
+  { value: 'ter', label: 'T' },
+  { value: 'qua', label: 'Q' },
+  { value: 'qui', label: 'Q' },
+  { value: 'sex', label: 'S' },
+  { value: 'sab', label: 'S' },
+];
+
 export default function SettingsPage() {
   const { signOut } = useAuth();
   const { data: clinic } = useClinic();
@@ -42,38 +50,65 @@ export default function SettingsPage() {
   const { subscriptionStatus, subscriptionEnd } = useSubscription();
   const [portalLoading, setPortalLoading] = useState(false);
 
+  // Profile fields
   const [name, setName] = useState('');
   const [doctorName, setDoctorName] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [hasSecretary, setHasSecretary] = useState(false);
-  const [numDoctors, setNumDoctors] = useState(1);
-  const [paymentType, setPaymentType] = useState('ambos');
+
+  // Operation fields
+  const [ticketMedio, setTicketMedio] = useState(250);
+  const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
+  const [dailyCapacity, setDailyCapacity] = useState(16);
+
+  // Performance goals
   const [fillRate, setFillRate] = useState(85);
   const [noshowRate, setNoshowRate] = useState(5);
-  const [timezone, setTimezone] = useState('America/Sao_Paulo');
-  const [dailyCapacity, setDailyCapacity] = useState(16);
-  const [ticketMedio, setTicketMedio] = useState(250);
-  const [monthlyTarget, setMonthlyTarget] = useState<number | ''>('');
-  const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
+
+  // Track initial values for dirty detection
+  const [initial, setInitial] = useState<Record<string, any> | null>(null);
 
   useEffect(() => {
     if (clinic) {
       const c = clinic as any;
-      setName(c.name);
-      setDoctorName(c.doctor_name || '');
-      setSpecialty(c.specialty || '');
-      setHasSecretary(c.has_secretary ?? false);
-      setNumDoctors(c.num_doctors ?? 1);
-      setPaymentType(c.payment_type ?? 'ambos');
-      setFillRate(Math.round(Number(c.target_fill_rate) * 100));
-      setNoshowRate(Math.round(Number(c.target_noshow_rate) * 100));
-      setTimezone(c.timezone);
-      setDailyCapacity(c.daily_capacity ?? 16);
-      setTicketMedio(c.ticket_medio ?? 250);
-      setMonthlyTarget(c.monthly_revenue_target ?? '');
-      setWorkingDays(c.working_days ?? ['seg', 'ter', 'qua', 'qui', 'sex']);
+      const vals = {
+        name: c.name || '',
+        doctorName: c.doctor_name || '',
+        specialty: c.specialty || '',
+        hasSecretary: c.has_secretary ?? false,
+        ticketMedio: c.ticket_medio ?? 250,
+        workingDays: c.working_days ?? ['seg', 'ter', 'qua', 'qui', 'sex'],
+        dailyCapacity: c.daily_capacity ?? 16,
+        fillRate: Math.round(Number(c.target_fill_rate) * 100),
+        noshowRate: Math.round(Number(c.target_noshow_rate) * 100),
+      };
+      setName(vals.name);
+      setDoctorName(vals.doctorName);
+      setSpecialty(vals.specialty);
+      setHasSecretary(vals.hasSecretary);
+      setTicketMedio(vals.ticketMedio);
+      setWorkingDays(vals.workingDays);
+      setDailyCapacity(vals.dailyCapacity);
+      setFillRate(vals.fillRate);
+      setNoshowRate(vals.noshowRate);
+      setInitial(vals);
     }
   }, [clinic?.id]);
+
+  const isDirty = useMemo(() => {
+    if (!initial) return false;
+    return (
+      name !== initial.name ||
+      doctorName !== initial.doctorName ||
+      specialty !== initial.specialty ||
+      hasSecretary !== initial.hasSecretary ||
+      ticketMedio !== initial.ticketMedio ||
+      JSON.stringify(workingDays.sort()) !== JSON.stringify([...initial.workingDays].sort()) ||
+      dailyCapacity !== initial.dailyCapacity ||
+      fillRate !== initial.fillRate ||
+      noshowRate !== initial.noshowRate
+    );
+  }, [initial, name, doctorName, specialty, hasSecretary, ticketMedio, workingDays, dailyCapacity, fillRate, noshowRate]);
 
   const handleSave = async () => {
     try {
@@ -82,17 +117,17 @@ export default function SettingsPage() {
         doctor_name: doctorName,
         specialty,
         has_secretary: hasSecretary,
-        num_doctors: numDoctors,
-        payment_type: paymentType,
+        ticket_medio: ticketMedio,
+        working_days: workingDays,
+        daily_capacity: dailyCapacity,
         target_fill_rate: fillRate / 100,
         target_noshow_rate: noshowRate / 100,
-        timezone,
-        daily_capacity: dailyCapacity,
-        ticket_medio: ticketMedio,
-        monthly_revenue_target: monthlyTarget || null,
-        working_days: workingDays,
       } as any);
-      toast.success('Configurações salvas!');
+      setInitial({
+        name, doctorName, specialty, hasSecretary,
+        ticketMedio, workingDays: [...workingDays], dailyCapacity, fillRate, noshowRate,
+      });
+      toast.success('Configurações salvas com sucesso!');
     } catch (err: any) {
       toast.error(err.message || 'Erro ao salvar');
     }
@@ -109,6 +144,12 @@ export default function SettingsPage() {
     } finally {
       setPortalLoading(false);
     }
+  };
+
+  const toggleDay = (day: string) => {
+    setWorkingDays(prev =>
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
   };
 
   return (
@@ -150,10 +191,10 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Doctor info */}
+      {/* Card 1: Perfil Básico */}
       <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
         <div className="px-4 pt-4 pb-2">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Médico</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Perfil Básico</p>
         </div>
         <div className="px-4 pb-4 space-y-4">
           <div className="space-y-1.5">
@@ -169,114 +210,159 @@ export default function SettingsPage() {
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome da clínica</Label>
+            <Input value={name} onChange={e => setName(e.target.value)} className="rounded-xl" />
+          </div>
           <div className="flex items-center justify-between rounded-xl border border-border p-3">
-            <div>
-              <p className="text-sm font-medium text-foreground">Tem secretária?</p>
-            </div>
+            <p className="text-sm font-medium text-foreground">Tem secretária?</p>
             <Switch checked={hasSecretary} onCheckedChange={setHasSecretary} />
           </div>
         </div>
       </div>
 
-      {/* Clinic settings */}
+      {/* Card 2: Operação da Clínica */}
       <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
         <div className="px-4 pt-4 pb-2">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Clínica</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Operação da Clínica</p>
         </div>
-        <div className="px-4 pb-4 space-y-4">
+        <div className="px-4 pb-4 space-y-5">
+          {/* Ticket Médio */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome da clínica</Label>
-            <Input value={name} onChange={e => setName(e.target.value)} className="rounded-xl" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quantidade de médicos</Label>
-            <Input type="number" min={1} value={numDoctors} onChange={e => setNumDoctors(Number(e.target.value))} className="rounded-xl" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Atende por</Label>
-            <Select value={paymentType} onValueChange={setPaymentType}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="convenio">Convênio</SelectItem>
-                <SelectItem value="particular">Particular</SelectItem>
-                <SelectItem value="ambos">Ambos</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Capacidade diária (consultas/dia)</Label>
-            <Input type="number" min={1} max={100} value={dailyCapacity} onChange={e => setDailyCapacity(Number(e.target.value))} className="rounded-xl" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket médio por consulta (R$)</Label>
-            <Input type="number" min={1} value={ticketMedio} onChange={e => setTicketMedio(Number(e.target.value))} className="rounded-xl" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta ocupação (%)</Label>
-              <Input type="number" min={0} max={100} value={fillRate} onChange={e => setFillRate(Number(e.target.value))} className="rounded-xl" />
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Qual o seu ticket médio por consulta?
+            </Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
+              <Input
+                type="number"
+                min={1}
+                value={ticketMedio}
+                onChange={e => setTicketMedio(Number(e.target.value))}
+                className="rounded-xl pl-10"
+              />
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta no-show (%)</Label>
-              <Input type="number" min={0} max={100} value={noshowRate} onChange={e => setNoshowRate(Number(e.target.value))} className="rounded-xl" />
-            </div>
+            <p className="text-[11px] text-muted-foreground">Esse valor é a base para calcular sua receita e perdas.</p>
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta de faturamento mensal (R$)</Label>
-            <Input
-              type="number"
-              min={0}
-              value={monthlyTarget}
-              onChange={e => setMonthlyTarget(e.target.value ? Number(e.target.value) : '')}
-              placeholder="Opcional"
-              className="rounded-xl"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fuso horário</Label>
-            <Select value={timezone} onValueChange={setTimezone}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="America/Sao_Paulo">São Paulo (BRT)</SelectItem>
-                <SelectItem value="America/Manaus">Manaus (AMT)</SelectItem>
-                <SelectItem value="America/Recife">Recife (BRT)</SelectItem>
-                <SelectItem value="America/Belem">Belém (BRT)</SelectItem>
-                <SelectItem value="America/Cuiaba">Cuiabá (AMT)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+
+          {/* Dias de Atendimento */}
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dias de Atendimento</Label>
-            <div className="flex flex-wrap gap-3">
-              {[
-                { value: 'seg', label: 'Seg' },
-                { value: 'ter', label: 'Ter' },
-                { value: 'qua', label: 'Qua' },
-                { value: 'qui', label: 'Qui' },
-                { value: 'sex', label: 'Sex' },
-                { value: 'sab', label: 'Sáb' },
-              ].map(day => (
-                <label key={day.value} className="flex items-center gap-1.5 cursor-pointer">
-                  <Checkbox
-                    checked={workingDays.includes(day.value)}
-                    onCheckedChange={(checked) => {
-                      setWorkingDays(prev =>
-                        checked ? [...prev, day.value] : prev.filter(d => d !== day.value)
-                      );
-                    }}
-                  />
-                  <span className="text-sm text-foreground">{day.label}</span>
-                </label>
-              ))}
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Quais dias você atende?
+            </Label>
+            <div className="flex gap-2">
+              {WEEK_DAYS.map((day, i) => {
+                const active = workingDays.includes(day.value);
+                return (
+                  <button
+                    key={day.value}
+                    type="button"
+                    onClick={() => toggleDay(day.value)}
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-semibold transition-colors ${
+                      active
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                    }`}
+                    title={['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][i]}
+                  >
+                    {day.label}
+                  </button>
+                );
+              })}
             </div>
-            <p className="text-[11px] text-muted-foreground">Marque apenas os dias que você atende.</p>
+            <p className="text-[11px] text-muted-foreground">Isso define os dias do seu checklist e o cálculo de consistência.</p>
           </div>
-          <Button onClick={handleSave} className="w-full rounded-xl" disabled={updateClinic.isPending}>
-            Salvar configurações
-          </Button>
+
+          {/* Capacidade Diária */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Qual a sua capacidade máxima de atendimentos por dia?
+            </Label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setDailyCapacity(Math.max(1, dailyCapacity - 1))}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <Input
+                type="number"
+                min={1}
+                max={100}
+                value={dailyCapacity}
+                onChange={e => setDailyCapacity(Math.max(1, Number(e.target.value)))}
+                className="rounded-xl text-center"
+              />
+              <button
+                type="button"
+                onClick={() => setDailyCapacity(Math.min(100, dailyCapacity + 1))}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">Usado para calcular sua taxa de ocupação.</p>
+          </div>
         </div>
       </div>
 
+      {/* Card 3: Metas de Performance */}
+      <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+        <div className="px-4 pt-4 pb-2">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Metas de Performance</p>
+        </div>
+        <div className="px-4 pb-4 space-y-5">
+          {/* Meta de Ocupação */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Meta de Ocupação da Agenda
+            </Label>
+            <div className="relative">
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={fillRate}
+                onChange={e => setFillRate(Math.min(100, Math.max(0, Number(e.target.value))))}
+                className="rounded-xl pr-10"
+              />
+              <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            </div>
+            <p className="text-[11px] text-muted-foreground">Recomendado: 85%. O sistema usará essa meta para gerar alertas.</p>
+          </div>
+
+          {/* Meta de No-show */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Meta de Taxa de No-show
+            </Label>
+            <div className="relative">
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={noshowRate}
+                onChange={e => setNoshowRate(Math.min(100, Math.max(0, Number(e.target.value))))}
+                className="rounded-xl pr-10"
+              />
+              <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            </div>
+            <p className="text-[11px] text-muted-foreground">Recomendado: abaixo de 5%.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Save Button */}
+      <Button
+        onClick={handleSave}
+        className="w-full rounded-xl"
+        disabled={!isDirty || updateClinic.isPending}
+      >
+        {updateClinic.isPending ? 'Salvando...' : 'Salvar Alterações'}
+      </Button>
+
+      {/* Logout */}
       <Button
         variant="outline"
         className="w-full rounded-xl border-destructive/30 text-destructive hover:bg-destructive/5"
