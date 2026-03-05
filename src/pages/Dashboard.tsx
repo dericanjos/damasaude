@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 import { useTodayCheckin, useYesterdayCheckin } from '@/hooks/useCheckin';
@@ -8,10 +9,11 @@ import { calculateIDEA, getIdeaStatus, getIdeaLabel, type CheckinData } from '@/
 import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET } from '@/lib/revenue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import SuccessChecklistCard from '@/components/SuccessChecklistCard';
 import {
   TrendingDown, TrendingUp, AlertCircle, CheckCircle2,
-  ClipboardCheck, ArrowRight, Bell
+  ClipboardCheck, ArrowRight, Bell, HelpCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -177,9 +179,25 @@ export default function Dashboard() {
         )}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-white/70 uppercase tracking-wider">Seu Índice IDEA de hoje</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-semibold text-white/70 uppercase tracking-wider">Seu Índice IDEA de hoje</p>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="text-white/50 hover:text-white/80 transition-colors">
+                      <HelpCircle className="h-3.5 w-3.5" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 text-sm" side="bottom">
+                    <p className="font-semibold mb-1">O que é o Índice IDEA?</p>
+                    <p className="text-muted-foreground text-xs leading-relaxed">
+                      O IDEA mede a eficiência da sua agenda com base em ocupação, no-shows e cancelamentos. Score acima de 70 = agenda saudável. Quanto maior, menos receita você está perdendo.
+                    </p>
+                  </PopoverContent>
+                </Popover>
+              </div>
               <p className="text-5xl font-extrabold text-white tracking-tight mt-0.5">{todayScore}</p>
               <p className="text-sm font-semibold text-white/90 mt-0.5">{getIdeaLabel(ideaStatus!)}</p>
+              <p className="text-[11px] text-white/60 mt-0.5">Quanto maior, mais eficiente sua agenda</p>
               {yesterdayScore != null && (
                 <p className="text-xs text-white/65 mt-1">
                   {todayScore - yesterdayScore > 0 ? `+${todayScore - yesterdayScore}` : todayScore - yesterdayScore} vs ontem
