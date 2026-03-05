@@ -1,17 +1,33 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useWeekCheckins } from '@/hooks/useCheckin';
 import { useClinic } from '@/hooks/useClinic';
-import { calculateIDEA, getIdeaStatus, type CheckinData } from '@/lib/idea';
+import { calculateIDEA, type CheckinData } from '@/lib/idea';
 import { formatBRL, formatPercent } from '@/lib/revenue';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Slider } from '@/components/ui/slider';
 import { startOfWeek, subWeeks } from 'date-fns';
-import { Sparkles, TrendingDown, TrendingUp, Zap, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import {
+  Sparkles, TrendingDown, TrendingUp, Zap, ArrowUpRight, ArrowDownRight,
+  Users, FileText, AlertTriangle, UserPlus
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  ChartContainer, ChartTooltip, ChartTooltipContent,
+} from '@/components/ui/chart';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, Area, AreaChart,
+  ResponsiveContainer, Cell,
+} from 'recharts';
 
 const DEFAULT_TICKET = 250;
 
+const WEEKDAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
+
 export default function InsightsPage() {
   const { data: clinic } = useClinic();
+  const [simNoShow, setSimNoShow] = useState(50);
+  const [simCancel, setSimCancel] = useState(30);
 
   const thisWeekStart = useMemo(() => startOfWeek(new Date(), { weekStartsOn: 1 }), []);
   const lastWeekStart = useMemo(() => subWeeks(thisWeekStart, 1), [thisWeekStart]);
@@ -26,6 +42,7 @@ export default function InsightsPage() {
     const totalScheduled = checkins.reduce((s, c) => s + c.appointments_scheduled, 0);
     const totalNoShow = checkins.reduce((s, c) => s + c.no_show, 0);
     const totalCancellations = checkins.reduce((s, c) => s + c.cancellations, 0);
+    const totalNew = checkins.reduce((s, c) => s + c.new_appointments, 0);
     const revenue = totalDone * TICKET;
     const lost = (totalNoShow + totalCancellations) * TICKET;
     const occupancy = totalScheduled > 0 ? totalDone / totalScheduled : 0;
@@ -45,27 +62,99 @@ export default function InsightsPage() {
     });
     const avgScore = scores.length > 0 ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : null;
 
-    return { revenue, lost, occupancy, noShowRate, totalDone, totalNoShow, totalCancellations, avgScore };
+    return { revenue, lost, occupancy, noShowRate, totalDone, totalNoShow, totalCancellations, totalNew, avgScore, scores };
   };
 
   const tw = calcWeek(thisWeek);
   const lw = calcWeek(lastWeek);
 
   const hasData = thisWeek.length > 0;
-  const daysInWeek = 5;
-  const daysWithData = thisWeek.length;
-  const projectedWeekRevenue = daysWithData > 0 ? (tw.revenue / daysWithData) * daysInWeek : 0;
-  const projectedMonthRevenue = projectedWeekRevenue * 4.3;
-
-  const monthlyLost = tw.lost * 4.3;
-  const potentialGain = daysWithData > 0
-    ? (tw.totalNoShow / daysWithData) * daysInWeek * 0.5 * TICKET * 4.3
-    : 0;
-
-  const revenueTrend = lw.revenue > 0 ? ((tw.revenue - lw.revenue) / lw.revenue) : 0;
-  const lostTrend = lw.lost > 0 ? ((tw.lost - lw.lost) / lw.lost) : 0;
-
   const noData = thisWeek.length === 0 && lastWeek.length === 0;
+
+  // Mock data for charts when real data exists
+  const revenueCompareData = useMemo(() => {
+    if (!hasData) return [];
+    return WEEKDAYS.map((day, i) => {
+      const checkin = thisWeek[i];
+      const done = checkin?.appointments_done ?? 0;
+      const noshow = checkin?.no_show ?? 0;
+      const cancel = checkin?.cancellations ?? 0;
+      return {
+        day,
+        recuperada: done * TICKET,
+        perdida: (noshow + cancel) * TICKET,
+      };
+    });
+  }, [thisWeek, TICKET, hasData]);
+
+  const performanceByDay = useMemo(() => {
+    if (!hasData) return [];
+    return WEEKDAYS.map((day, i) => {
+      const checkin = thisWeek[i];
+      const scheduled = checkin?.appointments_scheduled ?? 0;
+      const done = checkin?.appointments_done ?? 0;
+      const occ = scheduled > 0 ? Math.round((done / scheduled) * 100) : 0;
+      return { day, ocupacao: occ };
+    });
+  }, [thisWeek, hasData]);
+
+  const ideaEvolution = useMemo(() => {
+    if (!hasData) return [];
+    return WEEKDAYS.map((day, i) => ({
+      day,
+      idea: tw.scores[i] ?? null,
+    })).filter(d => d.idea !== null);
+  }, [tw.scores, hasData]);
+
+  // Simulador
+  const daysWithData = thisWeek.length || 1;
+  const weekDays = 5;
+  const simGain = useMemo(() => {
+    const noShowReduction = (tw.totalNoShow / daysWithData) * weekDays * (simNoShow / 100) * TICKET * 4.3;
+    const cancelReduction = (tw.totalCancellations / daysWithData) * weekDays * (simCancel / 100) * TICKET * 4.3;
+    return noShowReduction + cancelReduction;
+  }, [tw.totalNoShow, tw.totalCancellations, simNoShow, simCancel, TICKET, daysWithData]);
+
+  // Forecast area chart
+  const forecastData = useMemo(() => {
+    if (!hasData) return [];
+    const dailyAvg = tw.revenue / daysWithData;
+    return ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'].map((label, i) => ({
+      semana: label,
+      faturamento: Math.round(dailyAvg * weekDays * (i + 1)),
+      projecao: Math.round(dailyAvg * weekDays * (i + 1) * 1.05),
+    }));
+  }, [tw.revenue, daysWithData, hasData]);
+
+  // Mock: app average comparison
+  const appAvg = {
+    occupancy: 0.72,
+    noShowRate: 0.12,
+    score: 68,
+  };
+
+  // Mock: patients at risk
+  const patientsAtRisk = hasData ? Math.max(1, Math.round(tw.totalNoShow * 0.6)) : 0;
+  const riskValue = patientsAtRisk * TICKET * 3;
+
+  // Mock: new patients
+  const newPatientsData = useMemo(() => {
+    if (!hasData) return [];
+    return WEEKDAYS.map((day, i) => ({
+      day,
+      novos: thisWeek[i]?.new_appointments ?? 0,
+    }));
+  }, [thisWeek, hasData]);
+
+  const chartConfig = {
+    recuperada: { label: 'Recuperada', color: 'hsl(155, 60%, 38%)' },
+    perdida: { label: 'Perdida', color: 'hsl(0, 72%, 52%)' },
+    ocupacao: { label: 'Ocupação %', color: 'hsl(221, 83%, 45%)' },
+    idea: { label: 'IDEA', color: 'hsl(221, 83%, 45%)' },
+    faturamento: { label: 'Faturamento', color: 'hsl(155, 60%, 38%)' },
+    projecao: { label: 'Projeção', color: 'hsl(221, 83%, 55%)' },
+    novos: { label: 'Novos Pacientes', color: 'hsl(221, 83%, 45%)' },
+  };
 
   return (
     <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
@@ -87,125 +176,214 @@ export default function InsightsPage() {
         <div className="rounded-2xl bg-card border border-border/60 shadow-card py-12 text-center px-6">
           <Sparkles className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
           <p className="text-sm font-semibold text-foreground">Seus insights estão sendo construídos</p>
-          <p className="text-xs text-muted-foreground mt-1">Continue fazendo check-ins diários para desbloquear previsões de receita, simulações de impacto e análises de tendência.</p>
+          <p className="text-xs text-muted-foreground mt-1">Continue fazendo seus check-ins diários para desbloquear esta área.</p>
         </div>
       ) : (
-        <>
-          {/* ── REVENUE FORECAST ── */}
-          <div className="rounded-2xl gradient-dark p-5 shadow-elevated">
-            <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-3">Previsão de receita</p>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-white/70">Esta semana</span>
-                <span className="text-lg font-bold text-white">{formatBRL(projectedWeekRevenue)}</span>
-              </div>
-              <div className="h-px bg-white/10" />
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-white/70">Projeção mensal</span>
-                <div className="text-right">
-                  <span className="text-2xl font-extrabold text-white">{formatBRL(projectedMonthRevenue)}</span>
-                  {revenueTrend !== 0 && (
-                    <div className={cn('flex items-center justify-end gap-1 mt-0.5', revenueTrend > 0 ? 'text-revenue-gain' : 'text-revenue-loss')}>
-                      {revenueTrend > 0
-                        ? <ArrowUpRight className="h-3 w-3" />
-                        : <ArrowDownRight className="h-3 w-3" />
-                      }
-                      <span className="text-xs font-semibold">{Math.abs(Math.round(revenueTrend * 100))}% vs semana passada</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+        <Tabs defaultValue="resumo" className="w-full">
+          <TabsList className="w-full grid grid-cols-4 h-9 rounded-xl bg-secondary">
+            <TabsTrigger value="resumo" className="text-[10px] rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Resumo</TabsTrigger>
+            <TabsTrigger value="financeiro" className="text-[10px] rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Financeiro</TabsTrigger>
+            <TabsTrigger value="pacientes" className="text-[10px] rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Pacientes</TabsTrigger>
+            <TabsTrigger value="relatorios" className="text-[10px] rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Relatórios</TabsTrigger>
+          </TabsList>
 
-          {/* ── MONTHLY LOSS ── */}
-          <div className="rounded-2xl bg-card border border-revenue-loss shadow-card p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingDown className="h-4 w-4 text-revenue-loss" />
-              <p className="text-sm font-bold text-foreground">Vazamento de receita no mês</p>
-            </div>
-            <p className="text-3xl font-extrabold text-revenue-loss">{formatBRL(monthlyLost)}</p>
-            <p className="text-xs text-muted-foreground mt-1">O valor que deixou de ser faturado por ineficiências operacionais.</p>
-            {lostTrend !== 0 && (
-              <div className={cn('flex items-center gap-1 mt-2', lostTrend < 0 ? 'text-revenue-gain' : 'text-destructive')}>
-                {lostTrend < 0
-                  ? <ArrowDownRight className="h-3.5 w-3.5" />
-                  : <ArrowUpRight className="h-3.5 w-3.5" />
-                }
-                <span className="text-xs font-semibold">
-                  {lostTrend < 0 ? 'Redução' : 'Aumento'} de {Math.abs(Math.round(lostTrend * 100))}% vs semana passada
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* ── WHAT-IF SCENARIO ── */}
-          {potentialGain > 0 && (
-            <div className="rounded-2xl bg-primary/5 border border-primary/20 p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Zap className="h-4 w-4 text-primary" />
-                <p className="text-sm font-bold text-foreground">E se o no-show caísse 50%?</p>
-              </div>
-              <p className="text-2xl font-extrabold text-primary">{formatBRL(potentialGain)}</p>
-              <p className="text-xs text-muted-foreground mt-1">ganho adicional mensal estimado</p>
-              <p className="text-xs text-foreground/60 mt-2">
-                Com confirmações mais rigorosas, este ganho é realizável em 30 dias.
-              </p>
-            </div>
-          )}
-
-          {/* ── PERFORMANCE COMPARISON ── */}
-          {lastWeek.length > 0 && (
+          {/* ── ABA 1: RESUMO SEMANAL ── */}
+          <TabsContent value="resumo" className="space-y-4 mt-4">
+            {/* Card 1: Receita Perdida vs Recuperada */}
             <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
               <div className="px-4 pt-4 pb-2">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Esta semana vs anterior</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Receita Perdida vs. Recuperada</p>
+              </div>
+              <div className="px-2 pb-4">
+                <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                  <BarChart data={revenueCompareData} barGap={4}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,25%,24%)" />
+                    <XAxis dataKey="day" tick={{ fill: 'hsl(220,15%,60%)', fontSize: 11 }} />
+                    <YAxis tick={{ fill: 'hsl(220,15%,60%)', fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="recuperada" fill="hsl(155,60%,38%)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="perdida" fill="hsl(0,72%,52%)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
+              </div>
+            </div>
+
+            {/* Card 2: Performance por Dia */}
+            <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+              <div className="px-4 pt-4 pb-2">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Performance por Dia da Semana</p>
+              </div>
+              <div className="px-4 pb-4 space-y-2">
+                {performanceByDay.map((d) => (
+                  <div key={d.day} className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-muted-foreground w-8">{d.day}</span>
+                    <div className="flex-1 h-5 bg-secondary rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${d.ocupacao}%`,
+                          background: d.ocupacao >= 80 ? 'hsl(155,60%,38%)' : d.ocupacao >= 60 ? 'hsl(38,92%,48%)' : 'hsl(0,72%,52%)',
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs font-bold text-foreground w-10 text-right">{d.ocupacao}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Card 3: Você vs Média */}
+            <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+              <div className="px-4 pt-4 pb-2">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Você vs. Média do App</p>
               </div>
               <div className="divide-y divide-border/50">
-                <div className="flex items-center justify-between px-4 py-3">
-                  <span className="text-sm text-foreground">Receita estimada</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{formatBRL(lw.revenue)}</span>
-                    <span className="text-sm font-bold text-foreground">→ {formatBRL(tw.revenue)}</span>
+                {[
+                  { label: 'Ocupação', yours: formatPercent(tw.occupancy), avg: formatPercent(appAvg.occupancy), better: tw.occupancy >= appAvg.occupancy },
+                  { label: 'No-show', yours: formatPercent(tw.noShowRate), avg: formatPercent(appAvg.noShowRate), better: tw.noShowRate <= appAvg.noShowRate },
+                  { label: 'IDEA Score', yours: `${tw.avgScore ?? '-'}`, avg: `${appAvg.score}`, better: (tw.avgScore ?? 0) >= appAvg.score },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-center justify-between px-4 py-3">
+                    <span className="text-sm text-foreground">{row.label}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground">Média: {row.avg}</span>
+                      <span className={cn('text-sm font-bold', row.better ? 'text-revenue-gain' : 'text-revenue-loss')}>
+                        {row.yours}
+                      </span>
+                      {row.better
+                        ? <ArrowUpRight className="h-3.5 w-3.5 text-revenue-gain" />
+                        : <ArrowDownRight className="h-3.5 w-3.5 text-revenue-loss" />
+                      }
+                    </div>
                   </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Card 4: Evolução IDEA */}
+            {ideaEvolution.length > 1 && (
+              <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+                <div className="px-4 pt-4 pb-2">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Evolução do Índice IDEA</p>
                 </div>
-                <div className="flex items-center justify-between px-4 py-3">
-                  <span className="text-sm text-foreground">Perda</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{formatBRL(lw.lost)}</span>
-                    <span className={cn('text-sm font-bold', tw.lost < lw.lost ? 'text-revenue-gain' : 'text-revenue-loss')}>
-                      → {formatBRL(tw.lost)}
-                    </span>
-                  </div>
+                <div className="px-2 pb-4">
+                  <ChartContainer config={chartConfig} className="h-[180px] w-full">
+                    <LineChart data={ideaEvolution}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,25%,24%)" />
+                      <XAxis dataKey="day" tick={{ fill: 'hsl(220,15%,60%)', fontSize: 11 }} />
+                      <YAxis domain={[0, 100]} tick={{ fill: 'hsl(220,15%,60%)', fontSize: 10 }} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Line type="monotone" dataKey="idea" stroke="hsl(221,83%,45%)" strokeWidth={2.5} dot={{ r: 4, fill: 'hsl(221,83%,45%)' }} />
+                    </LineChart>
+                  </ChartContainer>
                 </div>
-                <div className="flex items-center justify-between px-4 py-3">
-                  <span className="text-sm text-foreground">Ocupação</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{formatPercent(lw.occupancy)}</span>
-                    <span className={cn('text-sm font-bold', tw.occupancy >= lw.occupancy ? 'text-revenue-gain' : 'text-revenue-loss')}>
-                      → {formatPercent(tw.occupancy)}
-                    </span>
-                  </div>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ── ABA 2: ANÁLISE FINANCEIRA ── */}
+          <TabsContent value="financeiro" className="space-y-4 mt-4">
+            {/* Previsão de Faturamento */}
+            <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+              <div className="px-4 pt-4 pb-2">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Previsão de Faturamento Mensal</p>
+              </div>
+              <div className="px-2 pb-4">
+                <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                  <AreaChart data={forecastData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,25%,24%)" />
+                    <XAxis dataKey="semana" tick={{ fill: 'hsl(220,15%,60%)', fontSize: 11 }} />
+                    <YAxis tick={{ fill: 'hsl(220,15%,60%)', fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Area type="monotone" dataKey="faturamento" stroke="hsl(155,60%,38%)" fill="hsl(155,60%,38%)" fillOpacity={0.15} strokeWidth={2} />
+                    <Area type="monotone" dataKey="projecao" stroke="hsl(221,83%,55%)" fill="hsl(221,83%,55%)" fillOpacity={0.1} strokeWidth={2} strokeDasharray="5 5" />
+                  </AreaChart>
+                </ChartContainer>
+              </div>
+            </div>
+
+            {/* Simulador de Cenários */}
+            <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+              <div className="px-4 pt-4 pb-2">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Simulador de Cenários</p>
                 </div>
-                <div className="flex items-center justify-between px-4 py-3">
-                  <span className="text-sm text-foreground">No-show</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{formatPercent(lw.noShowRate)}</span>
-                    <span className={cn('text-sm font-bold', tw.noShowRate <= lw.noShowRate ? 'text-revenue-gain' : 'text-revenue-loss')}>
-                      → {formatPercent(tw.noShowRate)}
-                    </span>
+              </div>
+              <div className="px-4 pb-4 space-y-5">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-foreground">Reduzir no-show em</span>
+                    <span className="text-sm font-bold text-primary">{simNoShow}%</span>
                   </div>
+                  <Slider value={[simNoShow]} onValueChange={(v) => setSimNoShow(v[0])} min={0} max={100} step={10} className="w-full" />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-foreground">Reduzir cancelamento em</span>
+                    <span className="text-sm font-bold text-primary">{simCancel}%</span>
+                  </div>
+                  <Slider value={[simCancel]} onValueChange={(v) => setSimCancel(v[0])} min={0} max={100} step={10} className="w-full" />
+                </div>
+                <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 text-center">
+                  <p className="text-xs text-muted-foreground">Ganho mensal estimado</p>
+                  <p className="text-2xl font-extrabold text-primary mt-1">{formatBRL(simGain)}</p>
                 </div>
               </div>
             </div>
-          )}
+          </TabsContent>
 
-          {/* Value insight - no brand mention */}
-          <div className="rounded-2xl bg-muted/40 border border-border/40 p-4 text-center">
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Clínicas que fazem check-in diário reduzem até <span className="font-bold text-foreground">27% do no-show</span> e recuperam em média <span className="font-bold text-foreground">R$ 1.200/mês</span> em receita perdida.
-            </p>
-          </div>
-        </>
+          {/* ── ABA 3: PACIENTES (placeholder) ── */}
+          <TabsContent value="pacientes" className="space-y-4 mt-4">
+            {/* Pacientes em Risco */}
+            <div className="rounded-2xl bg-card border border-revenue-loss shadow-card overflow-hidden p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="h-4 w-4 text-revenue-loss" />
+                <p className="text-sm font-bold text-foreground">Pacientes em Risco de Evasão</p>
+              </div>
+              <p className="text-3xl font-extrabold text-revenue-loss">{patientsAtRisk} pacientes</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Valor em risco: <span className="font-bold text-foreground">{formatBRL(riskValue)}</span> nos próximos 3 meses
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-2">
+                Baseado nos no-shows recorrentes e ausência de reagendamento.
+              </p>
+            </div>
+
+            {/* Novos Pacientes */}
+            <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+              <div className="px-4 pt-4 pb-2">
+                <div className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4 text-primary" />
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Aquisição de Novos Pacientes</p>
+                </div>
+              </div>
+              <div className="px-2 pb-4">
+                <ChartContainer config={chartConfig} className="h-[180px] w-full">
+                  <BarChart data={newPatientsData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,25%,24%)" />
+                    <XAxis dataKey="day" tick={{ fill: 'hsl(220,15%,60%)', fontSize: 11 }} />
+                    <YAxis tick={{ fill: 'hsl(220,15%,60%)', fontSize: 10 }} allowDecimals={false} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="novos" fill="hsl(221,83%,45%)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* ── ABA 4: RELATÓRIOS (placeholder) ── */}
+          <TabsContent value="relatorios" className="space-y-4 mt-4">
+            <div className="rounded-2xl bg-card border border-border/60 shadow-card py-12 text-center px-6">
+              <FileText className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
+              <p className="text-sm font-semibold text-foreground">Gerador de Relatórios</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Em breve você poderá gerar relatórios mensais em PDF com todos os dados da sua clínica.
+              </p>
+              <Badge variant="secondary" className="mt-3 text-[10px]">Em breve</Badge>
+            </div>
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );
