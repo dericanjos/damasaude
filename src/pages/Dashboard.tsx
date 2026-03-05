@@ -137,7 +137,7 @@ export default function Dashboard() {
             to="/institucional"
             className="text-xs font-semibold text-[hsl(38,70%,55%)] hover:text-[hsl(38,80%,65%)] transition-colors flex items-center gap-1"
           >
-            Conheça a DAMA
+            Resultados maiores?
             <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
@@ -343,16 +343,6 @@ export default function Dashboard() {
         </button>
       )}
 
-      {/* ── SLIM CTA BAR ── */}
-      <Link
-        to="/institucional"
-        className="flex items-center justify-center gap-2 rounded-xl bg-[hsl(38,70%,55%)]/10 border border-[hsl(38,70%,55%)]/25 px-4 py-2.5 transition-all hover:bg-[hsl(38,70%,55%)]/15 active:scale-[0.99]"
-      >
-        <span className="text-sm font-semibold text-[hsl(38,70%,55%)]">
-          Quer resultados maiores? Fale com um especialista
-        </span>
-        <ArrowRight className="h-3.5 w-3.5 text-[hsl(38,70%,55%)]" />
-      </Link>
 
       {/* ── UPDATE CHECKIN BUTTON ── */}
       <div className="flex gap-3 pb-1">
