@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { useWeekCheckins } from '@/hooks/useCheckin';
+import { useWeekCheckins, useCheckinRange, useAllCheckins } from '@/hooks/useCheckin';
 import { useClinic } from '@/hooks/useClinic';
 import { useGenerateInsight } from '@/hooks/useInsights';
 import { calculateIDEA, type CheckinData } from '@/lib/idea';
@@ -9,17 +9,19 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { startOfWeek, subWeeks, format } from 'date-fns';
+import { startOfWeek, subWeeks, subDays, format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
   Sparkles, TrendingDown, Zap, ArrowUpRight, ArrowDownRight,
-  AlertTriangle, UserPlus, FileText, Wand2, Loader2
+  AlertTriangle, UserPlus, FileText, Wand2, Loader2, Target, DollarSign, BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   ChartContainer, ChartTooltip, ChartTooltipContent,
 } from '@/components/ui/chart';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, AreaChart, Area,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line,
+  PieChart, Pie, Cell, ResponsiveContainer,
 } from 'recharts';
 
 const DEFAULT_TICKET = 250;
@@ -28,7 +30,7 @@ const WEEKDAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
 export default function InsightsPage() {
   const { data: clinic } = useClinic();
   const [simNoShow, setSimNoShow] = useState(50);
-  const [simCancel, setSimCancel] = useState(30);
+  const [simTicket, setSimTicket] = useState(20);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
 
   const thisWeekStart = useMemo(() => startOfWeek(new Date(), { weekStartsOn: 1 }), []);
@@ -37,19 +39,34 @@ export default function InsightsPage() {
   const { data: thisWeek = [] } = useWeekCheckins(thisWeekStart);
   const { data: lastWeek = [] } = useWeekCheckins(lastWeekStart);
 
+  // 30-day range
+  const thirtyDaysAgo = useMemo(() => format(subDays(new Date(), 30), 'yyyy-MM-dd'), []);
+  const today = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
+  const { data: last30 = [] } = useCheckinRange(thirtyDaysAgo, today);
+
+  // All checkins for total count
+  const { data: allCheckins = [] } = useAllCheckins();
+
+  // Monthly data for reports
+  const monthStart = useMemo(() => format(startOfMonth(parseISO(selectedMonth + '-01')), 'yyyy-MM-dd'), [selectedMonth]);
+  const monthEnd = useMemo(() => format(endOfMonth(parseISO(selectedMonth + '-01')), 'yyyy-MM-dd'), [selectedMonth]);
+  const { data: monthCheckins = [] } = useCheckinRange(monthStart, monthEnd);
+
   const { generate, insight: aiInsight, loading: aiLoading, error: aiError } = useGenerateInsight();
 
   const TICKET = (clinic as any)?.ticket_medio ?? DEFAULT_TICKET;
+  const CAPACITY = (clinic as any)?.daily_capacity ?? 16;
 
   const calcWeek = (checkins: typeof thisWeek) => {
     const totalDone = checkins.reduce((s, c) => s + c.appointments_done, 0);
     const totalScheduled = checkins.reduce((s, c) => s + c.appointments_scheduled, 0);
     const totalNoShow = checkins.reduce((s, c) => s + c.no_show, 0);
     const totalCancellations = checkins.reduce((s, c) => s + c.cancellations, 0);
+    const totalEmpty = checkins.reduce((s, c) => s + c.empty_slots, 0);
     const totalNew = checkins.reduce((s, c) => s + c.new_appointments, 0);
     const revenue = totalDone * TICKET;
-    const lost = (totalNoShow + totalCancellations) * TICKET;
-    const occupancy = totalScheduled > 0 ? totalDone / totalScheduled : 0;
+    const lost = (totalNoShow + totalCancellations + totalEmpty) * TICKET;
+    const occupancy = checkins.length > 0 ? checkins.reduce((s, c) => s + (c.appointments_done / CAPACITY), 0) / checkins.length : 0;
     const noShowRate = totalScheduled > 0 ? totalNoShow / totalScheduled : 0;
 
     const scores = checkins.map(c => {
@@ -62,96 +79,161 @@ export default function InsightsPage() {
         empty_slots: c.empty_slots,
         followup_done: c.followup_done,
       };
-      return calculateIDEA(d);
+      return calculateIDEA(d, CAPACITY);
     });
     const avgScore = scores.length > 0 ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : null;
 
-    return { revenue, lost, occupancy, noShowRate, totalDone, totalNoShow, totalCancellations, totalNew, avgScore, scores };
+    return { revenue, lost, occupancy, noShowRate, totalDone, totalNoShow, totalCancellations, totalEmpty, totalNew, totalScheduled, avgScore, scores };
   };
 
   const tw = calcWeek(thisWeek);
   const lw = calcWeek(lastWeek);
 
-  const hasData = thisWeek.length > 0;
-  const noData = thisWeek.length === 0 && lastWeek.length === 0;
+  const totalCheckins = allCheckins.length;
+  const hasEnoughData = totalCheckins >= 3;
 
-  // Auto-generate AI insight when resumo tab has data
+  // Auto-generate AI insight
   const [aiRequested, setAiRequested] = useState(false);
   useEffect(() => {
-    if (hasData && thisWeek.length >= 2 && !aiRequested && !aiInsight) {
+    if (hasEnoughData && thisWeek.length >= 2 && !aiRequested && !aiInsight) {
       setAiRequested(true);
       generate(thisWeek, 'weekly');
     }
-  }, [hasData, thisWeek.length]);
+  }, [hasEnoughData, thisWeek.length]);
 
-  // Chart data
-  const revenueCompareData = useMemo(() => {
-    if (!hasData) return [];
-    return WEEKDAYS.map((day, i) => {
-      const checkin = thisWeek[i];
-      const done = checkin?.appointments_done ?? 0;
-      const noshow = checkin?.no_show ?? 0;
-      const cancel = checkin?.cancellations ?? 0;
-      return { day, recuperada: done * TICKET, perdida: (noshow + cancel) * TICKET };
-    });
-  }, [thisWeek, TICKET, hasData]);
-
-  const performanceByDay = useMemo(() => {
-    if (!hasData) return [];
-    return WEEKDAYS.map((day, i) => {
-      const checkin = thisWeek[i];
-      const scheduled = checkin?.appointments_scheduled ?? 0;
-      const done = checkin?.appointments_done ?? 0;
-      return { day, ocupacao: scheduled > 0 ? Math.round((done / scheduled) * 100) : 0 };
-    });
-  }, [thisWeek, hasData]);
-
+  // ── RESUMO: IDEA evolution chart data ──
   const ideaEvolution = useMemo(() => {
-    if (!hasData) return [];
-    return WEEKDAYS.map((day, i) => ({
-      day, idea: tw.scores[i] ?? null,
-    })).filter(d => d.idea !== null);
-  }, [tw.scores, hasData]);
-
-  const daysWithData = thisWeek.length || 1;
-  const weekDays = 5;
-
-  const simGain = useMemo(() => {
-    const noShowReduction = (tw.totalNoShow / daysWithData) * weekDays * (simNoShow / 100) * TICKET * 4.3;
-    const cancelReduction = (tw.totalCancellations / daysWithData) * weekDays * (simCancel / 100) * TICKET * 4.3;
-    return noShowReduction + cancelReduction;
-  }, [tw.totalNoShow, tw.totalCancellations, simNoShow, simCancel, TICKET, daysWithData]);
-
-  const forecastData = useMemo(() => {
-    if (!hasData) return [];
-    const dailyAvg = tw.revenue / daysWithData;
-    return ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'].map((label, i) => ({
-      semana: label,
-      faturamento: Math.round(dailyAvg * weekDays * (i + 1)),
-      projecao: Math.round(dailyAvg * weekDays * (i + 1) * 1.05),
+    if (!thisWeek.length) return [];
+    return thisWeek.map((c, i) => ({
+      day: format(parseISO(c.date), 'EEE', { locale: ptBR }).replace(/^\w/, s => s.toUpperCase()),
+      idea: calculateIDEA({
+        appointments_scheduled: c.appointments_scheduled,
+        appointments_done: c.appointments_done,
+        no_show: c.no_show,
+        cancellations: c.cancellations,
+        new_appointments: c.new_appointments,
+        empty_slots: c.empty_slots,
+        followup_done: c.followup_done,
+      }, CAPACITY),
     }));
-  }, [tw.revenue, daysWithData, hasData]);
+  }, [thisWeek, CAPACITY]);
 
-  const appAvg = { occupancy: 0.72, noShowRate: 0.12, score: 68 };
-  const patientsAtRisk = hasData ? Math.max(1, Math.round(tw.totalNoShow * 0.6)) : 0;
-  const riskValue = patientsAtRisk * TICKET * 3;
+  // ── RESUMO: Comparativo semanal (this week vs last week) ──
+  const compareData = useMemo(() => {
+    return [
+      { label: 'Atendidos', atual: tw.totalDone, anterior: lw.totalDone },
+      { label: 'No-shows', atual: tw.totalNoShow, anterior: lw.totalNoShow },
+      { label: 'Cancelamentos', atual: tw.totalCancellations, anterior: lw.totalCancellations },
+    ];
+  }, [tw, lw]);
 
-  const newPatientsData = useMemo(() => {
-    if (!hasData) return [];
-    return WEEKDAYS.map((day, i) => ({ day, novos: thisWeek[i]?.new_appointments ?? 0 }));
-  }, [thisWeek, hasData]);
+  // ── FINANCEIRO: Donut chart ──
+  const lossDonutData = useMemo(() => {
+    const noShow = last30.reduce((s, c) => s + c.no_show, 0) * TICKET;
+    const cancel = last30.reduce((s, c) => s + c.cancellations, 0) * TICKET;
+    const empty = last30.reduce((s, c) => s + c.empty_slots, 0) * TICKET;
+    return [
+      { name: 'No-shows', value: noShow, color: 'hsl(0, 72%, 52%)' },
+      { name: 'Cancelamentos', value: cancel, color: 'hsl(38, 92%, 48%)' },
+      { name: 'Buracos', value: empty, color: 'hsl(220, 15%, 60%)' },
+    ].filter(d => d.value > 0);
+  }, [last30, TICKET]);
 
-  const chartConfig = {
-    recuperada: { label: 'Recuperada', color: 'hsl(155, 60%, 38%)' },
-    perdida: { label: 'Perdida', color: 'hsl(0, 72%, 52%)' },
-    ocupacao: { label: 'Ocupação %', color: 'hsl(221, 83%, 45%)' },
-    idea: { label: 'IDEA', color: 'hsl(221, 83%, 45%)' },
-    faturamento: { label: 'Faturamento', color: 'hsl(155, 60%, 38%)' },
-    projecao: { label: 'Projeção', color: 'hsl(221, 83%, 55%)' },
-    novos: { label: 'Novos Pacientes', color: 'hsl(221, 83%, 45%)' },
+  const totalLoss30 = lossDonutData.reduce((s, d) => s + d.value, 0);
+
+  // ── FINANCEIRO: Simulator ──
+  const simGain = useMemo(() => {
+    const daysWithData = thisWeek.length || 1;
+    const monthlyNoShowLoss = (tw.totalNoShow / daysWithData) * 22 * TICKET;
+    const noShowSaving = monthlyNoShowLoss * (simNoShow / 100);
+    const currentMonthlyRevenue = (tw.totalDone / daysWithData) * 22 * TICKET;
+    const ticketGain = currentMonthlyRevenue * (simTicket / 100);
+    return noShowSaving + ticketGain;
+  }, [tw, simNoShow, simTicket, TICKET, thisWeek.length]);
+
+  // ── PACIENTES: Funnel ──
+  const funnelData = useMemo(() => {
+    const scheduled = last30.reduce((s, c) => s + c.appointments_scheduled, 0);
+    const done = last30.reduce((s, c) => s + c.appointments_done, 0);
+    const lost = last30.reduce((s, c) => s + c.no_show + c.cancellations, 0);
+    return { scheduled, done, lost };
+  }, [last30]);
+
+  const totalEmptySlots30 = useMemo(() => last30.reduce((s, c) => s + c.empty_slots, 0), [last30]);
+
+  // ── RELATÓRIOS: PDF generation ──
+  const handleGeneratePDF = async () => {
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
+
+    const doc = new jsPDF();
+    const clinicName = (clinic as any)?.name || 'Clínica';
+    const doctorName = (clinic as any)?.doctor_name || 'Médico';
+    const monthLabel = format(parseISO(selectedMonth + '-01'), 'MMMM yyyy', { locale: ptBR }).replace(/^\w/, c => c.toUpperCase());
+
+    // Header
+    doc.setFontSize(18);
+    doc.text(`Relatório Mensal - ${monthLabel}`, 14, 22);
+    doc.setFontSize(11);
+    doc.text(`${clinicName} • Dr(a). ${doctorName}`, 14, 30);
+    doc.setDrawColor(200);
+    doc.line(14, 34, 196, 34);
+
+    // KPIs
+    const mStats = calcWeek(monthCheckins);
+    doc.setFontSize(13);
+    doc.text('Resumo do Mês', 14, 44);
+    doc.setFontSize(10);
+    const kpis = [
+      `Faturamento: ${formatBRL(mStats.revenue)}`,
+      `Perda Total: ${formatBRL(mStats.lost)}`,
+      `IDEA Médio: ${mStats.avgScore ?? '-'}`,
+      `Taxa de Ocupação: ${formatPercent(mStats.occupancy)}`,
+      `No-shows: ${mStats.totalNoShow}`,
+      `Cancelamentos: ${mStats.totalCancellations}`,
+      `Buracos: ${mStats.totalEmpty}`,
+    ];
+    kpis.forEach((kpi, i) => doc.text(kpi, 14, 52 + i * 7));
+
+    // Table
+    doc.setFontSize(13);
+    doc.text('Detalhamento Diário', 14, 108);
+
+    autoTable(doc, {
+      startY: 114,
+      head: [['Data', 'Agendados', 'Atendidos', 'No-show', 'Cancel.', 'Buracos', 'IDEA']],
+      body: monthCheckins.map(c => [
+        format(parseISO(c.date), 'dd/MM'),
+        c.appointments_scheduled,
+        c.appointments_done,
+        c.no_show,
+        c.cancellations,
+        c.empty_slots,
+        calculateIDEA({
+          appointments_scheduled: c.appointments_scheduled,
+          appointments_done: c.appointments_done,
+          no_show: c.no_show,
+          cancellations: c.cancellations,
+          new_appointments: c.new_appointments,
+          empty_slots: c.empty_slots,
+          followup_done: c.followup_done,
+        }, CAPACITY),
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [41, 82, 163] },
+      styles: { fontSize: 9 },
+    });
+
+    doc.save(`relatorio-${selectedMonth}.pdf`);
   };
 
-  // Month options for reports
+  const chartConfig = {
+    atual: { label: 'Semana Atual', color: 'hsl(221, 83%, 45%)' },
+    anterior: { label: 'Semana Anterior', color: 'hsl(220, 15%, 60%)' },
+    idea: { label: 'IDEA', color: 'hsl(221, 83%, 45%)' },
+  };
+
+  // Month options
   const monthOptions = useMemo(() => {
     const months = [];
     const now = new Date();
@@ -159,7 +241,7 @@ export default function InsightsPage() {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push({
         value: format(d, 'yyyy-MM'),
-        label: format(d, 'MMMM yyyy').replace(/^\w/, c => c.toUpperCase()),
+        label: format(d, 'MMMM yyyy', { locale: ptBR }).replace(/^\w/, c => c.toUpperCase()),
       });
     }
     return months;
@@ -181,11 +263,16 @@ export default function InsightsPage() {
         <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-wider">Premium</Badge>
       </div>
 
-      {noData ? (
+      {!hasEnoughData ? (
         <div className="rounded-2xl bg-card border border-border/60 shadow-card py-12 text-center px-6">
           <Sparkles className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
           <p className="text-sm font-semibold text-foreground">Seus insights estão sendo construídos</p>
-          <p className="text-xs text-muted-foreground mt-1">Continue fazendo seus check-ins diários para desbloquear esta área.</p>
+          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Continue fazendo seus check-ins diários. Após 3 dias de dados, seus insights e gráficos começarão a aparecer aqui!
+          </p>
+          <p className="text-xs text-muted-foreground mt-3">
+            Check-ins realizados: <span className="font-bold text-foreground">{totalCheckins}/3</span>
+          </p>
         </div>
       ) : (
         <Tabs defaultValue="resumo" className="w-full">
@@ -227,75 +314,26 @@ export default function InsightsPage() {
               </div>
             </div>
 
-            {/* Card 1: Receita Perdida vs Recuperada */}
-            <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
-              <div className="px-4 pt-4 pb-2">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Receita Perdida vs. Recuperada</p>
+            {/* KPI Cards */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-2xl bg-card border border-border/60 shadow-card p-4 text-center">
+                <DollarSign className="h-4 w-4 mx-auto text-revenue-gain mb-1" />
+                <p className="text-[10px] text-muted-foreground">Faturamento</p>
+                <p className="text-sm font-extrabold text-foreground mt-0.5">{formatBRL(tw.revenue)}</p>
               </div>
-              <div className="px-2 pb-4">
-                <ChartContainer config={chartConfig} className="h-[200px] w-full">
-                  <BarChart data={revenueCompareData} barGap={4}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,25%,24%)" />
-                    <XAxis dataKey="day" tick={{ fill: 'hsl(220,15%,60%)', fontSize: 11 }} />
-                    <YAxis tick={{ fill: 'hsl(220,15%,60%)', fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="recuperada" fill="hsl(155,60%,38%)" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="perdida" fill="hsl(0,72%,52%)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ChartContainer>
+              <div className="rounded-2xl bg-card border border-border/60 shadow-card p-4 text-center">
+                <TrendingDown className="h-4 w-4 mx-auto text-revenue-loss mb-1" />
+                <p className="text-[10px] text-muted-foreground">Perda</p>
+                <p className="text-sm font-extrabold text-foreground mt-0.5">{formatBRL(tw.lost)}</p>
               </div>
-            </div>
-
-            {/* Card 2: Performance por Dia */}
-            <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
-              <div className="px-4 pt-4 pb-2">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Performance por Dia da Semana</p>
-              </div>
-              <div className="px-4 pb-4 space-y-2">
-                {performanceByDay.map((d) => (
-                  <div key={d.day} className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-muted-foreground w-8">{d.day}</span>
-                    <div className="flex-1 h-5 bg-secondary rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${d.ocupacao}%`,
-                          background: d.ocupacao >= 80 ? 'hsl(155,60%,38%)' : d.ocupacao >= 60 ? 'hsl(38,92%,48%)' : 'hsl(0,72%,52%)',
-                        }}
-                      />
-                    </div>
-                    <span className="text-xs font-bold text-foreground w-10 text-right">{d.ocupacao}%</span>
-                  </div>
-                ))}
+              <div className="rounded-2xl bg-card border border-border/60 shadow-card p-4 text-center">
+                <Target className="h-4 w-4 mx-auto text-primary mb-1" />
+                <p className="text-[10px] text-muted-foreground">Ocupação</p>
+                <p className="text-sm font-extrabold text-foreground mt-0.5">{formatPercent(tw.occupancy)}</p>
               </div>
             </div>
 
-            {/* Card 3: Você vs Média */}
-            <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
-              <div className="px-4 pt-4 pb-2">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Você vs. Média do App</p>
-              </div>
-              <div className="divide-y divide-border/50">
-                {[
-                  { label: 'Ocupação', yours: formatPercent(tw.occupancy), avg: formatPercent(appAvg.occupancy), better: tw.occupancy >= appAvg.occupancy },
-                  { label: 'No-show', yours: formatPercent(tw.noShowRate), avg: formatPercent(appAvg.noShowRate), better: tw.noShowRate <= appAvg.noShowRate },
-                  { label: 'IDEA Score', yours: `${tw.avgScore ?? '-'}`, avg: `${appAvg.score}`, better: (tw.avgScore ?? 0) >= appAvg.score },
-                ].map((row) => (
-                  <div key={row.label} className="flex items-center justify-between px-4 py-3">
-                    <span className="text-sm text-foreground">{row.label}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-muted-foreground">Média: {row.avg}</span>
-                      <span className={cn('text-sm font-bold', row.better ? 'text-revenue-gain' : 'text-revenue-loss')}>{row.yours}</span>
-                      {row.better
-                        ? <ArrowUpRight className="h-3.5 w-3.5 text-revenue-gain" />
-                        : <ArrowDownRight className="h-3.5 w-3.5 text-revenue-loss" />}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Card 4: Evolução IDEA */}
+            {/* Evolução do IDEA */}
             {ideaEvolution.length > 1 && (
               <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
                 <div className="px-4 pt-4 pb-2">
@@ -314,74 +352,152 @@ export default function InsightsPage() {
                 </div>
               </div>
             )}
+
+            {/* Comparativo Semanal */}
+            <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+              <div className="px-4 pt-4 pb-2">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Comparativo Semanal</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Últimos 7 dias vs. 7 dias anteriores</p>
+              </div>
+              <div className="px-2 pb-4">
+                <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                  <BarChart data={compareData} barGap={4}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,25%,24%)" />
+                    <XAxis dataKey="label" tick={{ fill: 'hsl(220,15%,60%)', fontSize: 11 }} />
+                    <YAxis tick={{ fill: 'hsl(220,15%,60%)', fontSize: 10 }} allowDecimals={false} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="atual" fill="hsl(221,83%,45%)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="anterior" fill="hsl(220,15%,60%)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
+              </div>
+            </div>
           </TabsContent>
 
           {/* ── ABA 2: ANÁLISE FINANCEIRA ── */}
           <TabsContent value="financeiro" className="space-y-4 mt-4">
+            {/* Donut: Origem da Perda */}
             <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
               <div className="px-4 pt-4 pb-2">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Previsão de Faturamento Mensal</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Origem da Perda Financeira (30 dias)</p>
               </div>
-              <div className="px-2 pb-4">
-                <ChartContainer config={chartConfig} className="h-[200px] w-full">
-                  <AreaChart data={forecastData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,25%,24%)" />
-                    <XAxis dataKey="semana" tick={{ fill: 'hsl(220,15%,60%)', fontSize: 11 }} />
-                    <YAxis tick={{ fill: 'hsl(220,15%,60%)', fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Area type="monotone" dataKey="faturamento" stroke="hsl(155,60%,38%)" fill="hsl(155,60%,38%)" fillOpacity={0.15} strokeWidth={2} />
-                    <Area type="monotone" dataKey="projecao" stroke="hsl(221,83%,55%)" fill="hsl(221,83%,55%)" fillOpacity={0.1} strokeWidth={2} strokeDasharray="5 5" />
-                  </AreaChart>
-                </ChartContainer>
+              <div className="px-4 pb-4">
+                {lossDonutData.length > 0 ? (
+                  <div className="flex items-center gap-4">
+                    <div className="w-[140px] h-[140px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={lossDonutData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={35} outerRadius={60} strokeWidth={2} stroke="hsl(222,35%,18%)">
+                            {lossDonutData.map((entry, i) => (
+                              <Cell key={i} fill={entry.color} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      {lossDonutData.map((d) => (
+                        <div key={d.name} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                            <span className="text-xs text-muted-foreground">{d.name}</span>
+                          </div>
+                          <span className="text-xs font-bold text-foreground">{formatBRL(d.value)}</span>
+                        </div>
+                      ))}
+                      <div className="pt-2 border-t border-border/50">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-muted-foreground">Total</span>
+                          <span className="text-sm font-extrabold text-revenue-loss">{formatBRL(totalLoss30)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground py-4 text-center">Sem dados de perda nos últimos 30 dias.</p>
+                )}
               </div>
             </div>
 
+            {/* Simulador de Crescimento */}
             <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
               <div className="px-4 pt-4 pb-2">
                 <div className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-primary" />
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Simulador de Cenários</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Simulador de Crescimento</p>
                 </div>
               </div>
               <div className="px-4 pb-4 space-y-5">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-foreground">Reduzir no-show em</span>
+                    <span className="text-sm text-foreground">Se eu reduzir os no-shows em</span>
                     <span className="text-sm font-bold text-primary">{simNoShow}%</span>
                   </div>
                   <Slider value={[simNoShow]} onValueChange={(v) => setSimNoShow(v[0])} min={0} max={100} step={10} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-foreground">Reduzir cancelamento em</span>
-                    <span className="text-sm font-bold text-primary">{simCancel}%</span>
+                    <span className="text-sm text-foreground">Se eu aumentar meu ticket médio em</span>
+                    <span className="text-sm font-bold text-primary">{simTicket}%</span>
                   </div>
-                  <Slider value={[simCancel]} onValueChange={(v) => setSimCancel(v[0])} min={0} max={100} step={10} />
+                  <Slider value={[simTicket]} onValueChange={(v) => setSimTicket(v[0])} min={0} max={100} step={5} />
                 </div>
                 <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 text-center">
-                  <p className="text-xs text-muted-foreground">Ganho mensal estimado</p>
-                  <p className="text-2xl font-extrabold text-primary mt-1">{formatBRL(simGain)}</p>
+                  <p className="text-xs text-muted-foreground">Impacto Mensal</p>
+                  <p className="text-2xl font-extrabold text-primary mt-1">+ {formatBRL(simGain)}</p>
                 </div>
               </div>
             </div>
           </TabsContent>
 
-          {/* ── ABA 3: PACIENTES ── */}
+          {/* ── ABA 3: ANÁLISE DE PACIENTES ── */}
           <TabsContent value="pacientes" className="space-y-4 mt-4">
-            <div className="rounded-2xl bg-card border border-revenue-loss shadow-card overflow-hidden p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="h-4 w-4 text-revenue-loss" />
-                <p className="text-sm font-bold text-foreground">Pacientes em Risco de Evasão</p>
+            {/* Funil */}
+            <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+              <div className="px-4 pt-4 pb-2">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Jornada do Paciente (30 dias)</p>
               </div>
-              <p className="text-3xl font-extrabold text-revenue-loss">{patientsAtRisk} pacientes</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Valor em risco: <span className="font-bold text-foreground">{formatBRL(riskValue)}</span> nos próximos 3 meses
-              </p>
-              <p className="text-[11px] text-muted-foreground mt-2">
-                Baseado nos no-shows recorrentes e ausência de reagendamento.
-              </p>
+              <div className="px-4 pb-4 space-y-3">
+                {[
+                  { label: 'Agendados', value: funnelData.scheduled, color: 'hsl(221, 83%, 45%)', pct: 100 },
+                  { label: 'Atendidos', value: funnelData.done, color: 'hsl(155, 60%, 38%)', pct: funnelData.scheduled > 0 ? (funnelData.done / funnelData.scheduled) * 100 : 0 },
+                  { label: 'Perdidos', value: funnelData.lost, color: 'hsl(0, 72%, 52%)', pct: funnelData.scheduled > 0 ? (funnelData.lost / funnelData.scheduled) * 100 : 0 },
+                ].map((step) => (
+                  <div key={step.label}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-semibold text-foreground">{step.label}</span>
+                      <span className="text-xs text-muted-foreground">{step.value} ({Math.round(step.pct)}%)</span>
+                    </div>
+                    <div className="h-6 bg-secondary rounded-lg overflow-hidden flex items-center justify-center relative">
+                      <div
+                        className="absolute left-0 top-0 h-full rounded-lg transition-all"
+                        style={{ width: `${Math.max(step.pct, 3)}%`, backgroundColor: step.color }}
+                      />
+                      <span className="relative z-10 text-[10px] font-bold text-white">{step.value}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
+            {/* Oportunidades na Agenda */}
+            <div className="rounded-2xl bg-card border border-idea-attention shadow-card overflow-hidden p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <BarChart3 className="h-4 w-4 text-idea-attention" />
+                <p className="text-sm font-bold text-foreground">Oportunidades na Agenda</p>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Você teve <span className="font-bold text-foreground">{totalEmptySlots30}</span> buracos na agenda no último mês.
+                São <span className="font-bold text-foreground">{totalEmptySlots30}</span> horários que poderiam ter sido usados para encaixes ou reativação de pacientes antigos.
+              </p>
+              {totalEmptySlots30 > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Valor potencial: <span className="font-bold text-idea-attention">{formatBRL(totalEmptySlots30 * TICKET)}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Novos pacientes */}
             <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
               <div className="px-4 pt-4 pb-2">
                 <div className="flex items-center gap-2">
@@ -390,8 +506,11 @@ export default function InsightsPage() {
                 </div>
               </div>
               <div className="px-2 pb-4">
-                <ChartContainer config={chartConfig} className="h-[180px] w-full">
-                  <BarChart data={newPatientsData}>
+                <ChartContainer config={{ novos: { label: 'Novos', color: 'hsl(221,83%,45%)' } }} className="h-[180px] w-full">
+                  <BarChart data={thisWeek.map(c => ({
+                    day: format(parseISO(c.date), 'EEE', { locale: ptBR }).replace(/^\w/, s => s.toUpperCase()),
+                    novos: c.new_appointments,
+                  }))}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,25%,24%)" />
                     <XAxis dataKey="day" tick={{ fill: 'hsl(220,15%,60%)', fontSize: 11 }} />
                     <YAxis tick={{ fill: 'hsl(220,15%,60%)', fontSize: 10 }} allowDecimals={false} />
@@ -426,14 +545,41 @@ export default function InsightsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button variant="outline" className="w-full rounded-xl" disabled>
+
+                {/* Monthly preview */}
+                {monthCheckins.length > 0 && (
+                  <div className="rounded-xl bg-secondary/50 border border-border/40 p-4 space-y-2">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Prévia do mês</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { label: 'Faturamento', value: formatBRL(calcWeek(monthCheckins).revenue) },
+                        { label: 'Perda Total', value: formatBRL(calcWeek(monthCheckins).lost) },
+                        { label: 'IDEA Médio', value: `${calcWeek(monthCheckins).avgScore ?? '-'}` },
+                        { label: 'Check-ins', value: `${monthCheckins.length} dias` },
+                      ].map(k => (
+                        <div key={k.label}>
+                          <p className="text-[10px] text-muted-foreground">{k.label}</p>
+                          <p className="text-sm font-bold text-foreground">{k.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  variant="outline"
+                  className="w-full rounded-xl"
+                  disabled={monthCheckins.length === 0}
+                  onClick={handleGeneratePDF}
+                >
                   <FileText className="h-4 w-4 mr-2" />
-                  Gerar relatório PDF
-                  <Badge variant="secondary" className="ml-2 text-[9px]">Em breve</Badge>
+                  Gerar Relatório em PDF
                 </Button>
-                <p className="text-[11px] text-muted-foreground text-center">
-                  O gerador de relatórios em PDF estará disponível em breve com dados consolidados do mês.
-                </p>
+                {monthCheckins.length === 0 && (
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    Nenhum check-in encontrado neste mês.
+                  </p>
+                )}
               </div>
             </div>
           </TabsContent>

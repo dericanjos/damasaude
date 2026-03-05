@@ -92,6 +92,46 @@ export function useWeekCheckins(weekStart?: Date) {
   });
 }
 
+export function useCheckinRange(startDate: string, endDate: string) {
+  const { data: clinic } = useClinic();
+
+  return useQuery({
+    queryKey: ['checkins-range', clinic?.id, startDate, endDate],
+    queryFn: async () => {
+      if (!clinic) return [];
+      const { data, error } = await supabase
+        .from('daily_checkins')
+        .select('*')
+        .eq('clinic_id', clinic.id)
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!clinic && !!startDate && !!endDate,
+  });
+}
+
+export function useAllCheckins() {
+  const { data: clinic } = useClinic();
+
+  return useQuery({
+    queryKey: ['checkins-all', clinic?.id],
+    queryFn: async () => {
+      if (!clinic) return [];
+      const { data, error } = await supabase
+        .from('daily_checkins')
+        .select('*')
+        .eq('clinic_id', clinic.id)
+        .order('date', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!clinic,
+  });
+}
+
 export function useSaveCheckin() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
