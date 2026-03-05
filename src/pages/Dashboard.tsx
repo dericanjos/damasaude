@@ -133,6 +133,13 @@ export default function Dashboard() {
               <span className="text-[11px] font-medium text-idea-attention">Renova {renewalDate}</span>
             </div>
           )}
+          <Link
+            to="/institucional"
+            className="text-xs font-semibold text-[hsl(38,70%,55%)] hover:text-[hsl(38,80%,65%)] transition-colors flex items-center gap-1"
+          >
+            Conheça a DAMA
+            <ArrowRight className="h-3 w-3" />
+          </Link>
         </div>
       </div>
 
@@ -271,13 +278,6 @@ export default function Dashboard() {
       {/* ── SUCCESS CHECKLIST ── */}
       <SuccessChecklistCard />
 
-      {/* ── MICRO CTA ── */}
-      <Link
-        to="/institucional"
-        className="block text-center text-sm font-medium text-[hsl(38,70%,55%)] hover:text-[hsl(38,80%,65%)] transition-colors"
-      >
-        Quer resultados maiores? →
-      </Link>
 
       {/* ── CRITICAL ACTION ── */}
       {criticalAction && (
