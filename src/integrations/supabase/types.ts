@@ -343,6 +343,7 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           email: string | null
+          has_efficiency_badge: boolean
           onboarding_completed: boolean
           stripe_customer_id: string | null
           subscription_status: string
@@ -353,6 +354,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           email?: string | null
+          has_efficiency_badge?: boolean
           onboarding_completed?: boolean
           stripe_customer_id?: string | null
           subscription_status?: string
@@ -363,6 +365,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           email?: string | null
+          has_efficiency_badge?: boolean
           onboarding_completed?: boolean
           stripe_customer_id?: string | null
           subscription_status?: string

@@ -19,7 +19,10 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useLatestNews } from '@/hooks/useNews';
+import { useEfficiencyBadge } from '@/hooks/useEfficiencyBadge';
 import { cn } from '@/lib/utils';
+import LossRadarCard from '@/components/LossRadarCard';
+import EfficiencyBadgeModal from '@/components/EfficiencyBadgeModal';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -32,6 +35,7 @@ export default function Dashboard() {
   const { subscriptionStatus, subscriptionEnd } = useSubscription();
   const { data: news } = useLatestNews();
   const { data: streak = 0 } = useCheckinStreak();
+  const { data: hasBadge } = useEfficiencyBadge();
 
   const doctorName = user?.user_metadata?.doctor_name || 'Doutor(a)';
   const firstName = doctorName.split(' ')[0];
@@ -123,11 +127,13 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
-
+      <EfficiencyBadgeModal />
       {/* Header */}
       <div className="flex items-center justify-between pt-1">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Olá, Dr(a). {firstName} 👋</h1>
+          <h1 className="text-xl font-bold text-foreground">
+            Olá, Dr(a). {firstName} {hasBadge && <span title="Selo de Clínica Eficiente">🏅</span>} 👋
+          </h1>
           <p className="text-sm text-muted-foreground">Visão do dia</p>
         </div>
         <div className="flex items-center gap-2">
@@ -215,6 +221,9 @@ export default function Dashboard() {
           </p>
         </div>
       )}
+
+      {/* ── LOSS RADAR / TREND ALERT (only after check-in) ── */}
+      {todayScore != null && <LossRadarCard />}
 
       {/* ── STREAK + IDEA GAUGE (only after check-in) ── */}
       {todayScore != null && (

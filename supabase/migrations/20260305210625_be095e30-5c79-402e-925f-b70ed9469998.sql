@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS has_efficiency_badge boolean NOT NULL DEFAULT false;
