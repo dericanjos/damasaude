@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
-import { getTodayCategory, calculateChecklistPoints, POINTS_PER_ITEM, COMPLETION_BONUS } from '@/lib/checklist';
+import { getTodayCategory, calculateChecklistPoints, POINTS_PER_ITEM, COMPLETION_BONUS, CHECKLIST_CATEGORIES } from '@/lib/checklist';
 import { useTodayChecklist, useSaveChecklist } from '@/hooks/useChecklist';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { CheckCircle2, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
+
+function getNextCategory(currentDay: number) {
+  if (currentDay >= 5) return null; // Friday or weekend
+  return CHECKLIST_CATEGORIES.find(c => c.dayOfWeek === currentDay + 1) ?? null;
+}
 
 export default function SuccessChecklistCard() {
   const category = getTodayCategory();
@@ -63,7 +69,9 @@ export default function SuccessChecklistCard() {
             <p className="text-[10px] font-bold text-primary uppercase tracking-widest">
               {category.emoji} Checklist de Sucesso
             </p>
-            <p className="text-sm font-semibold text-foreground mt-0.5">{category.title}</p>
+            <p className="text-sm font-semibold text-foreground mt-0.5">
+              Dia {category.dayOfWeek} de 5: {category.title}
+            </p>
           </div>
           {saved && (
             <div className="flex items-center gap-1 text-primary">
@@ -71,6 +79,17 @@ export default function SuccessChecklistCard() {
               <span className="text-xs font-semibold">+{points}pts</span>
             </div>
           )}
+        </div>
+        <div className="mt-2 flex gap-1">
+          {[1, 2, 3, 4, 5].map(d => (
+            <div
+              key={d}
+              className={cn(
+                'h-1.5 flex-1 rounded-full',
+                d <= category.dayOfWeek ? 'bg-primary' : 'bg-muted'
+              )}
+            />
+          ))}
         </div>
       </div>
 
@@ -110,6 +129,20 @@ export default function SuccessChecklistCard() {
           </Button>
         </div>
       )}
+
+      {/* Tomorrow preview */}
+      {(() => {
+        const next = getNextCategory(category.dayOfWeek);
+        return (
+          <div className="px-4 pb-3">
+            <p className="text-[11px] text-muted-foreground text-center">
+              {next
+                ? `Amanhã: ${next.emoji} ${next.title}`
+                : '✅ Semana concluída com sucesso!'}
+            </p>
+          </div>
+        );
+      })()}
 
       {showSeal && (
         <div className="px-4 pb-4 pt-1">

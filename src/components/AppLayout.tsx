@@ -20,7 +20,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       <main className="flex-1 safe-bottom">
         {children}
       </main>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[hsl(222,47%,11%)] backdrop-blur-xl">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[hsl(222,41%,14%)] backdrop-blur-xl">
         <div
           className="mx-auto flex max-w-lg items-center justify-around px-1 py-1"
           style={{ paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))' }}

@@ -1,5 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom';
-import logoDama from '@/assets/logo-dama.png';
+
 import { useTodayCheckin, useYesterdayCheckin } from '@/hooks/useCheckin';
 import { useTodayActions, useCompleteAction } from '@/hooks/useActions';
 import { useClinic } from '@/hooks/useClinic';
@@ -133,8 +133,9 @@ export default function Dashboard() {
               <span className="text-[11px] font-medium text-idea-attention">Renova {renewalDate}</span>
             </div>
           )}
-          <Link to="/institucional">
-            <img src={logoDama} alt="DAMA" className="h-7 w-auto opacity-80 hover:opacity-100 transition-opacity" />
+        <Link to="/institucional" className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+            Conheça a DAMA
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </div>
