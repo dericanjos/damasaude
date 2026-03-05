@@ -325,16 +325,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── UPDATE CHECKIN BUTTON ── */}
-      <div className="flex gap-3 pb-1">
-        <Button variant="outline" className="flex-1 text-sm rounded-xl" onClick={() => navigate('/checkin')}>
-          {todayCheckin ? 'Atualizar check-in' : 'Fazer check-in'}
-        </Button>
-        <Button variant="outline" className="flex-1 text-sm rounded-xl" onClick={() => navigate('/relatorio')}>
-          Relatório
-        </Button>
-      </div>
-
       {/* ── NEWS BANNER ── */}
       {latestNews && (
         <button
