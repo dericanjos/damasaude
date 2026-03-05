@@ -14,6 +14,8 @@ export interface ChecklistRecord {
   tip_2: string;
   task_3: string;
   tip_3: string;
+  task_4: string | null;
+  tip_4: string | null;
   level: number;
 }
 
@@ -29,11 +31,15 @@ export const LEVEL_NAMES: Record<number, string> = {
 export const CHECKLISTS_TO_UNLOCK_NEXT = 5; // Complete 5 of level N to unlock N+1
 
 export function checklistToItems(checklist: ChecklistRecord): ChecklistItem[] {
-  return [
+  const items: ChecklistItem[] = [
     { question: checklist.task_1, tip: checklist.tip_1 },
     { question: checklist.task_2, tip: checklist.tip_2 },
     { question: checklist.task_3, tip: checklist.tip_3 },
   ];
+  if (checklist.task_4 && checklist.tip_4) {
+    items.push({ question: checklist.task_4, tip: checklist.tip_4 });
+  }
+  return items;
 }
 
 export function calculateChecklistPoints(answers: boolean[]): { points: number; completed: boolean } {
