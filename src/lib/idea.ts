@@ -99,7 +99,7 @@ export function generateActions(data: CheckinData, targetNoshowRate: number, ide
     actions.push({
       action_type: 'fix_empty_slots',
       title: 'Ativar preenchimento de buracos',
-      description: 'Sua ocupação está baixa. Acione a lista de espera ou antecipe consultas para preencher as vagas de hoje.',
+      description: `Você tem ${data.empty_slots} vaga${data.empty_slots > 1 ? 's' : ''} aberta${data.empty_slots > 1 ? 's' : ''} hoje. Acione sua lista de espera, entre em contato com pacientes que pediram encaixe ou antecipe consultas futuras para preencher esses horários vagos.`,
     });
   }
 
@@ -107,7 +107,7 @@ export function generateActions(data: CheckinData, targetNoshowRate: number, ide
     actions.push({
       action_type: 'confirmations',
       title: 'Revisar protocolo de confirmação',
-      description: 'O no-show está alto. Garanta que a confirmação em duas etapas (D-1 e D-0) seja executada sem falhas.',
+      description: `O no-show de hoje está em ${Math.round(noShowRate * 100)}% (${data.no_show} paciente${data.no_show > 1 ? 's' : ''}). Revise se a confirmação em duas etapas está sendo feita: envie lembrete no dia anterior (D-1) e confirme novamente na manhã do atendimento (D-0).`,
     });
   }
 
@@ -115,7 +115,7 @@ export function generateActions(data: CheckinData, targetNoshowRate: number, ide
     actions.push({
       action_type: 'reactivation',
       title: 'Executar rotina de follow-up',
-      description: 'Execute a rotina de contato com pacientes que necessitam de acompanhamento para não perder o timing.',
+      description: 'Você ainda não fez o follow-up de hoje. Entre em contato com pacientes que precisam de retorno ou acompanhamento. Quanto mais rápido o contato, maior a chance de manter o paciente ativo na sua agenda.',
     });
   }
 
@@ -123,7 +123,7 @@ export function generateActions(data: CheckinData, targetNoshowRate: number, ide
     actions.push({
       action_type: 'collect_nps',
       title: 'Pedir avaliações hoje',
-      description: 'Aproveite o bom dia para fortalecer reputação e indicações.',
+      description: 'Seu dia está indo muito bem. Aproveite a boa experiência dos pacientes para pedir avaliações no Google ou redes sociais. Isso fortalece sua reputação online e gera novas indicações.',
     });
   }
 
@@ -131,7 +131,7 @@ export function generateActions(data: CheckinData, targetNoshowRate: number, ide
     actions.push({
       action_type: 'schedule_admin_block',
       title: 'Bloquear 30 min para gestão',
-      description: 'Separe 30 min para ver números e ajustar a agenda da semana.',
+      description: 'Reserve 30 minutos no final do dia para analisar seus números da semana, revisar a agenda dos próximos dias e identificar horários que precisam de atenção.',
     });
   }
 
