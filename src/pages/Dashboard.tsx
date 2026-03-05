@@ -143,6 +143,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ── SUCCESS CHECKLIST ── */}
+      <SuccessChecklistCard />
+
       {/* ── CHECK-IN PROMPT or IDEA SCORE ── */}
       {todayScore == null ? (
         <button
@@ -192,9 +195,6 @@ export default function Dashboard() {
           </p>
         </div>
       )}
-
-      {/* ── SUCCESS CHECKLIST ── */}
-      <SuccessChecklistCard />
 
       {/* ── REVENUE CARDS ── */}
       {revenue && (
