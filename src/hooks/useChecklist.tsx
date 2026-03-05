@@ -143,18 +143,25 @@ export function useTodayChecklist() {
       !(recentIds || []).includes(c.id)
     );
     
+    // Separate "Visão Estratégica" — only include if all others at same level have been shown
+    const LOW_PRIORITY_CATEGORY = 'Visão Estratégica';
+    const filterLowPriority = (pool: ChecklistRecord[]) => {
+      const nonStrategic = pool.filter(c => c.category !== LOW_PRIORITY_CATEGORY);
+      if (nonStrategic.length > 0) return nonStrategic;
+      return pool; // all others shown, allow strategic
+    };
+
     if (eligible.length > 0) {
-      // Prioritize current max level, then fall back
       const byLevel = eligible.filter(c => c.level === unlockedLevel);
       const pool = byLevel.length > 0 ? byLevel : eligible;
-      // Deterministic daily pick based on date hash
+      const finalPool = filterLowPriority(pool);
       const dateHash = today.split('-').reduce((a, b) => a + parseInt(b), 0);
-      todayChecklist = pool[dateHash % pool.length];
+      todayChecklist = finalPool[dateHash % finalPool.length];
     } else {
-      // All done recently, just pick any from unlocked level
       const fallback = allChecklists.filter(c => c.level <= unlockedLevel);
+      const finalPool = filterLowPriority(fallback);
       const dateHash = today.split('-').reduce((a, b) => a + parseInt(b), 0);
-      todayChecklist = fallback.length > 0 ? fallback[dateHash % fallback.length] : null;
+      todayChecklist = finalPool.length > 0 ? finalPool[dateHash % finalPool.length] : null;
     }
   }
 

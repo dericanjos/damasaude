@@ -17,6 +17,8 @@ export default function WeeklyReportPage() {
   const { data: clinic } = useClinic();
   const { data: allCheckins = [] } = useAllCheckins();
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
+  const workingDays: string[] = Array.isArray((clinic as any)?.working_days) ? (clinic as any).working_days : ['seg', 'ter', 'qua', 'qui', 'sex'];
+  const workingDaysCount = workingDays.length;
   const targetFillRate = clinic?.target_fill_rate ?? 0.85;
   const targetNoShowRate = clinic?.target_noshow_rate ?? 0.05;
   const ticketMedio = (clinic as any)?.ticket_medio ?? 250;
@@ -50,31 +52,6 @@ export default function WeeklyReportPage() {
     setAiError(null);
 
     const fetchOrGenerate = async () => {
-      // Generate via edge function (it checks for existing internally)
-      setAiLoading(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('generate-weekly-report', {
-          body: { week_start: weekStartStr, clinic_id: clinic.id },
-        });
-        if (cancelled) return;
-        if (error) throw error;
-        if (data?.error === 'no_data') {
-          setAiReport(null);
-        } else if (data?.report?.report_text) {
-          setAiReport(data.report.report_text);
-        } else if (data?.error) {
-          throw new Error(data.error);
-        }
-      } catch (e: any) {
-        if (!cancelled) setAiError(e?.message || 'Erro ao gerar relatório');
-      } finally {
-        if (!cancelled) {
-          setAiLoading(false);
-          setReportFetched(true);
-        }
-      }
-
-      // Generate via edge function
       setAiLoading(true);
       try {
         const { data, error } = await supabase.functions.invoke('generate-weekly-report', {
@@ -131,7 +108,7 @@ export default function WeeklyReportPage() {
   const avgOccupancy = totalDone / (checkins.length * dailyCapacity || 1);
   const avgNoShow = totalNoShow / totalScheduled;
 
-  const hasEnoughData = allCheckins.length >= 7;
+  const hasEnoughData = allCheckins.length >= workingDaysCount;
 
   return (
     <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
@@ -164,10 +141,10 @@ export default function WeeklyReportPage() {
           <Sparkles className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
           <p className="text-sm font-semibold text-foreground">Seu primeiro relatório semanal está quase pronto</p>
           <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-            Seu primeiro relatório semanal será gerado após 7 dias de dados. Continue fazendo seus check-ins diários!
+            Seu primeiro relatório semanal será gerado após {workingDaysCount} dias de dados. Continue fazendo seus check-ins diários!
           </p>
           <p className="text-xs text-muted-foreground mt-3">
-            Check-ins realizados: <span className="font-bold text-foreground">{allCheckins.length}/7</span>
+            Check-ins realizados: <span className="font-bold text-foreground">{allCheckins.length}/{workingDaysCount}</span>
           </p>
         </div>
       ) : checkins.length === 0 ? (
