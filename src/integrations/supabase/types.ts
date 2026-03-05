@@ -14,12 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      checklists: {
+        Row: {
+          category: string
+          id: number
+          level: number
+          task_1: string
+          task_2: string
+          task_3: string
+          tip_1: string
+          tip_2: string
+          tip_3: string
+        }
+        Insert: {
+          category: string
+          id?: number
+          level?: number
+          task_1: string
+          task_2: string
+          task_3: string
+          tip_1: string
+          tip_2: string
+          tip_3: string
+        }
+        Update: {
+          category?: string
+          id?: number
+          level?: number
+          task_1?: string
+          task_2?: string
+          task_3?: string
+          tip_1?: string
+          tip_2?: string
+          tip_3?: string
+        }
+        Relationships: []
+      }
       clinics: {
         Row: {
           created_at: string
           daily_capacity: number
+          doctor_name: string | null
+          has_secretary: boolean
           id: string
+          monthly_revenue_target: number | null
           name: string
+          num_doctors: number
+          payment_type: string
+          specialty: string | null
           target_fill_rate: number
           target_noshow_rate: number
           ticket_medio: number
@@ -30,8 +72,14 @@ export type Database = {
         Insert: {
           created_at?: string
           daily_capacity?: number
+          doctor_name?: string | null
+          has_secretary?: boolean
           id?: string
+          monthly_revenue_target?: number | null
           name: string
+          num_doctors?: number
+          payment_type?: string
+          specialty?: string | null
           target_fill_rate?: number
           target_noshow_rate?: number
           ticket_medio?: number
@@ -42,8 +90,14 @@ export type Database = {
         Update: {
           created_at?: string
           daily_capacity?: number
+          doctor_name?: string | null
+          has_secretary?: boolean
           id?: string
+          monthly_revenue_target?: number | null
           name?: string
+          num_doctors?: number
+          payment_type?: string
+          specialty?: string | null
           target_fill_rate?: number
           target_noshow_rate?: number
           ticket_medio?: number
@@ -282,6 +336,7 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           email: string | null
+          onboarding_completed: boolean
           stripe_customer_id: string | null
           subscription_status: string
           user_id: string
@@ -290,6 +345,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           email?: string | null
+          onboarding_completed?: boolean
           stripe_customer_id?: string | null
           subscription_status?: string
           user_id: string
@@ -298,6 +354,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           email?: string | null
+          onboarding_completed?: boolean
           stripe_customer_id?: string | null
           subscription_status?: string
           user_id?: string

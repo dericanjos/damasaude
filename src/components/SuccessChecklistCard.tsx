@@ -1,43 +1,49 @@
 import { useState, useEffect } from 'react';
-import { getTodayCategory, calculateChecklistPoints, POINTS_PER_ITEM, COMPLETION_BONUS, CHECKLIST_CATEGORIES } from '@/lib/checklist';
-import { useTodayChecklist, useSaveChecklist } from '@/hooks/useChecklist';
+import { calculateChecklistPoints, checklistToItems, POINTS_PER_ITEM, COMPLETION_BONUS, getWorkingDaysPerWeek, LEVEL_NAMES } from '@/lib/checklist';
+import { useTodayChecklist, useWeeklyChecklistCount, useSaveChecklist } from '@/hooks/useChecklist';
+import { useClinic } from '@/hooks/useClinic';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { CheckCircle2, Trophy } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
-
-function getNextCategory(currentDay: number) {
-  if (currentDay >= 5) return null; // Friday or weekend
-  return CHECKLIST_CATEGORIES.find(c => c.dayOfWeek === currentDay + 1) ?? null;
-}
+import { toast } from 'sonner';
+import { CheckCircle2, Trophy, Lock } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function SuccessChecklistCard() {
-  const category = getTodayCategory();
-  const { data: existing } = useTodayChecklist();
+  const { checklist, existingAnswer, isWorkDay, unlockedLevel } = useTodayChecklist();
+  const { data: weekCount = 0 } = useWeeklyChecklistCount();
+  const { data: clinic } = useClinic();
   const saveChecklist = useSaveChecklist();
 
-  const [answers, setAnswers] = useState<boolean[]>([]);
+  const workingDays = (clinic as any)?.working_days ?? ['seg', 'ter', 'qua', 'qui', 'sex'];
+  const totalDaysPerWeek = getWorkingDaysPerWeek(workingDays as string[]);
+
+  const [answers, setAnswers] = useState<boolean[]>([false, false, false]);
   const [saved, setSaved] = useState(false);
   const [showSeal, setShowSeal] = useState(false);
 
   useEffect(() => {
-    if (!category) return;
-    if (existing?.answers) {
-      const parsed = (existing.answers as any[]).map((a: any) => a.answered);
+    if (existingAnswer?.answers?.items) {
+      const parsed = (existingAnswer.answers.items as any[]).map((a: any) => a.answered);
       setAnswers(parsed);
       setSaved(true);
-      if (existing.completed) setShowSeal(true);
+      if (existingAnswer.completed) setShowSeal(true);
     } else {
-      setAnswers(category.items.map(() => false));
+      setAnswers([false, false, false]);
       setSaved(false);
+      setShowSeal(false);
     }
-  }, [existing?.id, category?.dayOfWeek]);
+  }, [existingAnswer?.id]);
 
-  if (!category) return null; // Weekend
+  // Don't show on non-working days
+  if (!isWorkDay) return null;
+  // No checklist available
+  if (!checklist) return null;
 
+  const items = checklistToItems(checklist);
   const { points, completed } = calculateChecklistPoints(answers);
+  const weeklyDone = saved ? weekCount : Math.max(0, weekCount);
+  const weeklyProgress = (weeklyDone / totalDaysPerWeek) * 100;
 
   const handleToggle = (index: number, value: boolean) => {
     if (saved) return;
@@ -48,11 +54,11 @@ export default function SuccessChecklistCard() {
 
   const handleSave = async () => {
     try {
-      const result = await saveChecklist.mutateAsync(answers);
+      const result = await saveChecklist.mutateAsync({ answers, checklist });
       setSaved(true);
       if (result.completed) {
         setShowSeal(true);
-        toast.success(`Parabéns! Você completou o checklist e ganhou +${result.points} pontos no seu Índice IDEA.`);
+        toast.success(`Parabéns! Checklist completo! +${result.points} pontos no IDEA.`);
       } else {
         toast.success(`Checklist salvo! +${result.points} pontos no IDEA.`);
       }
@@ -67,34 +73,39 @@ export default function SuccessChecklistCard() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[10px] font-bold text-primary uppercase tracking-widest">
-              {category.emoji} Checklist de Sucesso
+              ✅ Checklist de Sucesso
             </p>
             <p className="text-sm font-semibold text-foreground mt-0.5">
-              Dia {category.dayOfWeek} de 5: {category.title}
+              Checklist {weeklyDone}/{totalDaysPerWeek} da semana: {checklist.category}
             </p>
           </div>
           {saved && (
             <div className="flex items-center gap-1 text-primary">
               <CheckCircle2 className="h-4 w-4" />
-              <span className="text-xs font-semibold">+{points}pts</span>
+              <span className="text-xs font-semibold">+{existingAnswer?.points_earned ?? points}pts</span>
             </div>
           )}
         </div>
-        <div className="mt-2 flex gap-1">
-          {[1, 2, 3, 4, 5].map(d => (
-            <div
-              key={d}
-              className={cn(
-                'h-1.5 flex-1 rounded-full',
-                d <= category.dayOfWeek ? 'bg-primary' : 'bg-muted'
-              )}
-            />
-          ))}
+        {/* Weekly progress bar */}
+        <div className="mt-2">
+          <Progress value={weeklyProgress} className="h-1.5" />
+        </div>
+        {/* Level badge */}
+        <div className="mt-1.5 flex items-center gap-2">
+          <span className="text-[10px] text-muted-foreground">
+            Nível {checklist.level}: {LEVEL_NAMES[checklist.level]}
+          </span>
+          {unlockedLevel < 3 && (
+            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+              <Lock className="h-2.5 w-2.5" />
+              Nível {unlockedLevel + 1} em breve
+            </span>
+          )}
         </div>
       </div>
 
       <div className="px-4 pb-3 space-y-3">
-        {category.items.map((item, i) => (
+        {items.map((item, i) => (
           <div key={i} className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <p className={cn(
@@ -130,26 +141,12 @@ export default function SuccessChecklistCard() {
         </div>
       )}
 
-      {/* Tomorrow preview */}
-      {(() => {
-        const next = getNextCategory(category.dayOfWeek);
-        return (
-          <div className="px-4 pb-3">
-            <p className="text-[11px] text-muted-foreground text-center">
-              {next
-                ? `Amanhã: ${next.emoji} ${next.title}`
-                : '✅ Semana concluída com sucesso!'}
-            </p>
-          </div>
-        );
-      })()}
-
       {showSeal && (
         <div className="px-4 pb-4 pt-1">
           <div className="flex items-center gap-2 rounded-xl bg-primary/10 border border-primary/20 p-3">
             <Trophy className="h-5 w-5 text-primary shrink-0" />
             <div>
-              <p className="text-sm font-bold text-foreground">{category.sealName}</p>
+              <p className="text-sm font-bold text-foreground">🏆 Selo: {checklist.category}</p>
               <p className="text-xs text-muted-foreground">
                 Bônus de conclusão: +{COMPLETION_BONUS}pts
               </p>
