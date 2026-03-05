@@ -331,7 +331,7 @@ export default function CheckinPage() {
                 <Stepper label="No-show" value={form.no_show} onChange={v => setField('no_show', v)} />
                 <Stepper label="Cancelamentos" value={form.cancellations} onChange={v => setField('cancellations', v)} />
                 <Stepper label="Novos agend." value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
-                <Stepper label="Buracos" value={form.empty_slots} onChange={v => setField('empty_slots', v)} />
+                <Stepper label="Buracos na agenda" value={form.empty_slots} onChange={v => setField('empty_slots', v)} />
               </div>
             </div>
 
