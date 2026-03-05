@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { SubscriptionProvider, useSubscription } from "@/hooks/useSubscription";
+import { useOnboardingStatus } from "@/hooks/useOnboarding";
 import AppLayout from "@/components/AppLayout";
 import AuthPage from "@/pages/AuthPage";
 import Dashboard from "@/pages/Dashboard";
@@ -15,11 +16,21 @@ import SettingsPage from "@/pages/SettingsPage";
 import SubscriptionPage from "@/pages/SubscriptionPage";
 import InsightsPage from "@/pages/InsightsPage";
 import InstitucionalPage from "@/pages/InstitucionalPage";
+import OnboardingPage from "@/pages/OnboardingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoutes() {
+  const { data: onboardingCompleted, isLoading } = useOnboardingStatus();
+  
+  if (isLoading) return null;
+  
+  // Redirect to onboarding if not completed
+  if (onboardingCompleted === false) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   return (
     <AppLayout>
       <Routes>
@@ -33,6 +44,15 @@ function ProtectedRoutes() {
       </Routes>
     </AppLayout>
   );
+}
+
+function OnboardingRoute() {
+  const { user, loading } = useAuth();
+  const { data: onboardingCompleted, isLoading } = useOnboardingStatus();
+  if (loading || isLoading) return null;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (onboardingCompleted) return <Navigate to="/" replace />;
+  return <OnboardingPage />;
 }
 
 function SubscriptionRoute() {
@@ -61,6 +81,7 @@ const App = () => (
           <SubscriptionProvider>
             <Routes>
               <Route path="/auth" element={<AuthRoute />} />
+              <Route path="/onboarding" element={<OnboardingRoute />} />
               <Route path="/assinatura" element={<SubscriptionRoute />} />
               <Route path="/institucional" element={<InstitucionalPage />} />
               <Route path="/*" element={<ProtectedRoutes />} />
@@ -73,4 +94,3 @@ const App = () => (
 );
 
 export default App;
-

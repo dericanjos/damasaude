@@ -26,19 +26,11 @@ export function useUpdateClinic() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (updates: {
-      name?: string;
-      target_fill_rate?: number;
-      target_noshow_rate?: number;
-      timezone?: string;
-      daily_capacity?: number;
-      ticket_medio?: number;
-      working_days?: string[];
-    }) => {
+    mutationFn: async (updates: Record<string, any>) => {
       if (!user) throw new Error('Not authenticated');
       const { data, error } = await supabase
         .from('clinics')
-        .update(updates)
+        .update(updates as any)
         .eq('user_id', user.id)
         .select()
         .single();
