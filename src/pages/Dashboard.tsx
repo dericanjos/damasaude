@@ -5,6 +5,7 @@ import { useTodayCheckin, useYesterdayCheckin } from '@/hooks/useCheckin';
 import { useTodayActions, useCompleteAction } from '@/hooks/useActions';
 import { useClinic } from '@/hooks/useClinic';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useCheckinStreak } from '@/hooks/useChecklist';
 import { calculateIDEA, getIdeaStatus, getIdeaLabel, type CheckinData } from '@/lib/idea';
 import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET } from '@/lib/revenue';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import SuccessChecklistCard from '@/components/SuccessChecklistCard';
 import {
   TrendingDown, TrendingUp, AlertCircle, CheckCircle2,
-  ClipboardCheck, ArrowRight, Bell, HelpCircle
+  ClipboardCheck, ArrowRight, Bell, HelpCircle, Flame
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const completeAction = useCompleteAction();
   const { subscriptionStatus, subscriptionEnd } = useSubscription();
   const { data: news } = useLatestNews();
+  const { data: streak = 0 } = useCheckinStreak();
 
   const doctorName = user?.user_metadata?.doctor_name || 'Doutor(a)';
   const firstName = doctorName.split(' ')[0];
@@ -145,9 +147,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── SUCCESS CHECKLIST ── */}
-      <SuccessChecklistCard />
-
       {/* ── CHECK-IN PROMPT or IDEA SCORE ── */}
       {todayScore == null ? (
         <button
@@ -214,7 +213,62 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── REVENUE CARDS ── */}
+      {/* ── SUCCESS CHECKLIST ── */}
+      <SuccessChecklistCard />
+
+      {/* ── STREAK + IDEA GAUGE (only after check-in) ── */}
+      {todayScore != null && (
+        <div className="grid grid-cols-2 gap-3">
+          {/* Streak */}
+          <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card flex flex-col items-center justify-center text-center">
+            <Flame className={cn('h-8 w-8 mb-1', streak >= 3 ? 'text-orange-500' : 'text-muted-foreground')} />
+            <p className="text-2xl font-bold text-foreground">{streak} {streak === 1 ? 'dia' : 'dias'}</p>
+            <p className="text-[11px] text-muted-foreground">de consistência</p>
+          </div>
+          {/* IDEA Gauge */}
+          <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card flex flex-col items-center justify-center text-center">
+            <div className="relative w-20 h-12 mb-1">
+              <svg viewBox="0 0 120 70" className="w-full h-full">
+                {/* Background arc */}
+                <path
+                  d="M 10 65 A 50 50 0 0 1 110 65"
+                  fill="none"
+                  stroke="hsl(var(--muted))"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                />
+                {/* Colored arc */}
+                <path
+                  d="M 10 65 A 50 50 0 0 1 110 65"
+                  fill="none"
+                  stroke={todayScore >= 71 ? 'hsl(142,71%,45%)' : todayScore >= 41 ? 'hsl(48,96%,53%)' : 'hsl(0,84%,60%)'}
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  strokeDasharray={`${(todayScore / 100) * 157} 157`}
+                />
+                <text x="60" y="60" textAnchor="middle" className="fill-foreground text-2xl font-bold" fontSize="24">{todayScore}</text>
+              </svg>
+            </div>
+            <div className="flex items-center gap-1">
+              <p className="text-[11px] font-semibold text-muted-foreground">Índice IDEA</p>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                    <HelpCircle className="h-3 w-3" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 text-sm" side="top">
+                  <p className="font-semibold mb-1">O que é o Índice IDEA?</p>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    O IDEA mede a eficiência da sua agenda com base em ocupação, no-shows e cancelamentos. Score acima de 70 = agenda saudável.
+                  </p>
+                </PopoverContent>
+              </Popover>
+            </div>
+            <p className="text-[10px] text-muted-foreground/70">Quanto maior, mais eficiente</p>
+          </div>
+        </div>
+      )}
       {revenue && (
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
