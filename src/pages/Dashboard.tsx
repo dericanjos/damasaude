@@ -193,6 +193,9 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* ── SUCCESS CHECKLIST ── */}
+      <SuccessChecklistCard />
+
       {/* ── REVENUE CARDS ── */}
       {revenue && (
         <div className="grid grid-cols-2 gap-3">
@@ -275,10 +278,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── SUCCESS CHECKLIST ── */}
-      <SuccessChecklistCard />
-
-
       {/* ── CRITICAL ACTION ── */}
       {criticalAction && (
         <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
@@ -326,6 +325,16 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* ── UPDATE CHECKIN BUTTON ── */}
+      <div className="flex gap-3 pb-1">
+        <Button variant="outline" className="flex-1 text-sm rounded-xl" onClick={() => navigate('/checkin')}>
+          {todayCheckin ? 'Atualizar check-in' : 'Fazer check-in'}
+        </Button>
+        <Button variant="outline" className="flex-1 text-sm rounded-xl" onClick={() => navigate('/relatorio')}>
+          Relatório
+        </Button>
+      </div>
+
       {/* ── NEWS BANNER ── */}
       {latestNews && (
         <button
@@ -342,17 +351,6 @@ export default function Dashboard() {
           </div>
         </button>
       )}
-
-
-      {/* ── UPDATE CHECKIN BUTTON ── */}
-      <div className="flex gap-3 pb-1">
-        <Button variant="outline" className="flex-1 text-sm rounded-xl" onClick={() => navigate('/checkin')}>
-          {todayCheckin ? 'Atualizar check-in' : 'Fazer check-in'}
-        </Button>
-        <Button variant="outline" className="flex-1 text-sm rounded-xl" onClick={() => navigate('/relatorio')}>
-          Relatório
-        </Button>
-      </div>
     </div>
   );
 }
