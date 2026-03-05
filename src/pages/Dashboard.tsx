@@ -133,7 +133,7 @@ export default function Dashboard() {
               <span className="text-[11px] font-medium text-idea-attention">Renova {renewalDate}</span>
             </div>
           )}
-        <Link to="/institucional" className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+        <Link to="/institucional" className="text-sm font-semibold text-[hsl(38,70%,55%)] hover:text-[hsl(38,80%,65%)] transition-colors flex items-center gap-1">
             Conheça a DAMA
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
