@@ -18,7 +18,10 @@ export default function SuccessChecklistCard() {
   const workingDays = (clinic as any)?.working_days ?? ['seg', 'ter', 'qua', 'qui', 'sex'];
   const totalDaysPerWeek = getWorkingDaysPerWeek(workingDays as string[]);
 
-  const [answers, setAnswers] = useState<boolean[]>([false, false, false]);
+  // Dynamic number of items based on checklist
+  const itemCount = checklist ? checklistToItems(checklist).length : 3;
+
+  const [answers, setAnswers] = useState<boolean[]>(new Array(itemCount).fill(false));
   const [saved, setSaved] = useState(false);
   const [showSeal, setShowSeal] = useState(false);
 
@@ -29,14 +32,12 @@ export default function SuccessChecklistCard() {
       setSaved(true);
       if (existingAnswer.completed) setShowSeal(true);
     } else {
-      setAnswers([false, false, false]);
+      setAnswers(new Array(itemCount).fill(false));
       setSaved(false);
       setShowSeal(false);
     }
-  }, [existingAnswer?.id]);
+  }, [existingAnswer?.id, itemCount]);
 
-  // Show always - even on non-working days, show next day's checklist
-  // No checklist available
   if (!checklist) return null;
 
   const items = checklistToItems(checklist);
@@ -55,6 +56,9 @@ export default function SuccessChecklistCard() {
     try {
       const result = await saveChecklist.mutateAsync({ answers, checklist });
       setSaved(true);
+      if (result.leveledUp) {
+        toast.success(`🎉 Parabéns! Você desbloqueou os checklists de Nível ${result.newLevel}: ${LEVEL_NAMES[result.newLevel]}!`);
+      }
       if (result.completed) {
         setShowSeal(true);
         toast.success(`Parabéns! Checklist completo! +${result.points} pontos no IDEA.`);

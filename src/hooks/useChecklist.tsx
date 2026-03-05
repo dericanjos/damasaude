@@ -68,10 +68,38 @@ function useCompletedCountByLevel() {
 /** Get the max unlocked level */
 export function useUnlockedLevel() {
   const { data: counts } = useCompletedCountByLevel();
-  if (!counts) return 1;
-  if (counts[2] >= CHECKLISTS_TO_UNLOCK_NEXT) return 3;
-  if (counts[1] >= CHECKLISTS_TO_UNLOCK_NEXT) return 2;
-  return 1;
+  const { data: clinic } = useClinic();
+
+  // Also check profile-based level
+  const profileLevel = useProfileChecklistLevel();
+
+  if (!counts) return profileLevel;
+  
+  let calculatedLevel = 1;
+  if (counts[2] >= CHECKLISTS_TO_UNLOCK_NEXT) calculatedLevel = 3;
+  else if (counts[1] >= CHECKLISTS_TO_UNLOCK_NEXT) calculatedLevel = 2;
+  
+  return Math.max(calculatedLevel, profileLevel);
+}
+
+/** Get checklist_level from profiles table */
+function useProfileChecklistLevel(): number {
+  const { user } = useAuth();
+  const { data } = useQuery({
+    queryKey: ['profile-checklist-level', user?.id],
+    queryFn: async () => {
+      if (!user) return 1;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('checklist_level')
+        .eq('user_id', user.id)
+        .single();
+      if (error) return 1;
+      return (data as any)?.checklist_level ?? 1;
+    },
+    enabled: !!user,
+  });
+  return data ?? 1;
 }
 
 /** Select today's checklist using card-deck logic */
@@ -174,15 +202,20 @@ export function useSaveChecklist() {
 
       const { points, completed } = calculateChecklistPoints(answers);
 
+      const items: any[] = [
+        { question: checklist.task_1, answered: answers[0] ?? false },
+        { question: checklist.task_2, answered: answers[1] ?? false },
+        { question: checklist.task_3, answered: answers[2] ?? false },
+      ];
+      if (checklist.task_4) {
+        items.push({ question: checklist.task_4, answered: answers[3] ?? false });
+      }
+
       const answersJson = {
         checklist_id: checklist.id,
         category: checklist.category,
         level: checklist.level,
-        items: [
-          { question: checklist.task_1, answered: answers[0] ?? false },
-          { question: checklist.task_2, answered: answers[1] ?? false },
-          { question: checklist.task_3, answered: answers[2] ?? false },
-        ],
+        items,
       };
 
       const { data, error } = await supabase
@@ -200,7 +233,35 @@ export function useSaveChecklist() {
         .single();
 
       if (error) throw error;
-      return { data, points, completed };
+
+      // Check level progression
+      let leveledUp = false;
+      if (completed) {
+        const currentLevel = checklist.level;
+        const { data: completedData } = await supabase
+          .from('daily_checklist_answers')
+          .select('answers')
+          .eq('clinic_id', clinic.id)
+          .eq('completed', true);
+
+        const uniqueIds = new Set<number>();
+        (completedData || []).forEach((d: any) => {
+          const lvl = d.answers?.level;
+          const cid = d.answers?.checklist_id;
+          if (lvl === currentLevel && cid) uniqueIds.add(cid);
+        });
+
+        const threshold = currentLevel === 1 ? 5 : currentLevel === 2 ? 6 : 999;
+        if (uniqueIds.size >= threshold && currentLevel < 3) {
+          await supabase
+            .from('profiles')
+            .update({ checklist_level: currentLevel + 1 } as any)
+            .eq('user_id', user.id);
+          leveledUp = true;
+        }
+      }
+
+      return { data, points, completed, leveledUp, newLevel: checklist.level + 1 };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['checklist'] });
@@ -208,6 +269,7 @@ export function useSaveChecklist() {
       queryClient.invalidateQueries({ queryKey: ['checklist-week-count'] });
       queryClient.invalidateQueries({ queryKey: ['checklist-recent'] });
       queryClient.invalidateQueries({ queryKey: ['checklist-level-counts'] });
+      queryClient.invalidateQueries({ queryKey: ['profile-checklist-level'] });
     },
   });
 }

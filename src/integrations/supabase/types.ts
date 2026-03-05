@@ -22,9 +22,11 @@ export type Database = {
           task_1: string
           task_2: string
           task_3: string
+          task_4: string | null
           tip_1: string
           tip_2: string
           tip_3: string
+          tip_4: string | null
         }
         Insert: {
           category: string
@@ -33,9 +35,11 @@ export type Database = {
           task_1: string
           task_2: string
           task_3: string
+          task_4?: string | null
           tip_1: string
           tip_2: string
           tip_3: string
+          tip_4?: string | null
         }
         Update: {
           category?: string
@@ -44,9 +48,11 @@ export type Database = {
           task_1?: string
           task_2?: string
           task_3?: string
+          task_4?: string | null
           tip_1?: string
           tip_2?: string
           tip_3?: string
+          tip_4?: string | null
         }
         Relationships: []
       }
@@ -333,6 +339,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          checklist_level: number
           created_at: string
           current_period_end: string | null
           email: string | null
@@ -342,6 +349,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          checklist_level?: number
           created_at?: string
           current_period_end?: string | null
           email?: string | null
@@ -351,6 +359,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          checklist_level?: number
           created_at?: string
           current_period_end?: string | null
           email?: string | null
