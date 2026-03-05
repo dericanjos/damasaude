@@ -5,6 +5,7 @@ import { useLastCheckin } from '@/hooks/useCheckin';
 import { useGenerateActions } from '@/hooks/useActions';
 import { useClinic } from '@/hooks/useClinic';
 import { useCheckinStreak } from '@/hooks/useChecklist';
+import { useGenerateInsight } from '@/hooks/useInsights';
 import { calculateIDEA, generateInsightText, getIdeaStatus, getIdeaLabel, getTopLossSources } from '@/lib/idea';
 import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET } from '@/lib/revenue';
 import { Button } from '@/components/ui/button';
@@ -88,6 +89,7 @@ export default function CheckinPage() {
   const { data: streak = 0 } = useCheckinStreak();
   const saveCheckin = useSaveCheckin();
   const generateActions = useGenerateActions();
+  const { generate: generateMicroInsight } = useGenerateInsight();
 
   const [quickMode, setQuickMode] = useState(false);
   const [quickHasBuracos, setQuickHasBuracos] = useState(false);
@@ -164,6 +166,13 @@ export default function CheckinPage() {
         lossSources,
       });
       setShowReward(true);
+
+      // Fire micro-insight in background
+      generateMicroInsight([submitData], 'micro').then((micro) => {
+        if (micro) {
+          toast.info(micro, { duration: 6000, icon: '💡' });
+        }
+      });
     } catch (err: any) {
       toast.error(err.message || 'Erro ao salvar');
     }
