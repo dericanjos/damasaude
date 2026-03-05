@@ -147,6 +147,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ── SUCCESS CHECKLIST (always first action) ── */}
+      <SuccessChecklistCard />
+
       {/* ── CHECK-IN PROMPT or IDEA SCORE ── */}
       {todayScore == null ? (
         <button
@@ -212,9 +215,6 @@ export default function Dashboard() {
           </p>
         </div>
       )}
-
-      {/* ── SUCCESS CHECKLIST ── */}
-      <SuccessChecklistCard />
 
       {/* ── STREAK + IDEA GAUGE (only after check-in) ── */}
       {todayScore != null && (
