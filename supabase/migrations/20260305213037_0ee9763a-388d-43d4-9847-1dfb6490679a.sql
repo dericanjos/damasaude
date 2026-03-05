@@ -1,0 +1,1 @@
+UPDATE checklists SET task_4 = NULL, tip_4 = NULL WHERE level = 1;
