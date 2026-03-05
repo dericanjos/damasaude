@@ -77,12 +77,15 @@ serve(async (req) => {
     // Fetch clinic info for context
     const { data: clinic } = await supabase
       .from("clinics")
-      .select("ticket_medio, daily_capacity, target_fill_rate, target_noshow_rate")
+      .select("ticket_medio, daily_capacity, target_fill_rate, target_noshow_rate, working_days")
       .eq("id", clinic_id)
       .single();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    const workingDays: string[] = Array.isArray(clinic?.working_days) ? clinic.working_days : ["seg", "ter", "qua", "qui", "sex"];
+    const workingDaysCount = workingDays.length;
 
     const totalDone = checkins.reduce((s: number, c: any) => s + c.appointments_done, 0);
     const totalScheduled = checkins.reduce((s: number, c: any) => s + c.appointments_scheduled, 0);
@@ -92,8 +95,15 @@ serve(async (req) => {
     const ticket = clinic?.ticket_medio ?? 250;
     const capacity = clinic?.daily_capacity ?? 16;
 
+    const isPartial = checkins.length < workingDaysCount;
+    const partialNote = isPartial
+      ? `\n\n---\n*Relatório parcial — você completou ${checkins.length} de ${workingDaysCount} dias de atendimento esta semana.*`
+      : "";
+
     const summary = {
       dias_com_checkin: checkins.length,
+      dias_de_atendimento: workingDaysCount,
+      relatorio_parcial: isPartial,
       total_atendidos: totalDone,
       total_agendados: totalScheduled,
       total_no_show: totalNoShow,
@@ -147,7 +157,7 @@ Use um tom profissional, direto e encorajador. Responda APENAS em português bra
     }
 
     const result = await response.json();
-    const reportText = result.choices?.[0]?.message?.content || "";
+    const reportText = (result.choices?.[0]?.message?.content || "") + partialNote;
 
     // Save report
     const { data: saved, error: saveError } = await supabase
