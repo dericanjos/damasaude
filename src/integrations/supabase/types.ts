@@ -322,6 +322,41 @@ export type Database = {
           },
         ]
       }
+      monthly_reports: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          id: string
+          month_date: string
+          report_text: string
+          user_id: string
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          id?: string
+          month_date: string
+          report_text: string
+          user_id: string
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          id?: string
+          month_date?: string
+          report_text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_reports_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       news: {
         Row: {
           active: boolean
