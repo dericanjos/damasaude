@@ -18,6 +18,7 @@ import InsightsPage from "@/pages/InsightsPage";
 import InstitucionalPage from "@/pages/InstitucionalPage";
 import OnboardingPage from "@/pages/OnboardingPage";
 import VersePage from "@/pages/VersePage";
+import MedicalNewsPage from "@/pages/MedicalNewsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ function ProtectedRoutes() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/checkin" element={<CheckinPage />} />
+        <Route path="/noticias" element={<MedicalNewsPage />} />
         <Route path="/motivos" element={<LossReasonsPage />} />
         <Route path="/relatorio" element={<WeeklyReportPage />} />
         <Route path="/insights" element={<InsightsPage />} />
