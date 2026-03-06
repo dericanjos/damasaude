@@ -31,7 +31,12 @@ export function calculateRevenue(p: RevenueParams): RevenueData {
   const totalAttended = p.attended_private + p.attended_insurance;
   const totalNoshows = p.noshows_private + p.noshows_insurance;
   const scheduled = Math.max(p.appointments_scheduled, 1);
-  const averageTicket = (p.ticket_private + p.ticket_insurance) / 2;
+
+  // Determine active tickets for average calculation
+  const activeTickets = [p.ticket_private, p.ticket_insurance].filter(t => t > 0);
+  const averageTicket = activeTickets.length > 0
+    ? activeTickets.reduce((a, b) => a + b, 0) / activeTickets.length
+    : 0;
 
   const estimated =
     (p.attended_private * p.ticket_private) +

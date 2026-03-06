@@ -84,7 +84,8 @@ export default function OnboardingPage() {
   // Step 3
   const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
   const [dailyCapacity, setDailyCapacity] = useState(16);
-  const [ticketMedio, setTicketMedio] = useState(250);
+  const [ticketPrivate, setTicketPrivate] = useState(250);
+  const [ticketInsurance, setTicketInsurance] = useState(100);
   const [timezone, setTimezone] = useState(detectTimezone());
 
   // Step 4
@@ -96,7 +97,11 @@ export default function OnboardingPage() {
     switch (step) {
       case 1: return doctorName.trim() && specialty;
       case 2: return clinicName.trim() && numDoctors >= 1;
-      case 3: return workingDays.length >= 1 && dailyCapacity >= 1 && ticketMedio >= 1;
+      case 3: return workingDays.length >= 1 && dailyCapacity >= 1 && (
+        paymentType === 'particular' ? ticketPrivate >= 1 :
+        paymentType === 'convenio' ? ticketInsurance >= 1 :
+        ticketPrivate >= 1 && ticketInsurance >= 1
+      );
       case 4: return fillRate >= 0 && noshowRate >= 0;
       default: return true;
     }
@@ -123,7 +128,9 @@ export default function OnboardingPage() {
         payment_type: paymentType,
         working_days: workingDays,
         daily_capacity: dailyCapacity,
-        ticket_medio: ticketMedio,
+        ticket_private: paymentType === 'convenio' ? 0 : ticketPrivate,
+        ticket_insurance: paymentType === 'particular' ? 0 : ticketInsurance,
+        ticket_medio: paymentType === 'ambos' ? Math.round((ticketPrivate + ticketInsurance) / 2) : (paymentType === 'particular' ? ticketPrivate : ticketInsurance),
         timezone,
         target_fill_rate: fillRate / 100,
         target_noshow_rate: noshowRate / 100,
@@ -275,11 +282,20 @@ export default function OnboardingPage() {
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Capacidade diária (consultas/dia) *</Label>
               <Input type="number" min={1} max={100} value={dailyCapacity} onChange={e => setDailyCapacity(Number(e.target.value))} className="rounded-xl" />
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket médio da consulta (R$) *</Label>
-              <Input type="number" min={1} value={ticketMedio} onChange={e => setTicketMedio(Number(e.target.value))} className="rounded-xl" />
-              <p className="text-[11px] text-muted-foreground">Valor médio cobrado por consulta. Será usado para calcular sua receita e perdas.</p>
-            </div>
+            {(paymentType === 'particular' || paymentType === 'ambos') && (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$) *</Label>
+                <Input type="number" min={1} value={ticketPrivate} onChange={e => setTicketPrivate(Number(e.target.value))} className="rounded-xl" />
+                <p className="text-[11px] text-muted-foreground">Valor cobrado por consulta particular.</p>
+              </div>
+            )}
+            {(paymentType === 'convenio' || paymentType === 'ambos') && (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$) *</Label>
+                <Input type="number" min={1} value={ticketInsurance} onChange={e => setTicketInsurance(Number(e.target.value))} className="rounded-xl" />
+                <p className="text-[11px] text-muted-foreground">Valor cobrado por consulta via convênio.</p>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fuso horário</Label>
               <Select value={timezone} onValueChange={setTimezone}>

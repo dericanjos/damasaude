@@ -95,6 +95,7 @@ export default function CheckinPage() {
   const generateActions = useGenerateActions();
   const { generate: generateMicroInsight } = useGenerateInsight();
 
+  const paymentType = (clinic as any)?.payment_type ?? 'ambos';
   const [quickMode, setQuickMode] = useState(false);
   const [quickHasBuracos, setQuickHasBuracos] = useState(false);
   const [quickHasNoShow, setQuickHasNoShow] = useState(false);
@@ -359,10 +360,33 @@ export default function CheckinPage() {
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Agenda de hoje</p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-5">
                 <Stepper label="Agendados" value={form.appointments_scheduled} onChange={v => setField('appointments_scheduled', v)} />
-                <Stepper label="Atendidos (Particular)" value={form.attended_private} onChange={v => setField('attended_private', v)} />
-                <Stepper label="Atendidos (Convênio)" value={form.attended_insurance} onChange={v => setField('attended_insurance', v)} />
-                <Stepper label="No-show (Particular)" value={form.noshows_private} onChange={v => setField('noshows_private', v)} />
-                <Stepper label="No-show (Convênio)" value={form.noshows_insurance} onChange={v => setField('noshows_insurance', v)} />
+
+                {paymentType === 'ambos' ? (
+                  <>
+                    <Stepper label="Atendidos (Particular)" value={form.attended_private} onChange={v => setField('attended_private', v)} />
+                    <Stepper label="Atendidos (Convênio)" value={form.attended_insurance} onChange={v => setField('attended_insurance', v)} />
+                  </>
+                ) : (
+                  <Stepper
+                    label="Atendidos"
+                    value={paymentType === 'particular' ? form.attended_private : form.attended_insurance}
+                    onChange={v => setField(paymentType === 'particular' ? 'attended_private' : 'attended_insurance', v)}
+                  />
+                )}
+
+                {paymentType === 'ambos' ? (
+                  <>
+                    <Stepper label="No-show (Particular)" value={form.noshows_private} onChange={v => setField('noshows_private', v)} />
+                    <Stepper label="No-show (Convênio)" value={form.noshows_insurance} onChange={v => setField('noshows_insurance', v)} />
+                  </>
+                ) : (
+                  <Stepper
+                    label="No-show"
+                    value={paymentType === 'particular' ? form.noshows_private : form.noshows_insurance}
+                    onChange={v => setField(paymentType === 'particular' ? 'noshows_private' : 'noshows_insurance', v)}
+                  />
+                )}
+
                 <Stepper label="Cancelamentos" value={form.cancellations} onChange={v => setField('cancellations', v)} />
                 <Stepper label="Novos agend." value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
                 <Stepper label="Buracos na agenda" value={form.empty_slots} onChange={v => setField('empty_slots', v)} />
