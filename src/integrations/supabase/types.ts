@@ -346,6 +346,45 @@ export type Database = {
           },
         ]
       }
+      medical_news: {
+        Row: {
+          category: string
+          created_at: string
+          external_url: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          published_at: string
+          source: string
+          summary: string
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          external_url: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          published_at?: string
+          source: string
+          summary: string
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          external_url?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          published_at?: string
+          source?: string
+          summary?: string
+          title?: string
+        }
+        Relationships: []
+      }
       monthly_reports: {
         Row: {
           clinic_id: string
