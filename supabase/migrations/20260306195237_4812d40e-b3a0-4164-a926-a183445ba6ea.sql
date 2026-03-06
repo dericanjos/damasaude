@@ -1,0 +1,1 @@
+ALTER TABLE public.clinics ADD COLUMN doctor_gender text NOT NULL DEFAULT 'masculino';

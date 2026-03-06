@@ -60,6 +60,7 @@ export type Database = {
         Row: {
           created_at: string
           daily_capacity: number
+          doctor_gender: string
           doctor_name: string | null
           has_secretary: boolean
           id: string
@@ -80,6 +81,7 @@ export type Database = {
         Insert: {
           created_at?: string
           daily_capacity?: number
+          doctor_gender?: string
           doctor_name?: string | null
           has_secretary?: boolean
           id?: string
@@ -100,6 +102,7 @@ export type Database = {
         Update: {
           created_at?: string
           daily_capacity?: number
+          doctor_gender?: string
           doctor_name?: string | null
           has_secretary?: boolean
           id?: string

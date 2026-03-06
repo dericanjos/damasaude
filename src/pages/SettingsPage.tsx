@@ -53,6 +53,7 @@ export default function SettingsPage() {
   // Profile fields
   const [name, setName] = useState('');
   const [doctorName, setDoctorName] = useState('');
+  const [doctorGender, setDoctorGender] = useState('masculino');
   const [specialty, setSpecialty] = useState('');
   const [hasSecretary, setHasSecretary] = useState(false);
 
@@ -74,6 +75,7 @@ export default function SettingsPage() {
       const vals = {
         name: c.name || '',
         doctorName: c.doctor_name || '',
+        doctorGender: c.doctor_gender || 'masculino',
         specialty: c.specialty || '',
         hasSecretary: c.has_secretary ?? false,
         ticketPrivate: c.ticket_private ?? 250,
@@ -85,6 +87,7 @@ export default function SettingsPage() {
       };
       setName(vals.name);
       setDoctorName(vals.doctorName);
+      setDoctorGender(vals.doctorGender);
       setSpecialty(vals.specialty);
       setHasSecretary(vals.hasSecretary);
       setTicketPrivate(vals.ticketPrivate);
@@ -102,6 +105,7 @@ export default function SettingsPage() {
     return (
       name !== initial.name ||
       doctorName !== initial.doctorName ||
+      doctorGender !== initial.doctorGender ||
       specialty !== initial.specialty ||
       hasSecretary !== initial.hasSecretary ||
       ticketPrivate !== initial.ticketPrivate ||
@@ -118,6 +122,7 @@ export default function SettingsPage() {
       await updateClinic.mutateAsync({
         name,
         doctor_name: doctorName,
+        doctor_gender: doctorGender,
         specialty,
         has_secretary: hasSecretary,
         ticket_private: ticketPrivate,
@@ -128,7 +133,7 @@ export default function SettingsPage() {
         target_noshow_rate: noshowRate / 100,
       } as any);
       setInitial({
-        name, doctorName, specialty, hasSecretary,
+        name, doctorName, doctorGender, specialty, hasSecretary,
         ticketPrivate, ticketInsurance, workingDays: [...workingDays], dailyCapacity, fillRate, noshowRate,
       });
       toast.success('Configurações salvas com sucesso!');
@@ -202,8 +207,18 @@ export default function SettingsPage() {
         </div>
         <div className="px-4 pb-4 space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome do médico</Label>
+           <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome do médico</Label>
             <Input value={doctorName} onChange={e => setDoctorName(e.target.value)} className="rounded-xl" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Sexo</Label>
+            <Select value={doctorGender} onValueChange={setDoctorGender}>
+              <SelectTrigger className="rounded-xl"><SelectValue placeholder="Selecione..." /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="masculino">Masculino</SelectItem>
+                <SelectItem value="feminino">Feminino</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Especialidade</Label>
