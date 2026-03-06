@@ -23,7 +23,7 @@ import { useEfficiencyBadge } from '@/hooks/useEfficiencyBadge';
 import { cn } from '@/lib/utils';
 import LossRadarCard from '@/components/LossRadarCard';
 import EfficiencyBadgeModal from '@/components/EfficiencyBadgeModal';
-import DailyVerseCard from '@/components/DailyVerseCard';
+
 
 /** Helper to convert DB row to CheckinData */
 function toCheckinData(c: any): CheckinData {
@@ -409,8 +409,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── DAILY VERSE ── */}
-      <DailyVerseCard />
 
       {/* ── NEWS BANNER ── */}
       {latestNews && (
