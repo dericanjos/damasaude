@@ -14,11 +14,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import SuccessChecklistCard from '@/components/SuccessChecklistCard';
 import {
   TrendingDown, TrendingUp, AlertCircle, CheckCircle2,
-  ClipboardCheck, ArrowRight, Bell, HelpCircle, Flame
+  ClipboardCheck, ArrowRight, Bell, HelpCircle, Flame, Newspaper
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { useLatestNews } from '@/hooks/useNews';
+import { useLatestMedicalNews, useMedicalNewsCount } from '@/hooks/useMedicalNews';
 import { useEfficiencyBadge } from '@/hooks/useEfficiencyBadge';
 import { cn } from '@/lib/utils';
 import LossRadarCard from '@/components/LossRadarCard';
@@ -49,7 +49,8 @@ export default function Dashboard() {
   const { data: actions = [] } = useTodayActions();
   const completeAction = useCompleteAction();
   const { subscriptionStatus, subscriptionEnd } = useSubscription();
-  const { data: news } = useLatestNews();
+  const { data: latestMedicalNews } = useLatestMedicalNews();
+  const { data: medicalNewsCount = 0 } = useMedicalNewsCount();
   const { data: streak = 0 } = useCheckinStreak();
   const { data: hasBadge } = useEfficiencyBadge();
 
@@ -129,8 +130,6 @@ export default function Dashboard() {
   const pendingActions = actions.filter(a => a.status === 'pending');
   const criticalAction = pendingActions[0] ?? null;
   const nextActions = pendingActions.slice(1, 3);
-  const latestNews = news?.[0] ?? null;
-
   return (
     <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
       <EfficiencyBadgeModal />
@@ -410,21 +409,36 @@ export default function Dashboard() {
       )}
 
 
-      {/* ── NEWS BANNER ── */}
-      {latestNews && (
-        <button
-          onClick={() => navigate('/insights')}
-          className="w-full rounded-2xl bg-card border border-border/60 shadow-card p-4 text-left transition-all hover:shadow-elevated active:scale-[0.99]"
-        >
-          <div className="flex items-start gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-0.5">Atualização relevante para você</p>
-              <p className="text-sm font-semibold text-foreground line-clamp-1">{latestNews.title}</p>
-              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{latestNews.summary}</p>
+      {/* ── MEDICAL NEWS BANNER ── */}
+      {latestMedicalNews && (
+        <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+          <a
+            href={latestMedicalNews.external_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block p-4 text-left transition-all hover:bg-accent/5 active:scale-[0.99]"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                <Newspaper className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-0.5">Notícias do Mundo Médico</p>
+                <p className="text-sm font-semibold text-foreground line-clamp-2">{latestMedicalNews.title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{latestMedicalNews.summary}</p>
+                <p className="text-[10px] text-primary/70 font-medium mt-1">{latestMedicalNews.source}</p>
+              </div>
             </div>
-            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground mt-1" />
-          </div>
-        </button>
+          </a>
+          {medicalNewsCount > 1 && (
+            <button
+              onClick={() => navigate('/noticias')}
+              className="w-full border-t border-border/50 px-4 py-2.5 text-xs font-semibold text-primary hover:bg-accent/5 transition-colors flex items-center justify-center gap-1"
+            >
+              Ver todas as notícias <ArrowRight className="h-3 w-3" />
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
