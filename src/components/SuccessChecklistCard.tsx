@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { CheckCircle2, Trophy, Lock } from 'lucide-react';
+import { CheckCircle2, Trophy, Lock, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function SuccessChecklistCard() {
@@ -19,23 +19,25 @@ export default function SuccessChecklistCard() {
   const totalDaysPerWeek = getWorkingDaysPerWeek(workingDays as string[]);
   const hasSecretary = (clinic as any)?.has_secretary ?? false;
 
-  // Dynamic number of items based on checklist
   const itemCount = checklist ? checklistToItems(checklist).length : 3;
 
   const [answers, setAnswers] = useState<boolean[]>(new Array(itemCount).fill(false));
   const [saved, setSaved] = useState(false);
   const [showSeal, setShowSeal] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     if (existingAnswer?.answers?.items) {
       const parsed = (existingAnswer.answers.items as any[]).map((a: any) => a.answered);
       setAnswers(parsed);
       setSaved(true);
+      setCollapsed(true); // Auto-collapse when already saved
       if (existingAnswer.completed) setShowSeal(true);
     } else {
       setAnswers(new Array(itemCount).fill(false));
       setSaved(false);
       setShowSeal(false);
+      setCollapsed(false);
     }
   }, [existingAnswer?.id, itemCount]);
 
@@ -45,6 +47,7 @@ export default function SuccessChecklistCard() {
   const { points, completed } = calculateChecklistPoints(answers);
   const weeklyDone = saved ? weekCount : Math.max(0, weekCount);
   const weeklyProgress = (weeklyDone / totalDaysPerWeek) * 100;
+  const earnedPoints = existingAnswer?.points_earned ?? points;
 
   const handleToggle = (index: number, value: boolean) => {
     if (saved) return;
@@ -57,6 +60,7 @@ export default function SuccessChecklistCard() {
     try {
       const result = await saveChecklist.mutateAsync({ answers, checklist });
       setSaved(true);
+      setCollapsed(true); // Collapse after saving
       if (result.leveledUp) {
         toast.success(`🎉 Parabéns! Você desbloqueou os checklists de Nível ${result.newLevel}: ${LEVEL_NAMES[result.newLevel]}!`);
       }
@@ -71,8 +75,31 @@ export default function SuccessChecklistCard() {
     }
   };
 
+  // Collapsed mini-card
+  if (saved && collapsed) {
+    return (
+      <button
+        onClick={() => setCollapsed(false)}
+        className="w-full rounded-2xl border p-3 flex items-center justify-between transition-all duration-300 ease-in-out"
+        style={{
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          borderColor: 'rgba(34, 197, 94, 0.3)',
+          maxHeight: '48px',
+        }}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: 'rgb(34, 197, 94)' }} />
+          <span className="text-sm font-semibold text-foreground truncate">
+            Checklist concluído! +{earnedPoints}pts
+          </span>
+        </div>
+        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+      </button>
+    );
+  }
+
   return (
-    <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+    <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden transition-all duration-300 ease-in-out">
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between">
           <div>
@@ -83,18 +110,26 @@ export default function SuccessChecklistCard() {
               Checklist {weeklyDone}/{totalDaysPerWeek} da semana: {checklist.category}
             </p>
           </div>
-          {saved && (
-            <div className="flex items-center gap-1 text-primary">
-              <CheckCircle2 className="h-4 w-4" />
-              <span className="text-xs font-semibold">+{existingAnswer?.points_earned ?? points}pts</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {saved && (
+              <>
+                <div className="flex items-center gap-1 text-primary">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span className="text-xs font-semibold">+{earnedPoints}pts</span>
+                </div>
+                <button
+                  onClick={() => setCollapsed(true)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ChevronDown className="h-4 w-4 rotate-180" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
-        {/* Weekly progress bar */}
         <div className="mt-2">
           <Progress value={weeklyProgress} className="h-1.5" />
         </div>
-        {/* Level badge */}
         <div className="mt-1.5 flex items-center gap-2">
           <span className="text-[10px] text-muted-foreground">
             Nível {checklist.level}: {LEVEL_NAMES[checklist.level]}

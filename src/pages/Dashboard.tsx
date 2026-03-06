@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { ChevronDown } from 'lucide-react';
 
 import { useTodayCheckin, useYesterdayCheckin } from '@/hooks/useCheckin';
 import { useTodayActions, useCompleteAction } from '@/hooks/useActions';
@@ -19,6 +20,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useLatestMedicalNews, useMedicalNewsCount } from '@/hooks/useMedicalNews';
+import { useLatestNews } from '@/hooks/useNews';
 import { useEfficiencyBadge } from '@/hooks/useEfficiencyBadge';
 import { cn } from '@/lib/utils';
 import LossRadarCard from '@/components/LossRadarCard';
@@ -51,8 +53,11 @@ export default function Dashboard() {
   const { subscriptionStatus, subscriptionEnd } = useSubscription();
   const { data: latestMedicalNews } = useLatestMedicalNews();
   const { data: medicalNewsCount = 0 } = useMedicalNewsCount();
+  const { data: oldNews } = useLatestNews();
   const { data: streak = 0 } = useCheckinStreak();
   const { data: hasBadge } = useEfficiencyBadge();
+
+  const [checkinCollapsed, setCheckinCollapsed] = useState(true);
 
   const doctorName = (clinic as any)?.doctor_name || user?.user_metadata?.doctor_name || '';
   const doctorGender = (clinic as any)?.doctor_gender || 'masculino';
@@ -182,9 +187,29 @@ export default function Dashboard() {
             </div>
           </div>
         </button>
+      ) : checkinCollapsed ? (
+        /* ── COLLAPSED CHECK-IN MINI-CARD ── */
+        <button
+          onClick={() => setCheckinCollapsed(false)}
+          className="w-full rounded-2xl border p-3 flex items-center justify-between transition-all duration-300 ease-in-out"
+          style={{
+            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+            borderColor: 'rgba(34, 197, 94, 0.3)',
+            maxHeight: '48px',
+          }}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: 'rgb(34, 197, 94)' }} />
+            <span className="text-sm font-semibold text-foreground truncate">
+              Check-in feito! Atendidos: {revenue?.totalAttended ?? 0} | Receita: {revenue ? formatBRL(revenue.estimated) : 'R$0'}
+            </span>
+          </div>
+          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </button>
       ) : (
+        /* ── EXPANDED IDEA SCORE ── */
         <div className={cn(
-          'rounded-2xl p-5 shadow-elevated',
+          'rounded-2xl p-5 shadow-elevated transition-all duration-300 ease-in-out',
           ideaStatus === 'critical' && 'idea-critical',
           ideaStatus === 'attention' && 'idea-attention',
           ideaStatus === 'stable' && 'idea-stable',
@@ -216,8 +241,16 @@ export default function Dashboard() {
                 </p>
               )}
             </div>
-            <div className="text-right opacity-70">
-              <p className="text-sm text-white font-bold">{todayScore}<span className="text-base text-white/60">/100</span></p>
+            <div className="flex flex-col items-end gap-2">
+              <div className="text-right opacity-70">
+                <p className="text-sm text-white font-bold">{todayScore}<span className="text-base text-white/60">/100</span></p>
+              </div>
+              <button
+                onClick={() => setCheckinCollapsed(true)}
+                className="text-white/50 hover:text-white/80 transition-colors"
+              >
+                <ChevronDown className="h-4 w-4 rotate-180" />
+              </button>
             </div>
           </div>
           <p className="mt-3 text-xs text-white/80 border-t border-white/20 pt-2">
@@ -410,7 +443,7 @@ export default function Dashboard() {
 
 
       {/* ── MEDICAL NEWS BANNER ── */}
-      {latestMedicalNews && (
+      {latestMedicalNews ? (
         <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
           <a
             href={latestMedicalNews.external_url}
@@ -439,6 +472,23 @@ export default function Dashboard() {
             </button>
           )}
         </div>
+      ) : oldNews && oldNews.length > 0 && (
+        /* Fallback: old news table */
+        <button
+          onClick={() => navigate('/insights')}
+          className="w-full rounded-2xl bg-card border border-border/60 shadow-card p-4 text-left transition-all hover:shadow-elevated active:scale-[0.99]"
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <Newspaper className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-0.5">Notícias do Mundo Médico</p>
+              <p className="text-sm font-semibold text-foreground line-clamp-1">{oldNews[0].title}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{oldNews[0].summary}</p>
+            </div>
+          </div>
+        </button>
       )}
     </div>
   );
