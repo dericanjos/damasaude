@@ -14,9 +14,26 @@ import { toast } from 'sonner';
 import logoDama from '@/assets/logo-dama.png';
 
 const SPECIALTIES = [
-  'Clínica Geral', 'Dermatologia', 'Ortopedia', 'Cardiologia',
-  'Ginecologia', 'Pediatria', 'Oftalmologia', 'Odontologia',
-  'Psiquiatria', 'Outra',
+  'Clínica Geral / Medicina de Família',
+  'Dermatologia',
+  'Ginecologia e Obstetrícia',
+  'Ortopedia',
+  'Cardiologia',
+  'Oftalmologia',
+  'Pediatria',
+  'Urologia',
+  'Endocrinologia',
+  'Psiquiatria',
+  'Gastroenterologia',
+  'Otorrinolaringologia',
+  'Neurologia',
+  'Cirurgia Geral',
+  'Cirurgia Plástica',
+  'Nutrição / Nutrologia',
+  'Pneumologia',
+  'Reumatologia',
+  'Oncologia',
+  'Outra',
 ];
 
 const TIMEZONES = [
