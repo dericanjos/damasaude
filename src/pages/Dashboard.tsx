@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { ChevronDown } from 'lucide-react';
 
 import { useTodayCheckin, useYesterdayCheckin } from '@/hooks/useCheckin';
 import { useTodayActions, useCompleteAction } from '@/hooks/useActions';
@@ -19,6 +20,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useLatestMedicalNews, useMedicalNewsCount } from '@/hooks/useMedicalNews';
+import { useLatestNews } from '@/hooks/useNews';
 import { useEfficiencyBadge } from '@/hooks/useEfficiencyBadge';
 import { cn } from '@/lib/utils';
 import LossRadarCard from '@/components/LossRadarCard';
@@ -51,8 +53,11 @@ export default function Dashboard() {
   const { subscriptionStatus, subscriptionEnd } = useSubscription();
   const { data: latestMedicalNews } = useLatestMedicalNews();
   const { data: medicalNewsCount = 0 } = useMedicalNewsCount();
+  const { data: oldNews } = useLatestNews();
   const { data: streak = 0 } = useCheckinStreak();
   const { data: hasBadge } = useEfficiencyBadge();
+
+  const [checkinCollapsed, setCheckinCollapsed] = useState(true);
 
   const doctorName = (clinic as any)?.doctor_name || user?.user_metadata?.doctor_name || '';
   const doctorGender = (clinic as any)?.doctor_gender || 'masculino';
