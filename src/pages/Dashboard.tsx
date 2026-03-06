@@ -153,8 +153,7 @@ export default function Dashboard() {
             to="/institucional"
             className="text-xs font-semibold text-[hsl(38,70%,55%)] hover:text-[hsl(38,80%,65%)] transition-colors flex items-center gap-1"
           >
-            Resultados maiores?
-            <ArrowRight className="h-3 w-3" />
+            Conheça a DAMA →
           </Link>
         </div>
       </div>
