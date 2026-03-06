@@ -16,6 +16,7 @@ import {
   AlertTriangle, UserPlus, FileText, Wand2, Loader2, Target, DollarSign, BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ReportTypeTabs from '@/components/ReportTypeTabs';
 import {
   ChartContainer, ChartTooltip, ChartTooltipContent,
 } from '@/components/ui/chart';
