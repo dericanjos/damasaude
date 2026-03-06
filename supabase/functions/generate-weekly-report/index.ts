@@ -77,7 +77,7 @@ serve(async (req) => {
     // Fetch clinic info for context
     const { data: clinic } = await supabase
       .from("clinics")
-      .select("ticket_private, ticket_insurance, daily_capacity, target_fill_rate, target_noshow_rate, working_days")
+      .select("ticket_private, ticket_insurance, daily_capacity, target_fill_rate, target_noshow_rate, working_days, has_secretary")
       .eq("id", clinic_id)
       .single();
 
@@ -133,7 +133,14 @@ serve(async (req) => {
       meta_noshow: `${Math.round((clinic?.target_noshow_rate ?? 0.05) * 100)}%`,
     };
 
-    const systemPrompt = `Você é um consultor de negócios especialista em clínicas médicas. Analise os dados da última semana e gere um relatório estratégico conciso em 3 seções:
+    const hasSecretary = clinic?.has_secretary ?? false;
+    const secretaryContext = hasSecretary
+      ? "O médico TEM secretária. No plano de ação, sugira delegação de tarefas operacionais à secretária."
+      : "O médico NÃO tem secretária. No plano de ação, sugira automação, uso de WhatsApp Business e ações diretas.";
+
+    const systemPrompt = `Você é um consultor de negócios especialista em clínicas médicas. ${secretaryContext}
+
+Analise os dados da última semana e gere um relatório estratégico conciso em 3 seções:
 1. **👍 O que foi bem:** Destaque 1 ou 2 pontos positivos (ex: baixa taxa de no-show, alta ocupação).
 2. **⚠️ Pontos de atenção:** Identifique o maior problema da semana (ex: muitos buracos na agenda, queda no faturamento).
 3. **🎯 Plano de Ação para a próxima semana:** Sugira 2 a 3 ações práticas e específicas para resolver os pontos de atenção.

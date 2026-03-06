@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { calculateChecklistPoints, checklistToItems, POINTS_PER_ITEM, COMPLETION_BONUS, getWorkingDaysPerWeek, LEVEL_NAMES } from '@/lib/checklist';
+import { calculateChecklistPoints, checklistToItems, adaptChecklistText, POINTS_PER_ITEM, COMPLETION_BONUS, getWorkingDaysPerWeek, LEVEL_NAMES } from '@/lib/checklist';
 import { useTodayChecklist, useWeeklyChecklistCount, useSaveChecklist } from '@/hooks/useChecklist';
 import { useClinic } from '@/hooks/useClinic';
 import { Switch } from '@/components/ui/switch';
@@ -17,6 +17,7 @@ export default function SuccessChecklistCard() {
 
   const workingDays = (clinic as any)?.working_days ?? ['seg', 'ter', 'qua', 'qui', 'sex'];
   const totalDaysPerWeek = getWorkingDaysPerWeek(workingDays as string[]);
+  const hasSecretary = (clinic as any)?.has_secretary ?? false;
 
   // Dynamic number of items based on checklist
   const itemCount = checklist ? checklistToItems(checklist).length : 3;
@@ -115,10 +116,10 @@ export default function SuccessChecklistCard() {
                 'text-sm text-foreground leading-snug',
                 saved && answers[i] && 'text-muted-foreground line-through'
               )}>
-                {item.question}
+                {adaptChecklistText(item.question, hasSecretary)}
               </p>
               <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                💡 {item.tip}
+                💡 {adaptChecklistText(item.tip, hasSecretary)}
               </p>
             </div>
             <Switch

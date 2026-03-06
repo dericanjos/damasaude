@@ -44,7 +44,8 @@ export function useGenerateActions() {
         .eq('date', today);
 
       const ideaScore = calculateIDEA(checkinData);
-      const actions = generateActions(checkinData, clinic.target_noshow_rate, ideaScore);
+      const hasSecretary = (clinic as any)?.has_secretary ?? false;
+      const actions = generateActions(checkinData, clinic.target_noshow_rate, ideaScore, hasSecretary);
 
       const { data, error } = await supabase
         .from('daily_actions')

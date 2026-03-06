@@ -12,22 +12,24 @@ serve(async (req) => {
   }
 
   try {
-    const { checkins, type } = await req.json();
+    const { checkins, type, has_secretary } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    const secretaryContext = has_secretary
+      ? "O médico TEM secretária. Adapte suas sugestões para incluir delegação de tarefas operacionais à secretária (ex: 'Peça à secretária para...', 'Oriente sua secretária a...')."
+      : "O médico NÃO tem secretária. Sugira automação, uso de WhatsApp Business e ações diretas que o próprio médico pode executar rapidamente.";
 
     let systemPrompt: string;
     let userPrompt: string;
 
     if (type === "micro") {
-      // Single check-in micro-insight
       systemPrompt =
-        "Você é um consultor de gestão para clínicas médicas. Seja direto e prático. Responda APENAS em português brasileiro.";
+        `Você é um consultor de gestão para clínicas médicas. Seja direto e prático. ${secretaryContext} Responda APENAS em português brasileiro.`;
       userPrompt = `Analise este check-in diário e retorne UMA observação rápida e acionável em no máximo 1 frase curta. Dados do check-in: ${JSON.stringify(checkins)}`;
     } else {
-      // Weekly analysis
       systemPrompt =
-        "Você é um consultor de gestão para clínicas médicas. Analise os dados e retorne um resumo em 3 parágrafos (no máximo 150 palavras total) com: 1) Um diagnóstico da semana, 2) O principal ponto de melhoria, e 3) Uma recomendação acionável. Use um tom profissional e direto. Responda APENAS em português brasileiro.";
+        `Você é um consultor de gestão para clínicas médicas. ${secretaryContext} Analise os dados e retorne um resumo em 3 parágrafos (no máximo 150 palavras total) com: 1) Um diagnóstico da semana, 2) O principal ponto de melhoria, e 3) Uma recomendação acionável. Use um tom profissional e direto. Responda APENAS em português brasileiro.`;
       userPrompt = `Dados dos check-ins da semana: ${JSON.stringify(checkins)}`;
     }
 

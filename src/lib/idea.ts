@@ -119,41 +119,51 @@ export interface ActionRule {
   description: string;
 }
 
-export function generateActions(data: CheckinData, targetNoshowRate: number, ideaScore: number): ActionRule[] {
+export function generateActions(data: CheckinData, targetNoshowRate: number, ideaScore: number, hasSecretary = false): ActionRule[] {
   const actions: ActionRule[] = [];
   const scheduled = Math.max(data.appointments_scheduled, 1);
   const noshows = totalNoshows(data);
   const noShowRate = noshows / scheduled;
 
+  const sec = hasSecretary;
+
   if (data.empty_slots > 0) {
     actions.push({
       action_type: 'fix_empty_slots',
-      title: 'Ativar preenchimento de buracos',
-      description: `Você tem ${data.empty_slots} vaga${data.empty_slots > 1 ? 's' : ''} aberta${data.empty_slots > 1 ? 's' : ''} hoje. Acione sua lista de espera, entre em contato com pacientes que pediram encaixe ou antecipe consultas futuras para preencher esses horários vagos.`,
+      title: sec ? 'Orientar secretária a preencher buracos' : 'Ativar preenchimento de buracos',
+      description: sec
+        ? `Você tem ${data.empty_slots} vaga${data.empty_slots > 1 ? 's' : ''} aberta${data.empty_slots > 1 ? 's' : ''} hoje. Oriente sua secretária a acionar a lista de espera, entrar em contato com pacientes que pediram encaixe ou antecipar consultas futuras para preencher esses horários vagos.`
+        : `Você tem ${data.empty_slots} vaga${data.empty_slots > 1 ? 's' : ''} aberta${data.empty_slots > 1 ? 's' : ''} hoje. Use o WhatsApp Business para acionar sua lista de espera, entre em contato com pacientes que pediram encaixe ou antecipe consultas futuras para preencher esses horários vagos.`,
     });
   }
 
   if (noShowRate >= targetNoshowRate) {
     actions.push({
       action_type: 'confirmations',
-      title: 'Revisar protocolo de confirmação',
-      description: `O no-show de hoje está em ${Math.round(noShowRate * 100)}% (${noshows} paciente${noshows > 1 ? 's' : ''}). Revise se a confirmação em duas etapas está sendo feita: envie lembrete no dia anterior (D-1) e confirme novamente na manhã do atendimento (D-0).`,
+      title: sec ? 'Pedir à secretária para revisar confirmações' : 'Revisar protocolo de confirmação',
+      description: sec
+        ? `O no-show de hoje está em ${Math.round(noShowRate * 100)}% (${noshows} paciente${noshows > 1 ? 's' : ''}). Peça à sua secretária para revisar se a confirmação em duas etapas está sendo feita: lembrete no dia anterior (D-1) e confirmação na manhã do atendimento (D-0).`
+        : `O no-show de hoje está em ${Math.round(noShowRate * 100)}% (${noshows} paciente${noshows > 1 ? 's' : ''}). Faça você mesmo a confirmação em duas etapas: envie lembrete no dia anterior (D-1) via WhatsApp e confirme novamente na manhã do atendimento (D-0).`,
     });
   }
 
   if (!data.followup_done) {
     actions.push({
       action_type: 'reactivation',
-      title: 'Executar rotina de follow-up',
-      description: 'Você ainda não fez o follow-up de hoje. Entre em contato com pacientes que precisam de retorno ou acompanhamento. Quanto mais rápido o contato, maior a chance de manter o paciente ativo na sua agenda.',
+      title: sec ? 'Delegar follow-up à secretária' : 'Executar rotina de follow-up',
+      description: sec
+        ? 'O follow-up de hoje ainda não foi feito. Peça à sua secretária para entrar em contato com pacientes que precisam de retorno ou acompanhamento. Quanto mais rápido o contato, maior a chance de manter o paciente ativo na sua agenda.'
+        : 'Você ainda não fez o follow-up de hoje. Use o WhatsApp Business para entrar em contato com pacientes que precisam de retorno ou acompanhamento. Quanto mais rápido o contato, maior a chance de manter o paciente ativo na sua agenda.',
     });
   }
 
   if (ideaScore >= 80 && actions.length === 0) {
     actions.push({
       action_type: 'collect_nps',
-      title: 'Pedir avaliações hoje',
-      description: 'Seu dia está indo muito bem. Aproveite a boa experiência dos pacientes para pedir avaliações no Google ou redes sociais. Isso fortalece sua reputação online e gera novas indicações.',
+      title: sec ? 'Pedir à secretária para coletar avaliações' : 'Pedir avaliações hoje',
+      description: sec
+        ? 'Seu dia está indo muito bem. Oriente sua secretária a pedir avaliações dos pacientes no Google ou redes sociais após o atendimento. Isso fortalece sua reputação online e gera novas indicações.'
+        : 'Seu dia está indo muito bem. Aproveite a boa experiência dos pacientes para pedir avaliações no Google ou redes sociais. Isso fortalece sua reputação online e gera novas indicações.',
     });
   }
 
@@ -161,7 +171,9 @@ export function generateActions(data: CheckinData, targetNoshowRate: number, ide
     actions.push({
       action_type: 'schedule_admin_block',
       title: 'Bloquear 30 min para gestão',
-      description: 'Reserve 30 minutos no final do dia para analisar seus números da semana, revisar a agenda dos próximos dias e identificar horários que precisam de atenção.',
+      description: sec
+        ? 'Reserve 30 minutos no final do dia com sua secretária para analisar os números da semana, revisar a agenda dos próximos dias e identificar horários que precisam de atenção.'
+        : 'Reserve 30 minutos no final do dia para analisar seus números da semana, revisar a agenda dos próximos dias e identificar horários que precisam de atenção.',
     });
   }
 
