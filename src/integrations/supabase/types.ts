@@ -70,7 +70,9 @@ export type Database = {
           specialty: string | null
           target_fill_rate: number
           target_noshow_rate: number
+          ticket_insurance: number
           ticket_medio: number
+          ticket_private: number
           timezone: string
           user_id: string
           working_days: Json
@@ -88,7 +90,9 @@ export type Database = {
           specialty?: string | null
           target_fill_rate?: number
           target_noshow_rate?: number
+          ticket_insurance?: number
           ticket_medio?: number
+          ticket_private?: number
           timezone?: string
           user_id: string
           working_days?: Json
@@ -106,7 +110,9 @@ export type Database = {
           specialty?: string | null
           target_fill_rate?: number
           target_noshow_rate?: number
+          ticket_insurance?: number
           ticket_medio?: number
+          ticket_private?: number
           timezone?: string
           user_id?: string
           working_days?: Json
@@ -164,6 +170,8 @@ export type Database = {
         Row: {
           appointments_done: number
           appointments_scheduled: number
+          attended_insurance: number
+          attended_private: number
           cancellations: number
           clinic_id: string
           created_at: string
@@ -174,12 +182,16 @@ export type Database = {
           insight_text: string | null
           new_appointments: number
           no_show: number
+          noshows_insurance: number
+          noshows_private: number
           notes: string | null
           user_id: string
         }
         Insert: {
           appointments_done?: number
           appointments_scheduled?: number
+          attended_insurance?: number
+          attended_private?: number
           cancellations?: number
           clinic_id: string
           created_at?: string
@@ -190,12 +202,16 @@ export type Database = {
           insight_text?: string | null
           new_appointments?: number
           no_show?: number
+          noshows_insurance?: number
+          noshows_private?: number
           notes?: string | null
           user_id: string
         }
         Update: {
           appointments_done?: number
           appointments_scheduled?: number
+          attended_insurance?: number
+          attended_private?: number
           cancellations?: number
           clinic_id?: string
           created_at?: string
@@ -206,6 +222,8 @@ export type Database = {
           insight_text?: string | null
           new_appointments?: number
           no_show?: number
+          noshows_insurance?: number
+          noshows_private?: number
           notes?: string | null
           user_id?: string
         }
