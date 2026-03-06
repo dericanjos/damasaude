@@ -14,25 +14,25 @@ import { toast } from 'sonner';
 import logoDama from '@/assets/logo-dama.png';
 
 const SPECIALTIES = [
-  'Clínica Geral / Medicina de Família',
-  'Dermatologia',
-  'Ginecologia e Obstetrícia',
-  'Ortopedia',
   'Cardiologia',
-  'Oftalmologia',
-  'Pediatria',
-  'Urologia',
-  'Endocrinologia',
-  'Psiquiatria',
-  'Gastroenterologia',
-  'Otorrinolaringologia',
-  'Neurologia',
   'Cirurgia Geral',
   'Cirurgia Plástica',
+  'Clínica Geral / Medicina de Família',
+  'Dermatologia',
+  'Endocrinologia',
+  'Gastroenterologia',
+  'Ginecologia e Obstetrícia',
+  'Neurologia',
   'Nutrição / Nutrologia',
-  'Pneumologia',
-  'Reumatologia',
+  'Oftalmologia',
   'Oncologia',
+  'Ortopedia',
+  'Otorrinolaringologia',
+  'Pediatria',
+  'Pneumologia',
+  'Psiquiatria',
+  'Reumatologia',
+  'Urologia',
   'Outra',
 ];
 
@@ -242,6 +242,7 @@ export default function OnboardingPage() {
                   <SelectItem value="ambos">Ambos</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground">Isso define como calculamos seu faturamento e as métricas de perda (ticket particular vs. convênio).</p>
             </div>
           </div>
         )}
