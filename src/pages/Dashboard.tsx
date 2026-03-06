@@ -232,8 +232,14 @@ export default function Dashboard() {
                   </PopoverContent>
                 </Popover>
               </div>
-              <p className="text-5xl font-extrabold text-white tracking-tight mt-0.5">{todayScore}</p>
-              <p className="text-sm font-semibold text-white/90 mt-0.5">{getIdeaLabel(ideaStatus!)}</p>
+              <button onClick={() => navigate('/idea')} className="text-left group">
+                <p className="text-5xl font-extrabold text-white tracking-tight mt-0.5 group-hover:opacity-90 transition-opacity">{todayScore}</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <p className="text-sm font-semibold text-white/90">{getIdeaLabel(ideaStatus!)}</p>
+                  <Info className="h-3 w-3 text-white/50" />
+                </div>
+                <p className="text-[10px] text-white/50 mt-0.5">Índice DAMA de Eficiência do Atendimento</p>
+              </button>
               <p className="text-[11px] text-white/60 mt-0.5">Quanto maior, mais eficiente sua agenda</p>
               {yesterdayScore != null && (
                 <p className="text-xs text-white/65 mt-1">
