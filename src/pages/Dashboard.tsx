@@ -272,7 +272,10 @@ export default function Dashboard() {
             <p className="text-[11px] text-muted-foreground">de consistência</p>
           </div>
           {/* IDEA Gauge */}
-          <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card flex flex-col items-center justify-center text-center">
+          <button
+            onClick={() => navigate('/idea')}
+            className="rounded-2xl bg-card border border-border/60 p-4 shadow-card flex flex-col items-center justify-center text-center transition-transform active:scale-[0.98] cursor-pointer"
+          >
             <div className="relative w-20 h-12 mb-1">
               <svg viewBox="0 0 120 70" className="w-full h-full">
                 <path
@@ -295,22 +298,10 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center gap-1">
               <p className="text-[11px] font-semibold text-muted-foreground">Índice IDEA</p>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
-                    <HelpCircle className="h-3 w-3" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 text-sm" side="top">
-                  <p className="font-semibold mb-1">O que é o Índice IDEA?</p>
-                  <p className="text-muted-foreground text-xs leading-relaxed">
-                    O IDEA mede a eficiência da sua agenda com base em ocupação, no-shows e cancelamentos. Score acima de 70 = agenda saudável.
-                  </p>
-                </PopoverContent>
-              </Popover>
+              <Info className="h-3 w-3 text-muted-foreground/50" />
             </div>
-            <p className="text-[10px] text-muted-foreground/70">Quanto maior, mais eficiente</p>
-          </div>
+            <p className="text-[10px] text-muted-foreground/70">Índice DAMA de Eficiência do Atendimento</p>
+          </button>
         </div>
       )}
       {revenue && (

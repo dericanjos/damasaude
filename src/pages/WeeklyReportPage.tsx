@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useWeekCheckins, useAllCheckins } from '@/hooks/useCheckin';
 import { calculateIDEA, getIdeaStatus, getIdeaLabel, type CheckinData } from '@/lib/idea';
 import { formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY } from '@/lib/revenue';
@@ -7,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { startOfWeek, subWeeks, addWeeks, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, BarChart3, TrendingUp, TrendingDown, Loader2, Sparkles, Mail } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BarChart3, TrendingUp, TrendingDown, Loader2, Sparkles, Mail, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
