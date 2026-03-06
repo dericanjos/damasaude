@@ -140,6 +140,10 @@ export function useSaveCheckin() {
   return useMutation({
     mutationFn: async (checkin: {
       appointments_scheduled: number;
+      attended_private: number;
+      attended_insurance: number;
+      noshows_private: number;
+      noshows_insurance: number;
       appointments_done: number;
       no_show: number;
       cancellations: number;
@@ -159,7 +163,7 @@ export function useSaveCheckin() {
           user_id: user.id,
           date: today,
           ...checkin,
-        }, { onConflict: 'clinic_id,date' })
+        } as any, { onConflict: 'clinic_id,date' })
         .select()
         .single();
 
