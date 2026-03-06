@@ -199,7 +199,8 @@ export default function CheckinPage() {
       setShowReward(true);
 
       // Fire micro-insight in background
-      generateMicroInsight([submitData], 'micro').then((micro) => {
+      const hasSecretary = (clinic as any)?.has_secretary ?? false;
+      generateMicroInsight([submitData], 'micro', hasSecretary).then((micro) => {
         if (micro) {
           toast.success(`Check-in salvo! ✨ Dica do dia: ${micro}`, { duration: 8000 });
         }

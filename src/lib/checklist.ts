@@ -62,3 +62,42 @@ export function isTodayWorkingDay(workingDays: string[]): boolean {
 export function getWorkingDaysPerWeek(workingDays: string[]): number {
   return workingDays.length;
 }
+
+/**
+ * Adapts checklist task/tip text based on whether the doctor has a secretary.
+ * With secretary: uses delegation language.
+ * Without secretary: uses direct action language.
+ */
+export function adaptChecklistText(text: string, hasSecretary: boolean): string {
+  if (!hasSecretary) return text;
+  
+  // Common patterns to convert to delegation language
+  const replacements: [RegExp, string][] = [
+    [/^Envie /i, 'Peça à sua secretária para enviar '],
+    [/^Confirme /i, 'Peça à sua secretária para confirmar '],
+    [/^Ligue /i, 'Peça à sua secretária para ligar '],
+    [/^Entre em contato /i, 'Peça à sua secretária para entrar em contato '],
+    [/^Revise /i, 'Peça à sua secretária para revisar '],
+    [/^Organize /i, 'Peça à sua secretária para organizar '],
+    [/^Agende /i, 'Peça à sua secretária para agendar '],
+    [/^Reagende /i, 'Peça à sua secretária para reagendar '],
+    [/^Verifique /i, 'Peça à sua secretária para verificar '],
+    [/^Faça /i, 'Peça à sua secretária para fazer '],
+    [/^Realize /i, 'Peça à sua secretária para realizar '],
+    [/^Separe /i, 'Peça à sua secretária para separar '],
+    [/^Prepare /i, 'Peça à sua secretária para preparar '],
+    [/^Cheque /i, 'Peça à sua secretária para checar '],
+    [/^Mande /i, 'Peça à sua secretária para mandar '],
+    [/^Identifique /i, 'Peça à sua secretária para identificar '],
+  ];
+
+  for (const [pattern, replacement] of replacements) {
+    if (pattern.test(text)) {
+      return text.replace(pattern, replacement);
+    }
+  }
+
+  // If no specific pattern matched but it starts with a verb, add generic prefix
+  // Check if first word looks like an imperative verb (ends in 'e', 'a', etc.)
+  return text;
+}

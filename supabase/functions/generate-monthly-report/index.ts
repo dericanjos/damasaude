@@ -77,7 +77,7 @@ serve(async (req) => {
     // Fetch clinic info
     const { data: clinic } = await supabase
       .from("clinics")
-      .select("ticket_private, ticket_insurance, daily_capacity, target_fill_rate, target_noshow_rate, working_days")
+      .select("ticket_private, ticket_insurance, daily_capacity, target_fill_rate, target_noshow_rate, working_days, has_secretary")
       .eq("id", clinic_id)
       .single();
 
@@ -123,7 +123,14 @@ serve(async (req) => {
       meta_noshow: `${Math.round((clinic?.target_noshow_rate ?? 0.05) * 100)}%`,
     };
 
-    const systemPrompt = `Você é um consultor de negócios sênior especialista em gestão de clínicas médicas. Analise os dados consolidados deste mês e gere um relatório executivo em 3 seções:
+    const hasSecretary = clinic?.has_secretary ?? false;
+    const secretaryContext = hasSecretary
+      ? "O médico TEM secretária. Nas prioridades, sugira delegação de tarefas operacionais à secretária."
+      : "O médico NÃO tem secretária. Nas prioridades, sugira automação, uso de WhatsApp Business e ações diretas.";
+
+    const systemPrompt = `Você é um consultor de negócios sênior especialista em gestão de clínicas médicas. ${secretaryContext}
+
+Analise os dados consolidados deste mês e gere um relatório executivo em 3 seções:
 
 1. **📈 Diagnóstico do Mês:** Qual foi o principal ponto forte e o principal ponto fraco do mês? (ex: "O faturamento cresceu, mas a taxa de no-show de convênio aumentou").
 2. **📊 Análise de Tendências:** Analise a performance dos KPIs principais e identifique tendências de melhora ou piora ao longo do mês.

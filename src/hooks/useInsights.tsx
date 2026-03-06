@@ -6,12 +6,12 @@ export function useGenerateInsight() {
   const [insight, setInsight] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const generate = async (checkins: any[], type: 'weekly' | 'micro' = 'weekly') => {
+  const generate = async (checkins: any[], type: 'weekly' | 'micro' = 'weekly', hasSecretary = false) => {
     setLoading(true);
     setError(null);
     try {
       const { data, error: fnError } = await supabase.functions.invoke('generate-insights', {
-        body: { checkins, type },
+        body: { checkins, type, has_secretary: hasSecretary },
       });
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
