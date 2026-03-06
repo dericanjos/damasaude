@@ -187,9 +187,29 @@ export default function Dashboard() {
             </div>
           </div>
         </button>
+      ) : checkinCollapsed ? (
+        /* ── COLLAPSED CHECK-IN MINI-CARD ── */
+        <button
+          onClick={() => setCheckinCollapsed(false)}
+          className="w-full rounded-2xl border p-3 flex items-center justify-between transition-all duration-300 ease-in-out"
+          style={{
+            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+            borderColor: 'rgba(34, 197, 94, 0.3)',
+            maxHeight: '48px',
+          }}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: 'rgb(34, 197, 94)' }} />
+            <span className="text-sm font-semibold text-foreground truncate">
+              Check-in feito! Atendidos: {revenue?.totalAttended ?? 0} | Receita: {revenue ? formatBRL(revenue.estimated) : 'R$0'}
+            </span>
+          </div>
+          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </button>
       ) : (
+        /* ── EXPANDED IDEA SCORE ── */
         <div className={cn(
-          'rounded-2xl p-5 shadow-elevated',
+          'rounded-2xl p-5 shadow-elevated transition-all duration-300 ease-in-out',
           ideaStatus === 'critical' && 'idea-critical',
           ideaStatus === 'attention' && 'idea-attention',
           ideaStatus === 'stable' && 'idea-stable',
@@ -221,8 +241,16 @@ export default function Dashboard() {
                 </p>
               )}
             </div>
-            <div className="text-right opacity-70">
-              <p className="text-sm text-white font-bold">{todayScore}<span className="text-base text-white/60">/100</span></p>
+            <div className="flex flex-col items-end gap-2">
+              <div className="text-right opacity-70">
+                <p className="text-sm text-white font-bold">{todayScore}<span className="text-base text-white/60">/100</span></p>
+              </div>
+              <button
+                onClick={() => setCheckinCollapsed(true)}
+                className="text-white/50 hover:text-white/80 transition-colors"
+              >
+                <ChevronDown className="h-4 w-4 rotate-180" />
+              </button>
             </div>
           </div>
           <p className="mt-3 text-xs text-white/80 border-t border-white/20 pt-2">
