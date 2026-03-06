@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Share2, Loader2, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
@@ -95,7 +95,7 @@ export default function VersePage() {
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-gradient-to-b from-[hsl(222,47%,12%)] via-background to-[hsl(222,47%,10%)] px-6 py-10">
       {/* Logo */}
       <div className="flex-shrink-0 pt-4">
-        <img src={logoDama} alt="DAMA" className="h-[60px] object-contain" />
+        <img src={logoDama} alt="DAMA" className="h-[80px] object-contain" />
       </div>
 
       {/* Verse content (shareable area) */}
@@ -127,7 +127,7 @@ export default function VersePage() {
           {sharing ? (
             <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
           ) : (
-            <Share2 className="h-3.5 w-3.5 mr-1.5" />
+            <svg className="h-3.5 w-3.5 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>
           )}
           Compartilhar no Stories
         </Button>
@@ -142,7 +142,7 @@ export default function VersePage() {
         </Button>
 
         <p className="text-[10px] text-muted-foreground/50 font-medium tracking-wider mt-2">
-          DAMA · Gestão Inteligente
+          DAMA · Solução completa para médicos
         </p>
       </div>
     </div>
