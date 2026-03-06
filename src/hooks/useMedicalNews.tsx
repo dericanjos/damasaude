@@ -25,7 +25,7 @@ export function useLatestMedicalNews() {
         .order('published_at', { ascending: false })
         .limit(1);
       if (error) throw error;
-      return (data as any[])?.[0] as MedicalNewsItem | undefined;
+      return (data as unknown as MedicalNewsItem[])?.[0] as MedicalNewsItem | undefined;
     },
   });
 }
@@ -40,7 +40,7 @@ export function useAllMedicalNews() {
         .eq('is_active', true)
         .order('published_at', { ascending: false });
       if (error) throw error;
-      return data as MedicalNewsItem[];
+      return data as unknown as MedicalNewsItem[];
     },
   });
 }
