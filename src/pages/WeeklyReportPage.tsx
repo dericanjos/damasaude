@@ -29,6 +29,7 @@ function toCheckinData(c: any): CheckinData {
 }
 
 export default function WeeklyReportPage() {
+  const navigate = useNavigate();
   const [weekOffset, setWeekOffset] = useState(0);
   const { data: clinic } = useClinic();
   const { data: allCheckins = [] } = useAllCheckins();
@@ -196,16 +197,23 @@ export default function WeeklyReportPage() {
 
           {/* IDEA avg */}
           {avgScore != null && (
-            <div className={cn(
-              'rounded-2xl p-5 shadow-elevated text-center',
-              avgStatus === 'critical' && 'idea-critical',
-              avgStatus === 'attention' && 'idea-attention',
-              avgStatus === 'stable' && 'idea-stable',
-            )}>
-              <p className="text-xs font-bold text-white/70 uppercase tracking-widest">IDEA Médio Semanal</p>
+            <button
+              onClick={() => navigate('/idea')}
+              className={cn(
+                'w-full rounded-2xl p-5 shadow-elevated text-center cursor-pointer transition-transform active:scale-[0.98]',
+                avgStatus === 'critical' && 'idea-critical',
+                avgStatus === 'attention' && 'idea-attention',
+                avgStatus === 'stable' && 'idea-stable',
+              )}
+            >
+              <div className="flex items-center justify-center gap-1">
+                <p className="text-xs font-bold text-white/70 uppercase tracking-widest">IDEA Médio Semanal</p>
+                <Info className="h-3 w-3 text-white/50" />
+              </div>
               <p className="text-5xl font-extrabold text-white tracking-tight mt-1">{avgScore}</p>
               <p className="text-sm font-semibold text-white/90 mt-0.5">{getIdeaLabel(avgStatus!)}</p>
-            </div>
+              <p className="text-[10px] text-white/50 mt-0.5">Índice DAMA de Eficiência do Atendimento</p>
+            </button>
           )}
 
           {/* Revenue */}
