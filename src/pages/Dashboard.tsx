@@ -443,7 +443,7 @@ export default function Dashboard() {
 
 
       {/* ── MEDICAL NEWS BANNER ── */}
-      {latestMedicalNews && (
+      {latestMedicalNews ? (
         <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
           <a
             href={latestMedicalNews.external_url}
@@ -472,6 +472,23 @@ export default function Dashboard() {
             </button>
           )}
         </div>
+      ) : oldNews && oldNews.length > 0 && (
+        /* Fallback: old news table */
+        <button
+          onClick={() => navigate('/insights')}
+          className="w-full rounded-2xl bg-card border border-border/60 shadow-card p-4 text-left transition-all hover:shadow-elevated active:scale-[0.99]"
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <Newspaper className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-0.5">Notícias do Mundo Médico</p>
+              <p className="text-sm font-semibold text-foreground line-clamp-1">{oldNews[0].title}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{oldNews[0].summary}</p>
+            </div>
+          </div>
+        </button>
       )}
     </div>
   );
