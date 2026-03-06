@@ -109,11 +109,10 @@ export default function VersePage() {
         className="flex flex-col items-center justify-center text-center max-w-sm rounded-2xl p-8"
         style={{ border: '1px solid rgba(212,175,55,0.3)' }}
       >
-        {/* Decorative quote mark */}
-        <div className="font-serif leading-none mb-4" style={{ fontSize: '48px', color: '#D4AF37' }}>"</div>
-
         <p className="text-xl font-medium text-foreground leading-relaxed italic">
+          <span style={{ fontFamily: 'Georgia, serif', fontSize: '64px', color: 'rgba(212,175,55,0.6)', lineHeight: '0.5', verticalAlign: '-0.15em' }}>{"\u201C"}</span>
           {verse.verse_text}
+          <span style={{ fontFamily: 'Georgia, serif', fontSize: '64px', color: 'rgba(212,175,55,0.6)', lineHeight: '0.5', verticalAlign: '-0.4em' }}>{"\u201D"}</span>
         </p>
 
         <p className="text-sm font-semibold text-muted-foreground mt-5">
