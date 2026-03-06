@@ -40,11 +40,14 @@ export function calculateRevenueEstimated(
 }
 
 /**
- * IDEA Score – simplified, explainable formula:
- * Base 100
- * penalty = (revenue_lost / revenue_potential) * 100
- * bonus = followup_done ? +5 : 0
- * Clamp 0–100
+ * IDEA Score – improved formula:
+ * IDEA = 100 - penalty + bonus_followup + bonus_occupation + bonus_capture
+ *
+ * - Weighted average ticket based on actual attendance proportions
+ * - Conditional follow-up bonus (+5 only if base score ≥ 50)
+ * - Occupation bonus (+3 if occupancy ≥ 90%)
+ * - Capture bonus (+2 if new_appointments > 0)
+ * - Clamped 0–100
  */
 export function calculateIDEA(
   data: CheckinData,
@@ -55,12 +58,26 @@ export function calculateIDEA(
   const capacity = dailyCapacity ?? DEFAULT_DAILY_CAPACITY;
   const tp = ticketPrivate ?? DEFAULT_TICKET_PRIVATE;
   const ti = ticketInsurance ?? DEFAULT_TICKET_INSURANCE;
-  const avgTicket = (tp + ti) / 2;
-  const revenuePotential = capacity * avgTicket;
-  const revenueLost = calculateRevenueLost(data, tp, ti);
-  const penalty = (revenueLost / revenuePotential) * 100;
-  const bonus = data.followup_done ? 5 : 0;
-  return Math.max(0, Math.min(100, Math.round(100 - penalty + bonus)));
+
+  const attended = totalAttended(data);
+  const propPrivate = attended > 0 ? data.attended_private / attended : 0.5;
+  const propInsurance = attended > 0 ? data.attended_insurance / attended : 0.5;
+  const weightedTicket = (tp * propPrivate) + (ti * propInsurance);
+
+  const revenuePotential = capacity * weightedTicket;
+  const revenueLost =
+    (data.noshows_private * tp) +
+    (data.noshows_insurance * ti) +
+    ((data.cancellations + data.empty_slots) * weightedTicket);
+
+  const penalty = revenuePotential > 0 ? (revenueLost / revenuePotential) * 100 : 0;
+  const baseScore = 100 - penalty;
+
+  const bonusFollowup = (data.followup_done && baseScore >= 50) ? 5 : 0;
+  const bonusOccupation = (attended / capacity) >= 0.90 ? 3 : 0;
+  const bonusCapture = data.new_appointments > 0 ? 2 : 0;
+
+  return Math.max(0, Math.min(100, Math.round(baseScore + bonusFollowup + bonusOccupation + bonusCapture)));
 }
 
 export function getIdeaStatus(score: number): 'critical' | 'attention' | 'stable' {
