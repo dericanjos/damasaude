@@ -170,7 +170,7 @@ export default function WeeklyReportPage() {
           <div className="rounded-2xl bg-card border border-primary/30 shadow-card overflow-hidden">
             <div className="px-4 pt-4 pb-2 flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              <p className="text-xs font-bold text-primary uppercase tracking-wider">Diagnóstico Semanal com IA</p>
+              <p className="text-xs font-bold text-primary uppercase tracking-wider">Diagnóstico Semanal</p>
             </div>
             <div className="px-4 pb-4">
               {aiLoading ? (

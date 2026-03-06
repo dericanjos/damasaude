@@ -285,11 +285,11 @@ export default function InsightsPage() {
 
           {/* ── ABA 1: RESUMO SEMANAL ── */}
           <TabsContent value="resumo" className="space-y-4 mt-4">
-            {/* Consultor IA */}
+            {/* Análise Semanal */}
             <div className="rounded-2xl bg-card border border-primary/30 shadow-card overflow-hidden">
               <div className="px-4 pt-4 pb-2 flex items-center gap-2">
                 <Wand2 className="h-4 w-4 text-primary" />
-                <p className="text-xs font-bold text-primary uppercase tracking-wider">Análise do seu Consultor IA</p>
+                <p className="text-xs font-bold text-primary uppercase tracking-wider">Análise Semanal</p>
               </div>
               <div className="px-4 pb-4">
                 {aiLoading ? (

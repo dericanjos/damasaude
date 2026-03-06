@@ -12,7 +12,7 @@ const benefits = [
   { icon: BarChart3, text: 'Dashboard completo com métricas em tempo real' },
   { icon: CheckCircle, text: 'Check-in diário e acompanhamento de agenda' },
   { icon: Shield, text: 'Análise de motivos de perda de pacientes' },
-  { icon: Zap, text: 'Ações diárias personalizadas com IA' },
+  { icon: Zap, text: 'Ações diárias personalizadas' },
 ];
 
 const reasonMessages: Record<string, { title: string; description: string }> = {
