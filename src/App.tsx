@@ -17,18 +17,29 @@ import SubscriptionPage from "@/pages/SubscriptionPage";
 import InsightsPage from "@/pages/InsightsPage";
 import InstitucionalPage from "@/pages/InstitucionalPage";
 import OnboardingPage from "@/pages/OnboardingPage";
+import VersePage from "@/pages/VersePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+function hasSeenVerseToday(): boolean {
+  const seen = localStorage.getItem('verse_seen_date');
+  if (!seen) return false;
+  return seen === new Date().toISOString().slice(0, 10);
+}
 
 function ProtectedRoutes() {
   const { data: onboardingCompleted, isLoading } = useOnboardingStatus();
   
   if (isLoading) return null;
   
-  // Redirect to onboarding if not completed
   if (onboardingCompleted === false) {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  // Redirect to verse if not seen today
+  if (!hasSeenVerseToday()) {
+    return <Navigate to="/versiculo" replace />;
   }
 
   return (
@@ -44,6 +55,14 @@ function ProtectedRoutes() {
       </Routes>
     </AppLayout>
   );
+}
+
+function VerseRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (hasSeenVerseToday()) return <Navigate to="/" replace />;
+  return <VersePage />;
 }
 
 function OnboardingRoute() {
@@ -82,6 +101,7 @@ const App = () => (
             <Routes>
               <Route path="/auth" element={<AuthRoute />} />
               <Route path="/onboarding" element={<OnboardingRoute />} />
+              <Route path="/versiculo" element={<VerseRoute />} />
               <Route path="/assinatura" element={<SubscriptionRoute />} />
               <Route path="/institucional" element={<InstitucionalPage />} />
               <Route path="/*" element={<ProtectedRoutes />} />
