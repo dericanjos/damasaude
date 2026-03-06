@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, ClipboardCheck, BarChart3, Sparkles, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import logoDama from '@/assets/logo-dama.png';
 
 const tabs = [
   { path: '/', icon: LayoutDashboard, label: 'Hoje' },
@@ -17,6 +18,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <header className="flex items-center justify-center pt-4 pb-1">
+        <img src={logoDama} alt="DAMA" className="h-10 object-contain" />
+      </header>
       <main className="flex-1 safe-bottom">
         {children}
       </main>
