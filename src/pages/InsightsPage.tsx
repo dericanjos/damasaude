@@ -523,63 +523,29 @@ export default function InsightsPage() {
 
           {/* ── ABA 4: RELATÓRIOS ── */}
           <TabsContent value="relatorios" className="space-y-4 mt-4">
-            <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
-              <div className="px-4 pt-4 pb-2">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-primary" />
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Gerador de Relatório Mensal</p>
-                </div>
-              </div>
-              <div className="px-4 pb-4 space-y-4">
-                <div className="space-y-1.5">
-                  <p className="text-sm text-foreground">Selecione o mês</p>
-                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                    <SelectTrigger className="rounded-xl">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {monthOptions.map((m) => (
-                        <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {monthCheckins.length > 0 && (
-                  <div className="rounded-xl bg-secondary/50 border border-border/40 p-4 space-y-2">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Prévia do mês</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {[
-                        { label: 'Faturamento', value: formatBRL(calcWeek(monthCheckins).revenue) },
-                        { label: 'Perda Total', value: formatBRL(calcWeek(monthCheckins).lost) },
-                        { label: 'IDEA Médio', value: `${calcWeek(monthCheckins).avgScore ?? '-'}` },
-                        { label: 'Check-ins', value: `${monthCheckins.length} dias` },
-                      ].map(k => (
-                        <div key={k.label}>
-                          <p className="text-[10px] text-muted-foreground">{k.label}</p>
-                          <p className="text-sm font-bold text-foreground">{k.value}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  variant="outline"
-                  className="w-full rounded-xl"
-                  disabled={monthCheckins.length === 0}
-                  onClick={handleGeneratePDF}
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Gerar Relatório em PDF
-                </Button>
-                {monthCheckins.length === 0 && (
-                  <p className="text-[11px] text-muted-foreground text-center">
-                    Nenhum check-in encontrado neste mês.
-                  </p>
-                )}
-              </div>
+            {/* Month selector */}
+            <div className="space-y-1.5">
+              <p className="text-sm text-foreground">Selecione o mês</p>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthOptions.map((m) => (
+                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            {/* Report type toggle */}
+            <ReportTypeTabs
+              selectedMonth={selectedMonth}
+              monthCheckins={monthCheckins}
+              calcWeek={calcWeek}
+              handleGeneratePDF={handleGeneratePDF}
+              clinicId={clinic?.id}
+            />
           </TabsContent>
         </Tabs>
       )}
