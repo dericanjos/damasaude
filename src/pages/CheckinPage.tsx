@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import {
   ClipboardCheck, CheckCircle2, TrendingDown, TrendingUp, ChevronRight,
-  Minus, Plus, Zap, Flame
+  Minus, Plus, Zap, Flame, Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -229,8 +229,14 @@ export default function CheckinPage() {
         )}>
           <CheckCircle2 className="mx-auto h-9 w-9 text-white/80 mb-2" />
           <p className="text-xs font-bold text-white/70 uppercase tracking-widest">Diagnóstico do Dia Concluído!</p>
-          <p className="text-7xl font-extrabold text-white tracking-tight mt-1">{reward.score}</p>
-          <p className="text-base font-semibold text-white/90 mt-1">Performance {getIdeaLabel(status)}</p>
+          <button onClick={() => navigate('/idea')} className="group">
+            <p className="text-7xl font-extrabold text-white tracking-tight mt-1 group-hover:opacity-90 transition-opacity">{reward.score}</p>
+            <div className="flex items-center justify-center gap-1 mt-1">
+              <p className="text-base font-semibold text-white/90">Performance {getIdeaLabel(status)}</p>
+              <Info className="h-3 w-3 text-white/50" />
+            </div>
+            <p className="text-[10px] text-white/50 mt-0.5">Índice DAMA de Eficiência do Atendimento</p>
+          </button>
           <p className="text-sm text-white/80 mt-3 font-medium italic">"{reward.insightText}"</p>
         </div>
 
