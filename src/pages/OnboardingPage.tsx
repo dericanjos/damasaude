@@ -55,6 +55,7 @@ export default function OnboardingPage() {
 
   // Step 1
   const [doctorName, setDoctorName] = useState(user?.user_metadata?.doctor_name || '');
+  const [doctorGender, setDoctorGender] = useState<string>('masculino');
   const [specialty, setSpecialty] = useState('');
   const [hasSecretary, setHasSecretary] = useState(false);
 
@@ -98,6 +99,7 @@ export default function OnboardingPage() {
       const clinicData = {
         name: clinicName,
         doctor_name: doctorName,
+        doctor_gender: doctorGender,
         specialty,
         has_secretary: hasSecretary,
         num_doctors: numDoctors,
@@ -168,7 +170,17 @@ export default function OnboardingPage() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome do médico *</Label>
-              <Input value={doctorName} onChange={e => setDoctorName(e.target.value)} placeholder="Dr(a). Maria Silva" className="rounded-xl" />
+              <Input value={doctorName} onChange={e => setDoctorName(e.target.value)} placeholder="Maria Silva" className="rounded-xl" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Sexo *</Label>
+              <Select value={doctorGender} onValueChange={setDoctorGender}>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="masculino">Masculino</SelectItem>
+                  <SelectItem value="feminino">Feminino</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Especialidade *</Label>

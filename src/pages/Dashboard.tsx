@@ -53,7 +53,9 @@ export default function Dashboard() {
   const { data: streak = 0 } = useCheckinStreak();
   const { data: hasBadge } = useEfficiencyBadge();
 
-  const doctorName = user?.user_metadata?.doctor_name || 'Doutor(a)';
+  const doctorName = (clinic as any)?.doctor_name || user?.user_metadata?.doctor_name || '';
+  const doctorGender = (clinic as any)?.doctor_gender || 'masculino';
+  const prefix = doctorGender === 'feminino' ? 'Dra.' : 'Dr.';
   const firstName = doctorName.split(' ')[0];
 
   const targetFillRate = clinic?.target_fill_rate ?? 0.85;
@@ -136,7 +138,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between pt-1">
         <div>
           <h1 className="text-xl font-bold text-foreground">
-            Olá, Dr(a). {firstName} {hasBadge && <span title="Selo de Clínica Eficiente">🏅</span>} 👋
+            Olá, {prefix} {firstName} {hasBadge && <span title="Selo de Clínica Eficiente">🏅</span>} 👋
           </h1>
           <p className="text-sm text-muted-foreground">Visão do dia</p>
         </div>
