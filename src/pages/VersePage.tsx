@@ -92,19 +92,25 @@ export default function VersePage() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-gradient-to-b from-[hsl(222,47%,12%)] via-background to-[hsl(222,47%,10%)] px-6 py-10">
+    <div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-between px-6 py-10"
+      style={{
+        background: 'radial-gradient(ellipse at center, rgba(212,175,55,0.08) 0%, hsl(222,47%,12%) 55%, hsl(222,47%,10%) 100%)',
+      }}
+    >
       {/* Logo */}
       <div className="flex-shrink-0 pt-4">
-        <img src={logoDama} alt="DAMA" className="h-[80px] object-contain" />
+        <img src={logoDama} alt="DAMA" className="h-[100px] object-contain" />
       </div>
 
       {/* Verse content (shareable area) */}
       <div
         ref={cardRef}
-        className="flex flex-col items-center justify-center text-center max-w-sm px-6 py-10"
+        className="flex flex-col items-center justify-center text-center max-w-sm rounded-2xl p-8"
+        style={{ border: '1px solid rgba(212,175,55,0.3)' }}
       >
         {/* Decorative quote mark */}
-        <div className="text-primary/20 text-7xl font-serif leading-none mb-4">"</div>
+        <div className="font-serif leading-none mb-4" style={{ fontSize: '48px', color: '#D4AF37' }}>"</div>
 
         <p className="text-xl font-medium text-foreground leading-relaxed italic">
           {verse.verse_text}
