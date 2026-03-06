@@ -151,7 +151,7 @@ export default function Dashboard() {
           )}
           <Link
             to="/institucional"
-            className="text-xs font-semibold text-[hsl(38,70%,55%)] hover:text-[hsl(38,80%,65%)] transition-colors flex items-center gap-1"
+            className="text-xs font-semibold text-[#D4AF37] hover:text-[#e0c04a] transition-colors flex items-center gap-1"
           >
             Conheça a DAMA →
           </Link>
