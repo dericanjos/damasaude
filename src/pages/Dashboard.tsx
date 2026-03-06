@@ -6,8 +6,8 @@ import { useTodayActions, useCompleteAction } from '@/hooks/useActions';
 import { useClinic } from '@/hooks/useClinic';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useCheckinStreak } from '@/hooks/useChecklist';
-import { calculateIDEA, getIdeaStatus, getIdeaLabel, type CheckinData } from '@/lib/idea';
-import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET } from '@/lib/revenue';
+import { calculateIDEA, getIdeaStatus, getIdeaLabel, totalAttended, totalNoshows, type CheckinData } from '@/lib/idea';
+import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET_PRIVATE, DEFAULT_TICKET_INSURANCE } from '@/lib/revenue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -23,6 +23,21 @@ import { useEfficiencyBadge } from '@/hooks/useEfficiencyBadge';
 import { cn } from '@/lib/utils';
 import LossRadarCard from '@/components/LossRadarCard';
 import EfficiencyBadgeModal from '@/components/EfficiencyBadgeModal';
+
+/** Helper to convert DB row to CheckinData */
+function toCheckinData(c: any): CheckinData {
+  return {
+    appointments_scheduled: c.appointments_scheduled,
+    attended_private: c.attended_private ?? c.appointments_done ?? 0,
+    attended_insurance: c.attended_insurance ?? 0,
+    noshows_private: c.noshows_private ?? c.no_show ?? 0,
+    noshows_insurance: c.noshows_insurance ?? 0,
+    cancellations: c.cancellations,
+    new_appointments: c.new_appointments,
+    empty_slots: c.empty_slots,
+    followup_done: c.followup_done,
+  };
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -43,7 +58,8 @@ export default function Dashboard() {
   const targetFillRate = clinic?.target_fill_rate ?? 0.85;
   const targetNoShowRate = clinic?.target_noshow_rate ?? 0.05;
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
-  const ticketMedio = (clinic as any)?.ticket_medio ?? DEFAULT_TICKET;
+  const ticketPrivate = (clinic as any)?.ticket_private ?? DEFAULT_TICKET_PRIVATE;
+  const ticketInsurance = (clinic as any)?.ticket_insurance ?? DEFAULT_TICKET_INSURANCE;
 
   // Renewal warning
   const showRenewalBanner = (() => {
@@ -57,33 +73,20 @@ export default function Dashboard() {
     ? new Date(subscriptionEnd).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
     : '';
 
-  const checkinData: CheckinData | null = todayCheckin
-    ? {
-        appointments_scheduled: todayCheckin.appointments_scheduled,
-        appointments_done: todayCheckin.appointments_done,
-        no_show: todayCheckin.no_show,
-        cancellations: todayCheckin.cancellations,
-        new_appointments: todayCheckin.new_appointments,
-        empty_slots: todayCheckin.empty_slots,
-        followup_done: todayCheckin.followup_done,
-      }
-    : null;
+  const checkinData: CheckinData | null = todayCheckin ? toCheckinData(todayCheckin) : null;
 
-  const todayScore = checkinData ? calculateIDEA(checkinData, dailyCapacity) : null;
+  const todayScore = checkinData ? calculateIDEA(checkinData, dailyCapacity, ticketPrivate, ticketInsurance) : null;
   const yesterdayScore = yesterdayCheckin
-    ? calculateIDEA({
-        appointments_scheduled: yesterdayCheckin.appointments_scheduled,
-        appointments_done: yesterdayCheckin.appointments_done,
-        no_show: yesterdayCheckin.no_show,
-        cancellations: yesterdayCheckin.cancellations,
-        new_appointments: yesterdayCheckin.new_appointments,
-        empty_slots: yesterdayCheckin.empty_slots,
-        followup_done: yesterdayCheckin.followup_done,
-      }, dailyCapacity)
+    ? calculateIDEA(toCheckinData(yesterdayCheckin), dailyCapacity, ticketPrivate, ticketInsurance)
     : null;
 
   const revenue = checkinData
-    ? calculateRevenue({ ...checkinData, daily_capacity: dailyCapacity, ticket: ticketMedio })
+    ? calculateRevenue({
+        ...checkinData,
+        daily_capacity: dailyCapacity,
+        ticket_private: ticketPrivate,
+        ticket_insurance: ticketInsurance,
+      })
     : null;
   const ideaStatus = todayScore != null ? getIdeaStatus(todayScore) : null;
 
@@ -238,7 +241,6 @@ export default function Dashboard() {
           <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card flex flex-col items-center justify-center text-center">
             <div className="relative w-20 h-12 mb-1">
               <svg viewBox="0 0 120 70" className="w-full h-full">
-                {/* Background arc */}
                 <path
                   d="M 10 65 A 50 50 0 0 1 110 65"
                   fill="none"
@@ -246,7 +248,6 @@ export default function Dashboard() {
                   strokeWidth="10"
                   strokeLinecap="round"
                 />
-                {/* Colored arc */}
                 <path
                   d="M 10 65 A 50 50 0 0 1 110 65"
                   fill="none"
@@ -286,7 +287,7 @@ export default function Dashboard() {
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Receita est.</span>
             </div>
             <p className="text-2xl font-bold text-foreground">{formatBRL(revenue.estimated)}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{checkinData?.appointments_done} consultas</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{revenue.totalAttended} consultas</p>
           </div>
           <div className="rounded-2xl bg-card border border-revenue-loss/40 p-4 shadow-card">
             <div className="flex items-center gap-1.5 mb-2">
@@ -294,7 +295,7 @@ export default function Dashboard() {
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Receita perdida</span>
             </div>
             <p className="text-2xl font-bold text-revenue-loss">{formatBRL(revenue.lost)}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{(checkinData?.no_show ?? 0) + (checkinData?.cancellations ?? 0) + (checkinData?.empty_slots ?? 0)} perdas</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{revenue.totalNoshows + (checkinData?.cancellations ?? 0) + (checkinData?.empty_slots ?? 0)} perdas</p>
           </div>
         </div>
       )}

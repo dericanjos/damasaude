@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useWeekCheckins, useAllCheckins } from '@/hooks/useCheckin';
 import { calculateIDEA, getIdeaStatus, getIdeaLabel, type CheckinData } from '@/lib/idea';
-import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY } from '@/lib/revenue';
+import { formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY } from '@/lib/revenue';
 import { useClinic } from '@/hooks/useClinic';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,21 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 
+/** Helper to convert a DB checkin row to CheckinData */
+function toCheckinData(c: any): CheckinData {
+  return {
+    appointments_scheduled: c.appointments_scheduled,
+    attended_private: c.attended_private ?? c.appointments_done ?? 0,
+    attended_insurance: c.attended_insurance ?? 0,
+    noshows_private: c.noshows_private ?? c.no_show ?? 0,
+    noshows_insurance: c.noshows_insurance ?? 0,
+    cancellations: c.cancellations,
+    new_appointments: c.new_appointments,
+    empty_slots: c.empty_slots,
+    followup_done: c.followup_done,
+  };
+}
+
 export default function WeeklyReportPage() {
   const [weekOffset, setWeekOffset] = useState(0);
   const { data: clinic } = useClinic();
@@ -21,7 +36,9 @@ export default function WeeklyReportPage() {
   const workingDaysCount = workingDays.length;
   const targetFillRate = clinic?.target_fill_rate ?? 0.85;
   const targetNoShowRate = clinic?.target_noshow_rate ?? 0.05;
-  const ticketMedio = (clinic as any)?.ticket_medio ?? 250;
+  const ticketPrivate = (clinic as any)?.ticket_private ?? 250;
+  const ticketInsurance = (clinic as any)?.ticket_insurance ?? 100;
+  const avgTicket = (ticketPrivate + ticketInsurance) / 2;
 
   const weekStart = useMemo(() => {
     const base = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -38,14 +55,12 @@ export default function WeeklyReportPage() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [reportFetched, setReportFetched] = useState(false);
 
-  // Fetch or generate report when week changes
   useEffect(() => {
     if (!clinic?.id || checkins.length === 0) {
       setAiReport(null);
       setReportFetched(true);
       return;
     }
-
     let cancelled = false;
     setReportFetched(false);
     setAiReport(null);
@@ -75,36 +90,31 @@ export default function WeeklyReportPage() {
         }
       }
     };
-
     fetchOrGenerate();
     return () => { cancelled = true; };
   }, [clinic?.id, weekStartStr, checkins.length]);
 
   // Stats
   const scores = checkins.map(c => {
-    const data: CheckinData = {
-      appointments_scheduled: c.appointments_scheduled,
-      appointments_done: c.appointments_done,
-      no_show: c.no_show,
-      cancellations: c.cancellations,
-      new_appointments: c.new_appointments,
-      empty_slots: c.empty_slots,
-      followup_done: c.followup_done,
-    };
-    return { date: c.date, score: calculateIDEA(data, dailyCapacity), data };
+    const data = toCheckinData(c);
+    return { date: c.date, score: calculateIDEA(data, dailyCapacity, ticketPrivate, ticketInsurance), data };
   });
 
   const avgScore = scores.length > 0 ? Math.round(scores.reduce((s, c) => s + c.score, 0) / scores.length) : null;
   const avgStatus = avgScore != null ? getIdeaStatus(avgScore) : null;
 
-  const totalNoShow = checkins.reduce((s, c) => s + c.no_show, 0);
+  const totalNoshowsPrivate = checkins.reduce((s, c) => s + ((c as any).noshows_private ?? (c as any).no_show ?? 0), 0);
+  const totalNoshowsInsurance = checkins.reduce((s, c) => s + ((c as any).noshows_insurance ?? 0), 0);
+  const totalNoShow = totalNoshowsPrivate + totalNoshowsInsurance;
   const totalCancellations = checkins.reduce((s, c) => s + c.cancellations, 0);
-  const totalDone = checkins.reduce((s, c) => s + c.appointments_done, 0);
+  const totalAttendedPrivate = checkins.reduce((s, c) => s + ((c as any).attended_private ?? (c as any).appointments_done ?? 0), 0);
+  const totalAttendedInsurance = checkins.reduce((s, c) => s + ((c as any).attended_insurance ?? 0), 0);
+  const totalDone = totalAttendedPrivate + totalAttendedInsurance;
   const totalScheduled = Math.max(checkins.reduce((s, c) => s + c.appointments_scheduled, 0), 1);
   const totalEmptySlots = checkins.reduce((s, c) => s + c.empty_slots, 0);
 
-  const totalRevenueEstimated = totalDone * ticketMedio;
-  const totalRevenueLost = (totalNoShow + totalCancellations + totalEmptySlots) * ticketMedio;
+  const totalRevenueEstimated = (totalAttendedPrivate * ticketPrivate) + (totalAttendedInsurance * ticketInsurance);
+  const totalRevenueLost = (totalNoshowsPrivate * ticketPrivate) + (totalNoshowsInsurance * ticketInsurance) + ((totalCancellations + totalEmptySlots) * avgTicket);
   const avgOccupancy = totalDone / (checkins.length * dailyCapacity || 1);
   const avgNoShow = totalNoShow / totalScheduled;
 

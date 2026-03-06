@@ -6,8 +6,8 @@ import { useGenerateActions } from '@/hooks/useActions';
 import { useClinic } from '@/hooks/useClinic';
 import { useCheckinStreak } from '@/hooks/useChecklist';
 import { useGenerateInsight } from '@/hooks/useInsights';
-import { calculateIDEA, generateInsightText, getIdeaStatus, getIdeaLabel, getTopLossSources } from '@/lib/idea';
-import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET } from '@/lib/revenue';
+import { calculateIDEA, generateInsightText, getIdeaStatus, getIdeaLabel, getTopLossSources, totalAttended, totalNoshows } from '@/lib/idea';
+import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET_PRIVATE, DEFAULT_TICKET_INSURANCE } from '@/lib/revenue';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,8 +21,10 @@ import { cn } from '@/lib/utils';
 
 type FormData = {
   appointments_scheduled: number;
-  appointments_done: number;
-  no_show: number;
+  attended_private: number;
+  attended_insurance: number;
+  noshows_private: number;
+  noshows_insurance: number;
   cancellations: number;
   new_appointments: number;
   empty_slots: number;
@@ -41,8 +43,10 @@ type RewardData = {
 
 const EMPTY_FORM: FormData = {
   appointments_scheduled: 0,
-  appointments_done: 0,
-  no_show: 0,
+  attended_private: 0,
+  attended_insurance: 0,
+  noshows_private: 0,
+  noshows_insurance: 0,
   cancellations: 0,
   new_appointments: 0,
   empty_slots: 0,
@@ -103,24 +107,30 @@ export default function CheckinPage() {
 
   useEffect(() => {
     if (existing) {
+      const e = existing as any;
       setForm({
-        appointments_scheduled: existing.appointments_scheduled,
-        appointments_done: existing.appointments_done,
-        no_show: existing.no_show,
-        cancellations: existing.cancellations,
-        new_appointments: existing.new_appointments,
-        empty_slots: existing.empty_slots,
-        followup_done: existing.followup_done,
-        notes: existing.notes ?? '',
+        appointments_scheduled: e.appointments_scheduled,
+        attended_private: e.attended_private ?? e.appointments_done ?? 0,
+        attended_insurance: e.attended_insurance ?? 0,
+        noshows_private: e.noshows_private ?? e.no_show ?? 0,
+        noshows_insurance: e.noshows_insurance ?? 0,
+        cancellations: e.cancellations,
+        new_appointments: e.new_appointments,
+        empty_slots: e.empty_slots,
+        followup_done: e.followup_done,
+        notes: e.notes ?? '',
       });
     } else if (lastCheckin) {
+      const l = lastCheckin as any;
       setForm({
-        appointments_scheduled: lastCheckin.appointments_scheduled,
-        appointments_done: lastCheckin.appointments_done,
-        no_show: lastCheckin.no_show,
-        cancellations: lastCheckin.cancellations,
-        new_appointments: lastCheckin.new_appointments,
-        empty_slots: lastCheckin.empty_slots,
+        appointments_scheduled: l.appointments_scheduled,
+        attended_private: l.attended_private ?? l.appointments_done ?? 0,
+        attended_insurance: l.attended_insurance ?? 0,
+        noshows_private: l.noshows_private ?? l.no_show ?? 0,
+        noshows_insurance: l.noshows_insurance ?? 0,
+        cancellations: l.cancellations,
+        new_appointments: l.new_appointments,
+        empty_slots: l.empty_slots,
         followup_done: false,
         notes: '',
       });
@@ -128,7 +138,8 @@ export default function CheckinPage() {
   }, [existing?.id, lastCheckin?.id]);
 
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
-  const ticketMedio = (clinic as any)?.ticket_medio ?? DEFAULT_TICKET;
+  const ticketPrivate = (clinic as any)?.ticket_private ?? DEFAULT_TICKET_PRIVATE;
+  const ticketInsurance = (clinic as any)?.ticket_insurance ?? DEFAULT_TICKET_INSURANCE;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,24 +149,44 @@ export default function CheckinPage() {
     if (quickMode) {
       submitData = {
         ...form,
-        no_show: quickHasNoShow ? (lastCheckin?.no_show || 1) : 0,
-        empty_slots: quickHasBuracos ? (lastCheckin?.empty_slots || 1) : 0,
+        noshows_private: quickHasNoShow ? ((lastCheckin as any)?.noshows_private || (lastCheckin as any)?.no_show || 1) : 0,
+        noshows_insurance: 0,
+        empty_slots: quickHasBuracos ? ((lastCheckin as any)?.empty_slots || 1) : 0,
         followup_done: quickFollowup,
       };
     }
 
     try {
-      const ideaScore = calculateIDEA(submitData, dailyCapacity);
-      const insightText = generateInsightText(submitData, ideaScore);
-      const lossSources = getTopLossSources(submitData);
+      const checkinData = {
+        appointments_scheduled: submitData.appointments_scheduled,
+        attended_private: submitData.attended_private,
+        attended_insurance: submitData.attended_insurance,
+        noshows_private: submitData.noshows_private,
+        noshows_insurance: submitData.noshows_insurance,
+        cancellations: submitData.cancellations,
+        new_appointments: submitData.new_appointments,
+        empty_slots: submitData.empty_slots,
+        followup_done: submitData.followup_done,
+      };
 
-      await saveCheckin.mutateAsync({ ...submitData, insight_text: insightText });
-      await generateActions.mutateAsync(submitData);
+      const ideaScore = calculateIDEA(checkinData, dailyCapacity, ticketPrivate, ticketInsurance);
+      const insightText = generateInsightText(checkinData, ideaScore);
+      const lossSources = getTopLossSources(checkinData);
+
+      // Save with legacy fields too
+      await saveCheckin.mutateAsync({
+        ...submitData,
+        appointments_done: submitData.attended_private + submitData.attended_insurance,
+        no_show: submitData.noshows_private + submitData.noshows_insurance,
+        insight_text: insightText,
+      });
+      await generateActions.mutateAsync(checkinData);
 
       const rev = calculateRevenue({
-        ...submitData,
+        ...checkinData,
         daily_capacity: dailyCapacity,
-        ticket: ticketMedio,
+        ticket_private: ticketPrivate,
+        ticket_insurance: ticketInsurance,
       });
       setReward({
         score: ideaScore,
@@ -327,8 +358,10 @@ export default function CheckinPage() {
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Agenda de hoje</p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-5">
                 <Stepper label="Agendados" value={form.appointments_scheduled} onChange={v => setField('appointments_scheduled', v)} />
-                <Stepper label="Atendidos" value={form.appointments_done} onChange={v => setField('appointments_done', v)} />
-                <Stepper label="No-show" value={form.no_show} onChange={v => setField('no_show', v)} />
+                <Stepper label="Atendidos (Particular)" value={form.attended_private} onChange={v => setField('attended_private', v)} />
+                <Stepper label="Atendidos (Convênio)" value={form.attended_insurance} onChange={v => setField('attended_insurance', v)} />
+                <Stepper label="No-show (Particular)" value={form.noshows_private} onChange={v => setField('noshows_private', v)} />
+                <Stepper label="No-show (Convênio)" value={form.noshows_insurance} onChange={v => setField('noshows_insurance', v)} />
                 <Stepper label="Cancelamentos" value={form.cancellations} onChange={v => setField('cancellations', v)} />
                 <Stepper label="Novos agend." value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
                 <Stepper label="Buracos na agenda" value={form.empty_slots} onChange={v => setField('empty_slots', v)} />

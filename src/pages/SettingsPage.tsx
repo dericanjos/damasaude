@@ -57,7 +57,8 @@ export default function SettingsPage() {
   const [hasSecretary, setHasSecretary] = useState(false);
 
   // Operation fields
-  const [ticketMedio, setTicketMedio] = useState(250);
+  const [ticketPrivate, setTicketPrivate] = useState(250);
+  const [ticketInsurance, setTicketInsurance] = useState(100);
   const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
   const [dailyCapacity, setDailyCapacity] = useState(16);
 
@@ -65,7 +66,6 @@ export default function SettingsPage() {
   const [fillRate, setFillRate] = useState(85);
   const [noshowRate, setNoshowRate] = useState(5);
 
-  // Track initial values for dirty detection
   const [initial, setInitial] = useState<Record<string, any> | null>(null);
 
   useEffect(() => {
@@ -76,7 +76,8 @@ export default function SettingsPage() {
         doctorName: c.doctor_name || '',
         specialty: c.specialty || '',
         hasSecretary: c.has_secretary ?? false,
-        ticketMedio: c.ticket_medio ?? 250,
+        ticketPrivate: c.ticket_private ?? 250,
+        ticketInsurance: c.ticket_insurance ?? 100,
         workingDays: c.working_days ?? ['seg', 'ter', 'qua', 'qui', 'sex'],
         dailyCapacity: c.daily_capacity ?? 16,
         fillRate: Math.round(Number(c.target_fill_rate) * 100),
@@ -86,7 +87,8 @@ export default function SettingsPage() {
       setDoctorName(vals.doctorName);
       setSpecialty(vals.specialty);
       setHasSecretary(vals.hasSecretary);
-      setTicketMedio(vals.ticketMedio);
+      setTicketPrivate(vals.ticketPrivate);
+      setTicketInsurance(vals.ticketInsurance);
       setWorkingDays(vals.workingDays);
       setDailyCapacity(vals.dailyCapacity);
       setFillRate(vals.fillRate);
@@ -102,13 +104,14 @@ export default function SettingsPage() {
       doctorName !== initial.doctorName ||
       specialty !== initial.specialty ||
       hasSecretary !== initial.hasSecretary ||
-      ticketMedio !== initial.ticketMedio ||
+      ticketPrivate !== initial.ticketPrivate ||
+      ticketInsurance !== initial.ticketInsurance ||
       JSON.stringify(workingDays.sort()) !== JSON.stringify([...initial.workingDays].sort()) ||
       dailyCapacity !== initial.dailyCapacity ||
       fillRate !== initial.fillRate ||
       noshowRate !== initial.noshowRate
     );
-  }, [initial, name, doctorName, specialty, hasSecretary, ticketMedio, workingDays, dailyCapacity, fillRate, noshowRate]);
+  }, [initial, name, doctorName, specialty, hasSecretary, ticketPrivate, ticketInsurance, workingDays, dailyCapacity, fillRate, noshowRate]);
 
   const handleSave = async () => {
     try {
@@ -117,7 +120,8 @@ export default function SettingsPage() {
         doctor_name: doctorName,
         specialty,
         has_secretary: hasSecretary,
-        ticket_medio: ticketMedio,
+        ticket_private: ticketPrivate,
+        ticket_insurance: ticketInsurance,
         working_days: workingDays,
         daily_capacity: dailyCapacity,
         target_fill_rate: fillRate / 100,
@@ -125,7 +129,7 @@ export default function SettingsPage() {
       } as any);
       setInitial({
         name, doctorName, specialty, hasSecretary,
-        ticketMedio, workingDays: [...workingDays], dailyCapacity, fillRate, noshowRate,
+        ticketPrivate, ticketInsurance, workingDays: [...workingDays], dailyCapacity, fillRate, noshowRate,
       });
       toast.success('Configurações salvas com sucesso!');
     } catch (err: any) {
@@ -227,22 +231,40 @@ export default function SettingsPage() {
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Operação da Clínica</p>
         </div>
         <div className="px-4 pb-4 space-y-5">
-          {/* Ticket Médio */}
+          {/* Ticket Particular */}
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Qual o seu ticket médio por consulta?
+              Ticket Particular (R$)
             </Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
               <Input
                 type="number"
                 min={1}
-                value={ticketMedio}
-                onChange={e => setTicketMedio(Number(e.target.value))}
+                value={ticketPrivate}
+                onChange={e => setTicketPrivate(Number(e.target.value))}
                 className="rounded-xl pl-10"
               />
             </div>
-            <p className="text-[11px] text-muted-foreground">Esse valor é a base para calcular sua receita e perdas.</p>
+            <p className="text-[11px] text-muted-foreground">Valor médio cobrado por consulta particular.</p>
+          </div>
+
+          {/* Ticket Convênio */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Ticket Convênio (R$)
+            </Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
+              <Input
+                type="number"
+                min={1}
+                value={ticketInsurance}
+                onChange={e => setTicketInsurance(Number(e.target.value))}
+                className="rounded-xl pl-10"
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground">Valor médio recebido por consulta de convênio.</p>
           </div>
 
           {/* Dias de Atendimento */}
@@ -313,7 +335,6 @@ export default function SettingsPage() {
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Metas de Performance</p>
         </div>
         <div className="px-4 pb-4 space-y-5">
-          {/* Meta de Ocupação */}
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Meta de Ocupação da Agenda
@@ -332,7 +353,6 @@ export default function SettingsPage() {
             <p className="text-[11px] text-muted-foreground">Recomendado: 85%. O sistema usará essa meta para gerar alertas.</p>
           </div>
 
-          {/* Meta de No-show */}
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Meta de Taxa de No-show
