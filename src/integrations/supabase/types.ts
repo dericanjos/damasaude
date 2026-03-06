@@ -281,6 +281,27 @@ export type Database = {
           },
         ]
       }
+      daily_verses: {
+        Row: {
+          day_of_year: number
+          id: number
+          verse_reference: string
+          verse_text: string
+        }
+        Insert: {
+          day_of_year: number
+          id?: never
+          verse_reference: string
+          verse_text: string
+        }
+        Update: {
+          day_of_year?: number
+          id?: never
+          verse_reference?: string
+          verse_text?: string
+        }
+        Relationships: []
+      }
       loss_reasons: {
         Row: {
           clinic_id: string
