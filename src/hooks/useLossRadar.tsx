@@ -31,10 +31,9 @@ export function useLossRadar() {
       const d14 = format(subDays(today, 14), 'yyyy-MM-dd');
       const todayStr = format(today, 'yyyy-MM-dd');
 
-      // Fetch last 14 days of checkins
       const { data, error } = await supabase
         .from('daily_checkins')
-        .select('date, no_show, cancellations, empty_slots')
+        .select('date, no_show, cancellations, empty_slots, noshows_private, noshows_insurance')
         .eq('clinic_id', clinic.id)
         .gte('date', d14)
         .lte('date', todayStr)
@@ -46,20 +45,38 @@ export function useLossRadar() {
       const current = data.filter(d => d.date >= d7);
       const previous = data.filter(d => d.date < d7);
 
-      const sum = (arr: typeof data, key: 'no_show' | 'cancellations' | 'empty_slots') =>
+      const c = clinic as any;
+      const ticketPrivate = c.ticket_private ?? 250;
+      const ticketInsurance = c.ticket_insurance ?? 100;
+      const avgTicket = (ticketPrivate + ticketInsurance) / 2;
+
+      const sumNoshows = (arr: typeof data) =>
+        arr.reduce((acc, r) => {
+          const np = (r as any).noshows_private ?? r.no_show ?? 0;
+          const ni = (r as any).noshows_insurance ?? 0;
+          return acc + np + ni;
+        }, 0);
+
+      const sum = (arr: typeof data, key: 'cancellations' | 'empty_slots') =>
         arr.reduce((acc, r) => acc + (r[key] ?? 0), 0);
 
-      const ticket = (clinic as any).ticket_medio ?? 250;
-
-      const noShowCurr = sum(current, 'no_show');
-      const noShowPrev = sum(previous, 'no_show');
+      const noShowCurr = sumNoshows(current);
+      const noShowPrev = sumNoshows(previous);
       const cancCurr = sum(current, 'cancellations');
       const cancPrev = sum(previous, 'cancellations');
       const emptyCurr = sum(current, 'empty_slots');
       const emptyPrev = sum(previous, 'empty_slots');
 
+      // Revenue lost with weighted tickets
+      const noshowLostCurr = current.reduce((acc, r) => {
+        const np = (r as any).noshows_private ?? r.no_show ?? 0;
+        const ni = (r as any).noshows_insurance ?? 0;
+        return acc + (np * ticketPrivate) + (ni * ticketInsurance);
+      }, 0);
+      const genericLostCurr = (cancCurr + emptyCurr) * avgTicket;
+      const revenueLost7d = noshowLostCurr + genericLostCurr;
+
       const totalLosses7d = noShowCurr + cancCurr + emptyCurr;
-      const revenueLost7d = totalLosses7d * ticket;
 
       const calcChange = (curr: number, prev: number) => {
         if (prev === 0) return curr > 0 ? 100 : 0;
@@ -72,7 +89,6 @@ export function useLossRadar() {
         { type: 'empty_slots', label: 'Buracos na agenda', current: emptyCurr, previous: emptyPrev, percentChange: calcChange(emptyCurr, emptyPrev) },
       ];
 
-      // Worst trend = biggest increase of 30%+ 
       const negativeTrends = trends
         .filter(t => t.percentChange >= 30 && t.current > 0)
         .sort((a, b) => b.percentChange - a.percentChange);

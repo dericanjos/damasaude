@@ -77,7 +77,7 @@ serve(async (req) => {
     // Fetch clinic info for context
     const { data: clinic } = await supabase
       .from("clinics")
-      .select("ticket_medio, daily_capacity, target_fill_rate, target_noshow_rate, working_days")
+      .select("ticket_private, ticket_insurance, daily_capacity, target_fill_rate, target_noshow_rate, working_days")
       .eq("id", clinic_id)
       .single();
 
@@ -87,13 +87,23 @@ serve(async (req) => {
     const workingDays: string[] = Array.isArray(clinic?.working_days) ? clinic.working_days : ["seg", "ter", "qua", "qui", "sex"];
     const workingDaysCount = workingDays.length;
 
-    const totalDone = checkins.reduce((s: number, c: any) => s + c.appointments_done, 0);
+    const ticketPrivate = clinic?.ticket_private ?? 250;
+    const ticketInsurance = clinic?.ticket_insurance ?? 100;
+    const avgTicket = (ticketPrivate + ticketInsurance) / 2;
+    const capacity = clinic?.daily_capacity ?? 16;
+
+    const totalAttPrivate = checkins.reduce((s: number, c: any) => s + (c.attended_private ?? c.appointments_done ?? 0), 0);
+    const totalAttInsurance = checkins.reduce((s: number, c: any) => s + (c.attended_insurance ?? 0), 0);
+    const totalDone = totalAttPrivate + totalAttInsurance;
     const totalScheduled = checkins.reduce((s: number, c: any) => s + c.appointments_scheduled, 0);
-    const totalNoShow = checkins.reduce((s: number, c: any) => s + c.no_show, 0);
+    const totalNoshowPriv = checkins.reduce((s: number, c: any) => s + (c.noshows_private ?? c.no_show ?? 0), 0);
+    const totalNoshowIns = checkins.reduce((s: number, c: any) => s + (c.noshows_insurance ?? 0), 0);
+    const totalNoShow = totalNoshowPriv + totalNoshowIns;
     const totalCancel = checkins.reduce((s: number, c: any) => s + c.cancellations, 0);
     const totalEmpty = checkins.reduce((s: number, c: any) => s + c.empty_slots, 0);
-    const ticket = clinic?.ticket_medio ?? 250;
-    const capacity = clinic?.daily_capacity ?? 16;
+
+    const revenueEstimated = (totalAttPrivate * ticketPrivate) + (totalAttInsurance * ticketInsurance);
+    const revenueLost = (totalNoshowPriv * ticketPrivate) + (totalNoshowIns * ticketInsurance) + ((totalCancel + totalEmpty) * avgTicket);
 
     const isPartial = checkins.length < workingDaysCount;
     const partialNote = isPartial
@@ -105,12 +115,18 @@ serve(async (req) => {
       dias_de_atendimento: workingDaysCount,
       relatorio_parcial: isPartial,
       total_atendidos: totalDone,
+      atendidos_particular: totalAttPrivate,
+      atendidos_convenio: totalAttInsurance,
       total_agendados: totalScheduled,
       total_no_show: totalNoShow,
+      noshow_particular: totalNoshowPriv,
+      noshow_convenio: totalNoshowIns,
       total_cancelamentos: totalCancel,
       total_buracos: totalEmpty,
-      receita_estimada: totalDone * ticket,
-      receita_perdida: (totalNoShow + totalCancel + totalEmpty) * ticket,
+      receita_estimada: revenueEstimated,
+      receita_perdida: revenueLost,
+      ticket_particular: ticketPrivate,
+      ticket_convenio: ticketInsurance,
       taxa_ocupacao_media: `${Math.round((totalDone / (checkins.length * capacity)) * 100)}%`,
       taxa_noshow: `${totalScheduled > 0 ? Math.round((totalNoShow / totalScheduled) * 100) : 0}%`,
       meta_ocupacao: `${Math.round((clinic?.target_fill_rate ?? 0.85) * 100)}%`,
@@ -121,6 +137,8 @@ serve(async (req) => {
 1. **👍 O que foi bem:** Destaque 1 ou 2 pontos positivos (ex: baixa taxa de no-show, alta ocupação).
 2. **⚠️ Pontos de atenção:** Identifique o maior problema da semana (ex: muitos buracos na agenda, queda no faturamento).
 3. **🎯 Plano de Ação para a próxima semana:** Sugira 2 a 3 ações práticas e específicas para resolver os pontos de atenção.
+
+IMPORTANTE: Os dados diferenciam pacientes particulares e de convênio. Use essa informação para dar insights mais precisos sobre mix de receita e estratégia de precificação.
 
 Use um tom profissional, direto e encorajador. Responda APENAS em português brasileiro. Máximo 300 palavras.`;
 

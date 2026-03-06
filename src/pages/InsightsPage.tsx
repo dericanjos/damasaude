@@ -24,8 +24,20 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer,
 } from 'recharts';
 
-const DEFAULT_TICKET = 250;
-const WEEKDAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
+/** Helper to convert DB row to CheckinData */
+function toCheckinData(c: any): CheckinData {
+  return {
+    appointments_scheduled: c.appointments_scheduled,
+    attended_private: c.attended_private ?? c.appointments_done ?? 0,
+    attended_insurance: c.attended_insurance ?? 0,
+    noshows_private: c.noshows_private ?? c.no_show ?? 0,
+    noshows_insurance: c.noshows_insurance ?? 0,
+    cancellations: c.cancellations,
+    new_appointments: c.new_appointments,
+    empty_slots: c.empty_slots,
+    followup_done: c.followup_done,
+  };
+}
 
 export default function InsightsPage() {
   const { data: clinic } = useClinic();
@@ -39,47 +51,45 @@ export default function InsightsPage() {
   const { data: thisWeek = [] } = useWeekCheckins(thisWeekStart);
   const { data: lastWeek = [] } = useWeekCheckins(lastWeekStart);
 
-  // 30-day range
   const thirtyDaysAgo = useMemo(() => format(subDays(new Date(), 30), 'yyyy-MM-dd'), []);
   const today = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
   const { data: last30 = [] } = useCheckinRange(thirtyDaysAgo, today);
 
-  // All checkins for total count
   const { data: allCheckins = [] } = useAllCheckins();
 
-  // Monthly data for reports
   const monthStart = useMemo(() => format(startOfMonth(parseISO(selectedMonth + '-01')), 'yyyy-MM-dd'), [selectedMonth]);
   const monthEnd = useMemo(() => format(endOfMonth(parseISO(selectedMonth + '-01')), 'yyyy-MM-dd'), [selectedMonth]);
   const { data: monthCheckins = [] } = useCheckinRange(monthStart, monthEnd);
 
   const { generate, insight: aiInsight, loading: aiLoading, error: aiError } = useGenerateInsight();
 
-  const TICKET = (clinic as any)?.ticket_medio ?? DEFAULT_TICKET;
+  const TICKET_PRIVATE = (clinic as any)?.ticket_private ?? 250;
+  const TICKET_INSURANCE = (clinic as any)?.ticket_insurance ?? 100;
+  const AVG_TICKET = (TICKET_PRIVATE + TICKET_INSURANCE) / 2;
   const CAPACITY = (clinic as any)?.daily_capacity ?? 16;
 
   const calcWeek = (checkins: typeof thisWeek) => {
-    const totalDone = checkins.reduce((s, c) => s + c.appointments_done, 0);
+    const totalAttPrivate = checkins.reduce((s, c) => s + ((c as any).attended_private ?? (c as any).appointments_done ?? 0), 0);
+    const totalAttInsurance = checkins.reduce((s, c) => s + ((c as any).attended_insurance ?? 0), 0);
+    const totalDone = totalAttPrivate + totalAttInsurance;
     const totalScheduled = checkins.reduce((s, c) => s + c.appointments_scheduled, 0);
-    const totalNoShow = checkins.reduce((s, c) => s + c.no_show, 0);
+    const totalNoshowsPriv = checkins.reduce((s, c) => s + ((c as any).noshows_private ?? (c as any).no_show ?? 0), 0);
+    const totalNoshowsIns = checkins.reduce((s, c) => s + ((c as any).noshows_insurance ?? 0), 0);
+    const totalNoShow = totalNoshowsPriv + totalNoshowsIns;
     const totalCancellations = checkins.reduce((s, c) => s + c.cancellations, 0);
     const totalEmpty = checkins.reduce((s, c) => s + c.empty_slots, 0);
     const totalNew = checkins.reduce((s, c) => s + c.new_appointments, 0);
-    const revenue = totalDone * TICKET;
-    const lost = (totalNoShow + totalCancellations + totalEmpty) * TICKET;
-    const occupancy = checkins.length > 0 ? checkins.reduce((s, c) => s + (c.appointments_done / CAPACITY), 0) / checkins.length : 0;
+    const revenue = (totalAttPrivate * TICKET_PRIVATE) + (totalAttInsurance * TICKET_INSURANCE);
+    const lost = (totalNoshowsPriv * TICKET_PRIVATE) + (totalNoshowsIns * TICKET_INSURANCE) + ((totalCancellations + totalEmpty) * AVG_TICKET);
+    const occupancy = checkins.length > 0 ? checkins.reduce((s, c) => {
+      const att = ((c as any).attended_private ?? (c as any).appointments_done ?? 0) + ((c as any).attended_insurance ?? 0);
+      return s + (att / CAPACITY);
+    }, 0) / checkins.length : 0;
     const noShowRate = totalScheduled > 0 ? totalNoShow / totalScheduled : 0;
 
     const scores = checkins.map(c => {
-      const d: CheckinData = {
-        appointments_scheduled: c.appointments_scheduled,
-        appointments_done: c.appointments_done,
-        no_show: c.no_show,
-        cancellations: c.cancellations,
-        new_appointments: c.new_appointments,
-        empty_slots: c.empty_slots,
-        followup_done: c.followup_done,
-      };
-      return calculateIDEA(d, CAPACITY);
+      const d = toCheckinData(c);
+      return calculateIDEA(d, CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE);
     });
     const avgScore = scores.length > 0 ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : null;
 
@@ -92,7 +102,6 @@ export default function InsightsPage() {
   const totalCheckins = allCheckins.length;
   const hasEnoughData = totalCheckins >= 3;
 
-  // Auto-generate AI insight
   const [aiRequested, setAiRequested] = useState(false);
   useEffect(() => {
     if (hasEnoughData && thisWeek.length >= 2 && !aiRequested && !aiInsight) {
@@ -101,24 +110,14 @@ export default function InsightsPage() {
     }
   }, [hasEnoughData, thisWeek.length]);
 
-  // ── RESUMO: IDEA evolution chart data ──
   const ideaEvolution = useMemo(() => {
     if (!thisWeek.length) return [];
-    return thisWeek.map((c, i) => ({
+    return thisWeek.map((c) => ({
       day: format(parseISO(c.date), 'EEE', { locale: ptBR }).replace(/^\w/, s => s.toUpperCase()),
-      idea: calculateIDEA({
-        appointments_scheduled: c.appointments_scheduled,
-        appointments_done: c.appointments_done,
-        no_show: c.no_show,
-        cancellations: c.cancellations,
-        new_appointments: c.new_appointments,
-        empty_slots: c.empty_slots,
-        followup_done: c.followup_done,
-      }, CAPACITY),
+      idea: calculateIDEA(toCheckinData(c), CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE),
     }));
-  }, [thisWeek, CAPACITY]);
+  }, [thisWeek, CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE]);
 
-  // ── RESUMO: Comparativo semanal (this week vs last week) ──
   const compareData = useMemo(() => {
     return [
       { label: 'Atendidos', atual: tw.totalDone, anterior: lw.totalDone },
@@ -129,33 +128,41 @@ export default function InsightsPage() {
 
   // ── FINANCEIRO: Donut chart ──
   const lossDonutData = useMemo(() => {
-    const noShow = last30.reduce((s, c) => s + c.no_show, 0) * TICKET;
-    const cancel = last30.reduce((s, c) => s + c.cancellations, 0) * TICKET;
-    const empty = last30.reduce((s, c) => s + c.empty_slots, 0) * TICKET;
+    const noshowPriv = last30.reduce((s, c) => s + ((c as any).noshows_private ?? (c as any).no_show ?? 0), 0);
+    const noshowIns = last30.reduce((s, c) => s + ((c as any).noshows_insurance ?? 0), 0);
+    const noShowLoss = (noshowPriv * TICKET_PRIVATE) + (noshowIns * TICKET_INSURANCE);
+    const cancel = last30.reduce((s, c) => s + c.cancellations, 0) * AVG_TICKET;
+    const empty = last30.reduce((s, c) => s + c.empty_slots, 0) * AVG_TICKET;
     return [
-      { name: 'No-shows', value: noShow, color: 'hsl(0, 72%, 52%)' },
+      { name: 'No-shows', value: noShowLoss, color: 'hsl(0, 72%, 52%)' },
       { name: 'Cancelamentos', value: cancel, color: 'hsl(38, 92%, 48%)' },
       { name: 'Buracos', value: empty, color: 'hsl(220, 15%, 60%)' },
     ].filter(d => d.value > 0);
-  }, [last30, TICKET]);
+  }, [last30, TICKET_PRIVATE, TICKET_INSURANCE, AVG_TICKET]);
 
   const totalLoss30 = lossDonutData.reduce((s, d) => s + d.value, 0);
 
   // ── FINANCEIRO: Simulator ──
   const simGain = useMemo(() => {
     const daysWithData = thisWeek.length || 1;
-    const monthlyNoShowLoss = (tw.totalNoShow / daysWithData) * 22 * TICKET;
+    const noshowPriv = thisWeek.reduce((s, c) => s + ((c as any).noshows_private ?? (c as any).no_show ?? 0), 0);
+    const noshowIns = thisWeek.reduce((s, c) => s + ((c as any).noshows_insurance ?? 0), 0);
+    const monthlyNoShowLoss = ((noshowPriv * TICKET_PRIVATE) + (noshowIns * TICKET_INSURANCE)) / daysWithData * 22;
     const noShowSaving = monthlyNoShowLoss * (simNoShow / 100);
-    const currentMonthlyRevenue = (tw.totalDone / daysWithData) * 22 * TICKET;
+    const currentMonthlyRevenue = tw.revenue / daysWithData * 22;
     const ticketGain = currentMonthlyRevenue * (simTicket / 100);
     return noShowSaving + ticketGain;
-  }, [tw, simNoShow, simTicket, TICKET, thisWeek.length]);
+  }, [tw, simNoShow, simTicket, TICKET_PRIVATE, TICKET_INSURANCE, thisWeek.length]);
 
   // ── PACIENTES: Funnel ──
   const funnelData = useMemo(() => {
     const scheduled = last30.reduce((s, c) => s + c.appointments_scheduled, 0);
-    const done = last30.reduce((s, c) => s + c.appointments_done, 0);
-    const lost = last30.reduce((s, c) => s + c.no_show + c.cancellations, 0);
+    const attPriv = last30.reduce((s, c) => s + ((c as any).attended_private ?? (c as any).appointments_done ?? 0), 0);
+    const attIns = last30.reduce((s, c) => s + ((c as any).attended_insurance ?? 0), 0);
+    const done = attPriv + attIns;
+    const noshowP = last30.reduce((s, c) => s + ((c as any).noshows_private ?? (c as any).no_show ?? 0), 0);
+    const noshowI = last30.reduce((s, c) => s + ((c as any).noshows_insurance ?? 0), 0);
+    const lost = noshowP + noshowI + last30.reduce((s, c) => s + c.cancellations, 0);
     return { scheduled, done, lost };
   }, [last30]);
 
@@ -171,7 +178,6 @@ export default function InsightsPage() {
     const doctorName = (clinic as any)?.doctor_name || 'Médico';
     const monthLabel = format(parseISO(selectedMonth + '-01'), 'MMMM yyyy', { locale: ptBR }).replace(/^\w/, c => c.toUpperCase());
 
-    // Header
     doc.setFontSize(18);
     doc.text(`Relatório Mensal - ${monthLabel}`, 14, 22);
     doc.setFontSize(11);
@@ -179,7 +185,6 @@ export default function InsightsPage() {
     doc.setDrawColor(200);
     doc.line(14, 34, 196, 34);
 
-    // KPIs
     const mStats = calcWeek(monthCheckins);
     doc.setFontSize(13);
     doc.text('Resumo do Mês', 14, 44);
@@ -195,30 +200,25 @@ export default function InsightsPage() {
     ];
     kpis.forEach((kpi, i) => doc.text(kpi, 14, 52 + i * 7));
 
-    // Table
     doc.setFontSize(13);
     doc.text('Detalhamento Diário', 14, 108);
 
     autoTable(doc, {
       startY: 114,
-      head: [['Data', 'Agendados', 'Atendidos', 'No-show', 'Cancel.', 'Buracos', 'IDEA']],
-      body: monthCheckins.map(c => [
-        format(parseISO(c.date), 'dd/MM'),
-        c.appointments_scheduled,
-        c.appointments_done,
-        c.no_show,
-        c.cancellations,
-        c.empty_slots,
-        calculateIDEA({
-          appointments_scheduled: c.appointments_scheduled,
-          appointments_done: c.appointments_done,
-          no_show: c.no_show,
-          cancellations: c.cancellations,
-          new_appointments: c.new_appointments,
-          empty_slots: c.empty_slots,
-          followup_done: c.followup_done,
-        }, CAPACITY),
-      ]),
+      head: [['Data', 'Agendados', 'Atend. Part.', 'Atend. Conv.', 'No-show', 'Cancel.', 'Buracos', 'IDEA']],
+      body: monthCheckins.map(c => {
+        const d = toCheckinData(c);
+        return [
+          format(parseISO(c.date), 'dd/MM'),
+          c.appointments_scheduled,
+          d.attended_private,
+          d.attended_insurance,
+          d.noshows_private + d.noshows_insurance,
+          c.cancellations,
+          c.empty_slots,
+          calculateIDEA(d, CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE),
+        ];
+      }),
       theme: 'grid',
       headStyles: { fillColor: [41, 82, 163] },
       styles: { fontSize: 9 },
@@ -233,7 +233,6 @@ export default function InsightsPage() {
     idea: { label: 'IDEA', color: 'hsl(221, 83%, 45%)' },
   };
 
-  // Month options
   const monthOptions = useMemo(() => {
     const months = [];
     const now = new Date();
@@ -492,7 +491,7 @@ export default function InsightsPage() {
               </p>
               {totalEmptySlots30 > 0 && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  Valor potencial: <span className="font-bold text-idea-attention">{formatBRL(totalEmptySlots30 * TICKET)}</span>
+                  Valor potencial: <span className="font-bold text-idea-attention">{formatBRL(totalEmptySlots30 * AVG_TICKET)}</span>
                 </p>
               )}
             </div>
@@ -546,7 +545,6 @@ export default function InsightsPage() {
                   </Select>
                 </div>
 
-                {/* Monthly preview */}
                 {monthCheckins.length > 0 && (
                   <div className="rounded-xl bg-secondary/50 border border-border/40 p-4 space-y-2">
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Prévia do mês</p>
