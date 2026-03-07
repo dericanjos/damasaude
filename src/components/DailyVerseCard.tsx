@@ -37,23 +37,28 @@ export default function DailyVerseCard() {
       });
       const res = await fetch(dataUrl);
       const blob = await res.blob();
-      const file = new File([blob], `versiculo-dama.png`, { type: 'image/png' });
+      const file = new File([blob], 'versiculo-dama.png', { type: 'image/png' });
 
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'Versículo do Dia - DAMA',
-        });
+        await navigator.share({ files: [file], title: 'Versículo do Dia - DAMA' });
         return;
       }
 
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = 'versiculo-dama.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success('Imagem salva! Abra o Instagram e compartilhe nos Stories.');
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob }),
+        ]);
+        window.location.href = 'instagram://story-camera';
+        toast.success('Imagem copiada! Cole no Stories do Instagram.', { duration: 5000 });
+      } catch {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = 'versiculo-dama.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('Imagem salva! Abra o Instagram e compartilhe nos Stories.');
+      }
     } catch (e: any) {
       if (e?.name !== 'AbortError') {
         toast.error('Não foi possível compartilhar. Tente novamente.');
