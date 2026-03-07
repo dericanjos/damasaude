@@ -54,36 +54,53 @@ const EMPTY_FORM: FormData = {
   notes: '',
 };
 
-function Stepper({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
+function Stepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
-    <div className="space-y-1.5">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center w-full whitespace-normal">{label}</p>
-      <div className="flex items-center justify-center gap-3">
-        <button
-          type="button"
-          onClick={() => onChange(Math.max(0, value - 1))}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
-        >
-          <Minus className="h-4 w-4" />
-        </button>
-        <input
-          type="number"
-          min={0}
-          value={value}
-          onChange={e => onChange(Math.max(0, parseInt(e.target.value) || 0))}
-          className="w-14 text-center text-2xl font-bold bg-transparent border-none outline-none text-foreground"
-        />
-        <button
-          type="button"
-          onClick={() => onChange(value + 1)}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
-      </div>
+    <div className="flex items-center justify-center gap-3">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(0, value - 1))}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
+      >
+        <Minus className="h-4 w-4" />
+      </button>
+      <input
+        type="number"
+        min={0}
+        value={value}
+        onChange={e => onChange(Math.max(0, parseInt(e.target.value) || 0))}
+        className="w-14 text-center text-2xl font-bold bg-transparent border-none outline-none text-foreground"
+      />
+      <button
+        type="button"
+        onClick={() => onChange(value + 1)}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
     </div>
   );
 }
+
+function CheckinField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex w-full flex-col gap-2.5">
+      <Label className="w-full whitespace-normal text-left text-sm font-semibold leading-snug text-foreground">
+        {label}
+      </Label>
+      <Stepper value={value} onChange={onChange} />
+    </div>
+  );
+}
+
 
 export default function CheckinPage() {
   const navigate = useNavigate();
