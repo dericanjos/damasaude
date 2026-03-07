@@ -62,7 +62,8 @@ export default function Dashboard() {
   const doctorName = (clinic as any)?.doctor_name || user?.user_metadata?.doctor_name || '';
   const doctorGender = (clinic as any)?.doctor_gender || 'masculino';
   const prefix = doctorGender === 'feminino' ? 'Dra.' : 'Dr.';
-  const firstName = doctorName.split(' ')[0];
+  const nameAlreadyHasPrefix = /^(dr\.|dra\.)\s/i.test(doctorName.trim());
+  const firstName = nameAlreadyHasPrefix ? doctorName.trim().split(' ').slice(1).join(' ').split(' ')[0] || doctorName.trim() : doctorName.split(' ')[0];
 
   const targetFillRate = clinic?.target_fill_rate ?? 0.85;
   const targetNoShowRate = clinic?.target_noshow_rate ?? 0.05;
@@ -142,7 +143,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between pt-1">
         <div>
           <h1 className="text-xl font-bold text-foreground">
-            Olá, {prefix} {firstName} {hasBadge && <span title="Selo de Clínica Eficiente">🏅</span>} 👋
+            Olá, {nameAlreadyHasPrefix ? '' : `${prefix} `}{firstName} {hasBadge && <span title="Selo de Clínica Eficiente">🏅</span>} 👋
           </h1>
           <p className="text-sm text-muted-foreground">Visão do dia</p>
         </div>
@@ -161,6 +162,18 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
+
+      {/* ── VERSE MINI-CARD ── */}
+      <button
+        onClick={() => navigate('/versiculo')}
+        className="w-full rounded-2xl bg-card border border-primary/20 p-3 flex items-center gap-3 shadow-card transition-transform active:scale-[0.99]"
+      >
+        <span className="text-lg">📖</span>
+        <div className="text-left">
+          <p className="text-sm font-semibold text-foreground">Versículo do dia</p>
+          <p className="text-[11px] text-muted-foreground">Toque para ler e compartilhar</p>
+        </div>
+      </button>
 
       {/* ── SUCCESS CHECKLIST (always first action) ── */}
       <SuccessChecklistCard />

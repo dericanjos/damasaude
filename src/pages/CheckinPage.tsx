@@ -364,13 +364,13 @@ export default function CheckinPage() {
           <>
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Agenda de hoje</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-5">
+              <div className="grid grid-cols-1 gap-y-5">
                 <Stepper label="Agendados" value={form.appointments_scheduled} onChange={v => setField('appointments_scheduled', v)} />
 
                 {paymentType === 'ambos' ? (
                   <>
-                    <Stepper label="Atendidos (Particular)" value={form.attended_private} onChange={v => setField('attended_private', v)} />
-                    <Stepper label="Atendidos (Convênio)" value={form.attended_insurance} onChange={v => setField('attended_insurance', v)} />
+                    <Stepper label="Atendidos Particular" value={form.attended_private} onChange={v => setField('attended_private', v)} />
+                    <Stepper label="Atendidos Convênio" value={form.attended_insurance} onChange={v => setField('attended_insurance', v)} />
                   </>
                 ) : (
                   <Stepper
@@ -382,8 +382,8 @@ export default function CheckinPage() {
 
                 {paymentType === 'ambos' ? (
                   <>
-                    <Stepper label="No-show (Particular)" value={form.noshows_private} onChange={v => setField('noshows_private', v)} />
-                    <Stepper label="No-show (Convênio)" value={form.noshows_insurance} onChange={v => setField('noshows_insurance', v)} />
+                    <Stepper label="No-shows Particular" value={form.noshows_private} onChange={v => setField('noshows_private', v)} />
+                    <Stepper label="No-shows Convênio" value={form.noshows_insurance} onChange={v => setField('noshows_insurance', v)} />
                   </>
                 ) : (
                   <Stepper
@@ -394,8 +394,8 @@ export default function CheckinPage() {
                 )}
 
                 <Stepper label="Cancelamentos" value={form.cancellations} onChange={v => setField('cancellations', v)} />
-                <Stepper label="Novos agend." value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
-                <Stepper label="Buracos na agenda" value={form.empty_slots} onChange={v => setField('empty_slots', v)} />
+                <Stepper label="Novos Agendamentos" value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
+                <Stepper label="Buracos na Agenda" value={form.empty_slots} onChange={v => setField('empty_slots', v)} />
               </div>
             </div>
 

@@ -98,7 +98,7 @@ export default function VersePage() {
     <div
       className="fixed inset-0 z-50 flex flex-col items-center justify-between px-6 py-10"
       style={{
-        background: 'radial-gradient(ellipse at center, rgba(212,175,55,0.08) 0%, hsl(222,47%,12%) 55%, hsl(222,47%,10%) 100%)',
+        background: 'radial-gradient(ellipse at center, rgba(212,175,55,0.10) 0%, rgba(212,175,55,0.04) 35%, hsl(222,47%,12%) 65%, hsl(222,47%,10%) 100%)',
       }}
     >
       {/* Logo */}
