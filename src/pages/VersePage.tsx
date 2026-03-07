@@ -7,28 +7,21 @@ import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
 import logoDama from '@/assets/logo-dama.png';
 
-function getDayOfYear(): number {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  const diff = now.getTime() - start.getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
-}
-
 export default function VersePage() {
   const navigate = useNavigate();
   const [verse, setVerse] = useState<{ verse_text: string; verse_reference: string } | null>(null);
+  const [error, setError] = useState(false);
   const [sharing, setSharing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchVerse = async () => {
-      const day = getDayOfYear();
-      const { data } = await supabase
-        .from('daily_verses')
-        .select('verse_text, verse_reference')
-        .eq('day_of_year', day)
-        .maybeSingle();
-      if (data) setVerse(data);
+      const { data, error: err } = await supabase.rpc('get_daily_verse').single();
+      if (err || !data) {
+        setError(true);
+      } else {
+        setVerse({ verse_text: data.verse_text, verse_reference: data.verse_reference });
+      }
     };
     fetchVerse();
   }, []);
@@ -49,7 +42,7 @@ export default function VersePage() {
       });
       const res = await fetch(dataUrl);
       const blob = await res.blob();
-      const file = new File([blob], `versiculo-${getDayOfYear()}.png`, { type: 'image/png' });
+      const file = new File([blob], `versiculo-${Date.now()}.png`, { type: 'image/png' });
 
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
@@ -85,8 +78,17 @@ export default function VersePage() {
 
   if (!verse) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background gap-3">
+        {error ? (
+          <div className="text-center px-6">
+            <p className="text-sm text-muted-foreground">Não foi possível carregar o versículo de hoje.</p>
+            <Button variant="outline" size="sm" className="mt-4" onClick={handleContinue}>
+              Continuar <ArrowRight className="h-4 w-4 ml-1.5" />
+            </Button>
+          </div>
+        ) : (
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        )}
       </div>
     );
   }
