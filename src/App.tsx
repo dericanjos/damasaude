@@ -65,7 +65,6 @@ function VerseRoute() {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/auth" replace />;
-  if (hasSeenVerseToday()) return <Navigate to="/" replace />;
   return <VersePage />;
 }
 

@@ -56,13 +56,13 @@ const EMPTY_FORM: FormData = {
 
 function Stepper({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
   return (
-    <div className="space-y-2">
-      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider text-center">{label}</p>
+    <div className="space-y-1.5">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center w-full whitespace-normal">{label}</p>
       <div className="flex items-center justify-center gap-3">
         <button
           type="button"
           onClick={() => onChange(Math.max(0, value - 1))}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
         >
           <Minus className="h-4 w-4" />
         </button>
@@ -76,7 +76,7 @@ function Stepper({ value, onChange, label }: { value: number; onChange: (v: numb
         <button
           type="button"
           onClick={() => onChange(value + 1)}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
         >
           <Plus className="h-4 w-4" />
         </button>
