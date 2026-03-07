@@ -529,7 +529,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_daily_verse: {
+        Args: { target_date?: string }
+        Returns: {
+          day_of_year: number
+          verse_reference: string
+          verse_text: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
