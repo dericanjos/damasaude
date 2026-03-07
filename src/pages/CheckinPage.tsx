@@ -54,36 +54,53 @@ const EMPTY_FORM: FormData = {
   notes: '',
 };
 
-function Stepper({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
+function Stepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
-    <div className="space-y-1.5">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center w-full whitespace-normal">{label}</p>
-      <div className="flex items-center justify-center gap-3">
-        <button
-          type="button"
-          onClick={() => onChange(Math.max(0, value - 1))}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
-        >
-          <Minus className="h-4 w-4" />
-        </button>
-        <input
-          type="number"
-          min={0}
-          value={value}
-          onChange={e => onChange(Math.max(0, parseInt(e.target.value) || 0))}
-          className="w-14 text-center text-2xl font-bold bg-transparent border-none outline-none text-foreground"
-        />
-        <button
-          type="button"
-          onClick={() => onChange(value + 1)}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
-      </div>
+    <div className="flex items-center justify-center gap-3">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(0, value - 1))}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
+      >
+        <Minus className="h-4 w-4" />
+      </button>
+      <input
+        type="number"
+        min={0}
+        value={value}
+        onChange={e => onChange(Math.max(0, parseInt(e.target.value) || 0))}
+        className="w-14 text-center text-2xl font-bold bg-transparent border-none outline-none text-foreground"
+      />
+      <button
+        type="button"
+        onClick={() => onChange(value + 1)}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
     </div>
   );
 }
+
+function CheckinField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex w-full flex-col gap-2.5">
+      <Label className="w-full whitespace-normal text-left text-sm font-semibold leading-snug text-foreground">
+        {label}
+      </Label>
+      <Stepper value={value} onChange={onChange} />
+    </div>
+  );
+}
+
 
 export default function CheckinPage() {
   const navigate = useNavigate();
@@ -365,15 +382,27 @@ export default function CheckinPage() {
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Agenda de hoje</p>
               <div className="grid grid-cols-1 gap-y-5">
-                <Stepper label="Agendados" value={form.appointments_scheduled} onChange={v => setField('appointments_scheduled', v)} />
+                <CheckinField
+                  label="Agendados"
+                  value={form.appointments_scheduled}
+                  onChange={v => setField('appointments_scheduled', v)}
+                />
 
                 {paymentType === 'ambos' ? (
                   <>
-                    <Stepper label="Atendidos Particular" value={form.attended_private} onChange={v => setField('attended_private', v)} />
-                    <Stepper label="Atendidos Convênio" value={form.attended_insurance} onChange={v => setField('attended_insurance', v)} />
+                    <CheckinField
+                      label="Atendidos Particular"
+                      value={form.attended_private}
+                      onChange={v => setField('attended_private', v)}
+                    />
+                    <CheckinField
+                      label="Atendidos Convênio"
+                      value={form.attended_insurance}
+                      onChange={v => setField('attended_insurance', v)}
+                    />
                   </>
                 ) : (
-                  <Stepper
+                  <CheckinField
                     label="Atendidos"
                     value={paymentType === 'particular' ? form.attended_private : form.attended_insurance}
                     onChange={v => setField(paymentType === 'particular' ? 'attended_private' : 'attended_insurance', v)}
@@ -382,20 +411,28 @@ export default function CheckinPage() {
 
                 {paymentType === 'ambos' ? (
                   <>
-                    <Stepper label="No-shows Particular" value={form.noshows_private} onChange={v => setField('noshows_private', v)} />
-                    <Stepper label="No-shows Convênio" value={form.noshows_insurance} onChange={v => setField('noshows_insurance', v)} />
+                    <CheckinField
+                      label="No-shows Particular"
+                      value={form.noshows_private}
+                      onChange={v => setField('noshows_private', v)}
+                    />
+                    <CheckinField
+                      label="No-shows Convênio"
+                      value={form.noshows_insurance}
+                      onChange={v => setField('noshows_insurance', v)}
+                    />
                   </>
                 ) : (
-                  <Stepper
+                  <CheckinField
                     label="No-show"
                     value={paymentType === 'particular' ? form.noshows_private : form.noshows_insurance}
                     onChange={v => setField(paymentType === 'particular' ? 'noshows_private' : 'noshows_insurance', v)}
                   />
                 )}
 
-                <Stepper label="Cancelamentos" value={form.cancellations} onChange={v => setField('cancellations', v)} />
-                <Stepper label="Novos Agendamentos" value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
-                <Stepper label="Buracos na Agenda" value={form.empty_slots} onChange={v => setField('empty_slots', v)} />
+                <CheckinField label="Cancelamentos" value={form.cancellations} onChange={v => setField('cancellations', v)} />
+                <CheckinField label="Novos Agendamentos" value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
+                <CheckinField label="Buracos na Agenda" value={form.empty_slots} onChange={v => setField('empty_slots', v)} />
               </div>
             </div>
 
