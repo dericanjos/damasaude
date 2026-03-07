@@ -5,27 +5,23 @@ import { Button } from '@/components/ui/button';
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
 
-function getDayOfYear(): number {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  const diff = now.getTime() - start.getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
-}
-
 export default function DailyVerseCard() {
   const [verse, setVerse] = useState<{ verse_text: string; verse_reference: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [sharing, setSharing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchVerse = async () => {
-      const day = getDayOfYear();
-      const { data } = await supabase
-        .from('daily_verses')
-        .select('verse_text, verse_reference')
-        .eq('day_of_year', day)
-        .maybeSingle();
-      if (data) setVerse(data);
+      setLoading(true);
+      const { data, error: err } = await supabase.rpc('get_daily_verse').single();
+      if (err || !data) {
+        setError(true);
+      } else {
+        setVerse({ verse_text: data.verse_text, verse_reference: data.verse_reference });
+      }
+      setLoading(false);
     };
     fetchVerse();
   }, []);
@@ -43,7 +39,7 @@ export default function DailyVerseCard() {
       // Convert to blob
       const res = await fetch(dataUrl);
       const blob = await res.blob();
-      const file = new File([blob], `versiculo-${getDayOfYear()}.png`, { type: 'image/png' });
+      const file = new File([blob], `versiculo-${Date.now()}.png`, { type: 'image/png' });
 
       // Try native share (mobile)
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
@@ -83,6 +79,16 @@ export default function DailyVerseCard() {
       setSharing(false);
     }
   };
+
+  if (loading) return (
+    <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-[hsl(222,47%,14%)] to-[hsl(222,47%,10%)] p-5 animate-pulse h-32" />
+  );
+
+  if (error) return (
+    <div className="rounded-2xl border border-destructive/20 bg-gradient-to-br from-[hsl(222,47%,14%)] to-[hsl(222,47%,10%)] p-5">
+      <p className="text-xs text-muted-foreground">Não foi possível carregar o versículo de hoje.</p>
+    </div>
+  );
 
   if (!verse) return null;
 
