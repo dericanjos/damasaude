@@ -13,6 +13,7 @@ export default function VersePage() {
   const [error, setError] = useState(false);
   const [sharing, setSharing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const storiesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchVerse = async () => {
@@ -32,12 +33,14 @@ export default function VersePage() {
   };
 
   const handleShare = async () => {
-    if (!cardRef.current) return;
+    if (!storiesRef.current) return;
     setSharing(true);
     try {
-      const dataUrl = await toPng(cardRef.current, {
+      const dataUrl = await toPng(storiesRef.current, {
         quality: 0.95,
         pixelRatio: 2,
+        width: 1080,
+        height: 1920,
         backgroundColor: '#0f1729',
       });
       const res = await fetch(dataUrl);
@@ -55,7 +58,6 @@ export default function VersePage() {
         await navigator.clipboard.write([
           new ClipboardItem({ 'image/png': blob }),
         ]);
-        // Try opening Instagram Stories camera via deep link
         window.location.href = 'instagram://story-camera';
         toast.success('Imagem copiada! Cole no Stories do Instagram.', { duration: 5000 });
       } catch {
@@ -98,15 +100,62 @@ export default function VersePage() {
     <div
       className="fixed inset-0 z-50 flex flex-col items-center justify-between px-6 py-10"
       style={{
-        background: 'radial-gradient(ellipse at center, rgba(212,175,55,0.08) 0%, hsl(222,47%,12%) 55%, hsl(222,47%,10%) 100%)',
+        background: 'radial-gradient(ellipse at center, rgba(212,175,55,0.10) 0%, rgba(212,175,55,0.04) 35%, hsl(222,47%,12%) 65%, hsl(222,47%,10%) 100%)',
       }}
     >
+      {/* Hidden Stories-format image for sharing (9:16 = 1080x1920) */}
+      <div
+        ref={storiesRef}
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          top: 0,
+          width: '1080px',
+          height: '1920px',
+          background: 'radial-gradient(ellipse at center, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.04) 35%, #0f1729 65%, #0d1322 100%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '120px 80px',
+        }}
+      >
+        <img src={logoDama} alt="DAMA" style={{ height: '120px', objectFit: 'contain' }} />
+        <div
+          style={{
+            border: '1px solid rgba(212,175,55,0.3)',
+            borderRadius: '24px',
+            padding: '60px 50px',
+            textAlign: 'center',
+            maxWidth: '920px',
+          }}
+        >
+          <p style={{
+            fontSize: '42px',
+            fontWeight: 500,
+            color: '#e2e8f0',
+            lineHeight: 1.6,
+            fontStyle: 'italic',
+          }}>
+            <span style={{ fontFamily: 'Georgia, serif', fontSize: '80px', color: 'rgba(212,175,55,0.6)', lineHeight: '0.5', verticalAlign: '-0.15em' }}>{"\u201C"}</span>
+            {verse.verse_text}
+            <span style={{ fontFamily: 'Georgia, serif', fontSize: '80px', color: 'rgba(212,175,55,0.6)', lineHeight: '0.5', verticalAlign: '-0.4em' }}>{"\u201D"}</span>
+          </p>
+          <p style={{ fontSize: '28px', fontWeight: 600, color: '#94a3b8', marginTop: '40px' }}>
+            — {verse.verse_reference}
+          </p>
+        </div>
+        <p style={{ fontSize: '22px', color: 'rgba(148,163,184,0.5)', fontWeight: 500, letterSpacing: '3px' }}>
+          DAMA · Solução completa para médicos
+        </p>
+      </div>
+
       {/* Logo */}
       <div className="flex-shrink-0 pt-4">
         <img src={logoDama} alt="DAMA" className="h-[100px] object-contain" />
       </div>
 
-      {/* Verse content (shareable area) */}
+      {/* Verse content */}
       <div
         ref={cardRef}
         className="flex flex-col items-center justify-center text-center max-w-sm rounded-2xl p-8"

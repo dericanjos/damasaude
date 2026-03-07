@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 export default function InstitucionalPage() {
   const navigate = useNavigate();
-  const whatsappUrl = 'https://wa.me/5511999999999?text=Quero+fazer+o+diagn%C3%B3stico+da+minha+equipe';
+  const whatsappUrl = 'https://wa.me/5521959214292?text=Ol%C3%A1!%20Quero%20agendar%20meu%20Diagn%C3%B3stico%20Estrat%C3%A9gico%20gratuito.';
 
   return (
     <div className="min-h-screen bg-[hsl(220,30%,7%)]">
