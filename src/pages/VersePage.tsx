@@ -42,31 +42,25 @@ export default function VersePage() {
       });
       const res = await fetch(dataUrl);
       const blob = await res.blob();
-      const file = new File([blob], `versiculo-${Date.now()}.png`, { type: 'image/png' });
+      const file = new File([blob], `versiculo-dama.png`, { type: 'image/png' });
 
+      // Try native share (prioritize — on mobile, Instagram appears directly)
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           files: [file],
           title: 'Versículo do Dia - DAMA',
-          text: `"${verse?.verse_text}" — ${verse?.verse_reference}`,
         });
-      } else {
-        const fileName = `verse-${Date.now()}.png`;
-        const { error: uploadError } = await supabase.storage
-          .from('verse-images')
-          .upload(fileName, blob, { contentType: 'image/png', upsert: true });
-        if (uploadError) throw uploadError;
-
-        const { data: urlData } = supabase.storage
-          .from('verse-images')
-          .getPublicUrl(fileName);
-
-        if (urlData?.publicUrl) {
-          window.open(`instagram://share?source_application=DAMA`, '_blank');
-          await navigator.clipboard?.writeText(urlData.publicUrl);
-          toast.success('Imagem gerada! Link copiado para a área de transferência.');
-        }
+        return;
       }
+
+      // Fallback: download the image directly so user can share manually
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = 'versiculo-dama.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Imagem salva! Abra o Instagram e compartilhe nos Stories.');
     } catch (e: any) {
       if (e?.name !== 'AbortError') {
         toast.error('Não foi possível compartilhar. Tente novamente.');

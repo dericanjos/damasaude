@@ -35,42 +35,25 @@ export default function DailyVerseCard() {
         pixelRatio: 2,
         backgroundColor: '#0f1729',
       });
-
-      // Convert to blob
       const res = await fetch(dataUrl);
       const blob = await res.blob();
-      const file = new File([blob], `versiculo-${Date.now()}.png`, { type: 'image/png' });
+      const file = new File([blob], `versiculo-dama.png`, { type: 'image/png' });
 
-      // Try native share (mobile)
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           files: [file],
           title: 'Versículo do Dia - DAMA',
-          text: `"${verse?.verse_text}" — ${verse?.verse_reference}`,
         });
-      } else {
-        // Fallback: upload to storage and open Instagram deep link
-        const fileName = `verse-${Date.now()}.png`;
-        const { error: uploadError } = await supabase.storage
-          .from('verse-images')
-          .upload(fileName, blob, { contentType: 'image/png', upsert: true });
-
-        if (uploadError) throw uploadError;
-
-        const { data: urlData } = supabase.storage
-          .from('verse-images')
-          .getPublicUrl(fileName);
-
-        const publicUrl = urlData?.publicUrl;
-        if (publicUrl) {
-          // Try Instagram deep link
-          const instagramUrl = `instagram://share?source_application=DAMA`;
-          window.open(instagramUrl, '_blank');
-          // Also copy link
-          await navigator.clipboard?.writeText(publicUrl);
-          toast.success('Imagem gerada! Link copiado para a área de transferência.');
-        }
+        return;
       }
+
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = 'versiculo-dama.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Imagem salva! Abra o Instagram e compartilhe nos Stories.');
     } catch (e: any) {
       if (e?.name !== 'AbortError') {
         toast.error('Não foi possível compartilhar. Tente novamente.');
