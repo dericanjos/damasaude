@@ -42,25 +42,32 @@ export default function VersePage() {
       });
       const res = await fetch(dataUrl);
       const blob = await res.blob();
-      const file = new File([blob], `versiculo-dama.png`, { type: 'image/png' });
+      const file = new File([blob], 'versiculo-dama.png', { type: 'image/png' });
 
-      // Try native share (prioritize — on mobile, Instagram appears directly)
+      // Try native share first (best UX on mobile)
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'Versículo do Dia - DAMA',
-        });
+        await navigator.share({ files: [file], title: 'Versículo do Dia - DAMA' });
         return;
       }
 
-      // Fallback: download the image directly so user can share manually
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = 'versiculo-dama.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success('Imagem salva! Abra o Instagram e compartilhe nos Stories.');
+      // Fallback: copy to clipboard + open Instagram Stories camera
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob }),
+        ]);
+        // Try opening Instagram Stories camera via deep link
+        window.location.href = 'instagram://story-camera';
+        toast.success('Imagem copiada! Cole no Stories do Instagram.', { duration: 5000 });
+      } catch {
+        // Final fallback: download the image
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = 'versiculo-dama.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('Imagem salva! Abra o Instagram e compartilhe nos Stories.');
+      }
     } catch (e: any) {
       if (e?.name !== 'AbortError') {
         toast.error('Não foi possível compartilhar. Tente novamente.');
