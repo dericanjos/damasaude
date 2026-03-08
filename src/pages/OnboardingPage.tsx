@@ -74,6 +74,7 @@ export default function OnboardingPage() {
   // Step 1
   const [doctorName, setDoctorName] = useState(user?.user_metadata?.doctor_name || '');
   const [doctorGender, setDoctorGender] = useState<string>('masculino');
+  const [displayName, setDisplayName] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [hasSecretary, setHasSecretary] = useState(false);
 
