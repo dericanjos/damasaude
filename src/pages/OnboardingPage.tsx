@@ -318,6 +318,7 @@ export default function OnboardingPage() {
                   {TIMEZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground">Usado para calcular horários e relatórios corretamente.</p>
             </div>
           </div>
         )}
