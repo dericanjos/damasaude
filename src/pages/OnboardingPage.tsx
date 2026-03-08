@@ -289,6 +289,7 @@ export default function OnboardingPage() {
                   </label>
                 ))}
               </div>
+              <p className="text-[11px] text-muted-foreground">Selecione os dias da semana em que você atende pacientes.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Capacidade diária (consultas/dia) *</Label>
