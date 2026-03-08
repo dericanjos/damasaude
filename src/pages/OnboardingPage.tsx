@@ -300,7 +300,7 @@ export default function OnboardingPage() {
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$) *</Label>
                 <Input type="number" min={1} value={ticketPrivate} onChange={e => setTicketPrivate(Number(e.target.value))} className="rounded-xl" />
-                <p className="text-[11px] text-muted-foreground">Valor cobrado por consulta particular.</p>
+                <p className="text-[11px] text-muted-foreground">Valor médio cobrado por consulta particular.</p>
               </div>
             )}
             {(paymentType === 'convenio' || paymentType === 'ambos') && (
