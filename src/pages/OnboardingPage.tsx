@@ -151,7 +151,7 @@ export default function OnboardingPage() {
       });
 
       // Mark onboarding as completed
-      await supabase.from('profiles').update({ onboarding_completed: true } as any).eq('user_id', user.id);
+      await supabase.from('profiles').update({ onboarding_completed: true, display_name: displayName || doctorName } as any).eq('user_id', user.id);
 
       setShowCompletion(true);
       setTimeout(() => navigate('/', { replace: true }), 2500);
