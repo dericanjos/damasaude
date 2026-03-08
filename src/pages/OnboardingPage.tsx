@@ -195,18 +195,25 @@ export default function OnboardingPage() {
               <p className="text-sm text-muted-foreground mt-1">Conte um pouco sobre você.</p>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome do médico *</Label>
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome completo *</Label>
               <Input value={doctorName} onChange={e => setDoctorName(e.target.value)} placeholder="Maria Silva" className="rounded-xl" />
+              <p className="text-[11px] text-muted-foreground">Seu nome completo para identificação no sistema.</p>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Sexo *</Label>
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tratamento *</Label>
               <Select value={doctorGender} onValueChange={setDoctorGender}>
                 <SelectTrigger className="rounded-xl"><SelectValue placeholder="Selecione..." /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="masculino">Masculino</SelectItem>
-                  <SelectItem value="feminino">Feminino</SelectItem>
+                  <SelectItem value="masculino">Médico</SelectItem>
+                  <SelectItem value="feminino">Médica</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground">Usado para definir o tratamento (Dr. / Dra.) nas comunicações.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Como você gostaria de ser chamado(a)?</Label>
+              <Input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Ex: Dr. Carlos, Dra. Ana, Carlos" className="rounded-xl" />
+              <p className="text-[11px] text-muted-foreground">Ex: Dr. Carlos, Dra. Ana, Carlos. Esse nome aparecerá nas saudações e relatórios.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Especialidade *</Label>
@@ -216,11 +223,12 @@ export default function OnboardingPage() {
                   {SPECIALTIES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground">Isso nos ajuda a personalizar sua experiência.</p>
             </div>
             <div className="flex items-center justify-between rounded-xl border border-border p-3">
               <div>
                 <p className="text-sm font-medium text-foreground">Tem secretária ou recepcionista?</p>
-                <p className="text-[11px] text-muted-foreground">Adaptaremos as orientações para você.</p>
+                <p className="text-[11px] text-muted-foreground">Adaptaremos as orientações e ações diárias para sua realidade.</p>
               </div>
               <Switch checked={hasSecretary} onCheckedChange={setHasSecretary} />
             </div>
