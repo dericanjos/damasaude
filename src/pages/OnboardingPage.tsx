@@ -22,6 +22,7 @@ const SPECIALTIES = [
   'Endocrinologia',
   'Gastroenterologia',
   'Ginecologia e Obstetrícia',
+  'Medicina da Família e Comunidade',
   'Neurologia',
   'Nutrição / Nutrologia',
   'Oftalmologia',
@@ -73,6 +74,7 @@ export default function OnboardingPage() {
   // Step 1
   const [doctorName, setDoctorName] = useState(user?.user_metadata?.doctor_name || '');
   const [doctorGender, setDoctorGender] = useState<string>('masculino');
+  const [displayName, setDisplayName] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [hasSecretary, setHasSecretary] = useState(false);
 
@@ -149,7 +151,7 @@ export default function OnboardingPage() {
       });
 
       // Mark onboarding as completed
-      await supabase.from('profiles').update({ onboarding_completed: true } as any).eq('user_id', user.id);
+      await supabase.from('profiles').update({ onboarding_completed: true, display_name: displayName || doctorName } as any).eq('user_id', user.id);
 
       setShowCompletion(true);
       setTimeout(() => navigate('/', { replace: true }), 2500);
@@ -193,18 +195,25 @@ export default function OnboardingPage() {
               <p className="text-sm text-muted-foreground mt-1">Conte um pouco sobre você.</p>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome do médico *</Label>
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome completo *</Label>
               <Input value={doctorName} onChange={e => setDoctorName(e.target.value)} placeholder="Maria Silva" className="rounded-xl" />
+              <p className="text-[11px] text-muted-foreground">Seu nome completo para identificação no sistema.</p>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Sexo *</Label>
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tratamento *</Label>
               <Select value={doctorGender} onValueChange={setDoctorGender}>
                 <SelectTrigger className="rounded-xl"><SelectValue placeholder="Selecione..." /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="masculino">Masculino</SelectItem>
-                  <SelectItem value="feminino">Feminino</SelectItem>
+                  <SelectItem value="masculino">Médico</SelectItem>
+                  <SelectItem value="feminino">Médica</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground">Usado para definir o tratamento (Dr. / Dra.) nas comunicações.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Como você gostaria de ser chamado(a)?</Label>
+              <Input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Ex: Dr. Carlos, Dra. Ana, Carlos" className="rounded-xl" />
+              <p className="text-[11px] text-muted-foreground">Ex: Dr. Carlos, Dra. Ana, Carlos. Esse nome aparecerá nas saudações e relatórios.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Especialidade *</Label>
@@ -214,11 +223,12 @@ export default function OnboardingPage() {
                   {SPECIALTIES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground">Isso nos ajuda a personalizar sua experiência.</p>
             </div>
             <div className="flex items-center justify-between rounded-xl border border-border p-3">
               <div>
                 <p className="text-sm font-medium text-foreground">Tem secretária ou recepcionista?</p>
-                <p className="text-[11px] text-muted-foreground">Adaptaremos as orientações para você.</p>
+                <p className="text-[11px] text-muted-foreground">Adaptaremos as orientações e ações diárias para sua realidade.</p>
               </div>
               <Switch checked={hasSecretary} onCheckedChange={setHasSecretary} />
             </div>
@@ -234,10 +244,12 @@ export default function OnboardingPage() {
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome da clínica *</Label>
               <Input value={clinicName} onChange={e => setClinicName(e.target.value)} placeholder="Clínica Saúde & Vida" className="rounded-xl" />
+              <p className="text-[11px] text-muted-foreground">Nome do consultório ou clínica onde você atende.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quantidade de médicos *</Label>
               <Input type="number" min={1} value={numDoctors} onChange={e => setNumDoctors(Number(e.target.value))} className="rounded-xl" />
+              <p className="text-[11px] text-muted-foreground">Quantos médicos atendem na sua clínica, incluindo você.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Atende por *</Label>
@@ -277,23 +289,25 @@ export default function OnboardingPage() {
                   </label>
                 ))}
               </div>
+              <p className="text-[11px] text-muted-foreground">Selecione os dias da semana em que você atende pacientes.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Capacidade diária (consultas/dia) *</Label>
               <Input type="number" min={1} max={100} value={dailyCapacity} onChange={e => setDailyCapacity(Number(e.target.value))} className="rounded-xl" />
+              <p className="text-[11px] text-muted-foreground">Número máximo de consultas que você consegue atender por dia.</p>
             </div>
             {(paymentType === 'particular' || paymentType === 'ambos') && (
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$) *</Label>
                 <Input type="number" min={1} value={ticketPrivate} onChange={e => setTicketPrivate(Number(e.target.value))} className="rounded-xl" />
-                <p className="text-[11px] text-muted-foreground">Valor cobrado por consulta particular.</p>
+                <p className="text-[11px] text-muted-foreground">Valor médio cobrado por consulta particular.</p>
               </div>
             )}
             {(paymentType === 'convenio' || paymentType === 'ambos') && (
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$) *</Label>
                 <Input type="number" min={1} value={ticketInsurance} onChange={e => setTicketInsurance(Number(e.target.value))} className="rounded-xl" />
-                <p className="text-[11px] text-muted-foreground">Valor cobrado por consulta via convênio.</p>
+                <p className="text-[11px] text-muted-foreground">Valor médio recebido por consulta via convênio.</p>
               </div>
             )}
             <div className="space-y-1.5">
@@ -304,6 +318,7 @@ export default function OnboardingPage() {
                   {TIMEZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground">Usado para calcular horários e relatórios corretamente.</p>
             </div>
           </div>
         )}

@@ -458,6 +458,7 @@ export type Database = {
           checklist_level: number
           created_at: string
           current_period_end: string | null
+          display_name: string | null
           email: string | null
           has_efficiency_badge: boolean
           onboarding_completed: boolean
@@ -469,6 +470,7 @@ export type Database = {
           checklist_level?: number
           created_at?: string
           current_period_end?: string | null
+          display_name?: string | null
           email?: string | null
           has_efficiency_badge?: boolean
           onboarding_completed?: boolean
@@ -480,6 +482,7 @@ export type Database = {
           checklist_level?: number
           created_at?: string
           current_period_end?: string | null
+          display_name?: string | null
           email?: string | null
           has_efficiency_badge?: boolean
           onboarding_completed?: boolean
