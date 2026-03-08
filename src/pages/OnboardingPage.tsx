@@ -22,6 +22,7 @@ const SPECIALTIES = [
   'Endocrinologia',
   'Gastroenterologia',
   'Ginecologia e Obstetrícia',
+  'Medicina da Família e Comunidade',
   'Neurologia',
   'Nutrição / Nutrologia',
   'Oftalmologia',
