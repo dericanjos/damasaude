@@ -68,7 +68,8 @@ export default function InsightsPage() {
   const TICKET_PRIVATE = (clinic as any)?.ticket_private ?? 250;
   const TICKET_INSURANCE = (clinic as any)?.ticket_insurance ?? 100;
   const AVG_TICKET = (TICKET_PRIVATE + TICKET_INSURANCE) / 2;
-  const CAPACITY = (clinic as any)?.daily_capacity ?? 16;
+  const caps: DailyCapacities = parseDailyCapacities((clinic as any)?.daily_capacities);
+  const CAPACITY = (clinic as any)?.daily_capacity ?? 16; // fallback for averages
 
   const calcWeek = (checkins: typeof thisWeek) => {
     const totalAttPrivate = checkins.reduce((s, c) => s + ((c as any).attended_private ?? (c as any).appointments_done ?? 0), 0);
