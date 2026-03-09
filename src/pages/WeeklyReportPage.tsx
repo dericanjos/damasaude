@@ -34,6 +34,7 @@ export default function WeeklyReportPage() {
   const [weekOffset, setWeekOffset] = useState(0);
   const { data: clinic } = useClinic();
   const { data: allCheckins = [] } = useAllCheckins();
+  const caps = parseDailyCapacities((clinic as any)?.daily_capacities);
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
   const workingDays: string[] = Array.isArray((clinic as any)?.working_days) ? (clinic as any).working_days : ['seg', 'ter', 'qua', 'qui', 'sex'];
   const workingDaysCount = workingDays.length;
