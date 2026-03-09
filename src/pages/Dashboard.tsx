@@ -9,6 +9,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useCheckinStreak } from '@/hooks/useChecklist';
 import { calculateIDEA, getIdeaStatus, getIdeaLabel, totalAttended, totalNoshows, type CheckinData } from '@/lib/idea';
 import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET_PRIVATE, DEFAULT_TICKET_INSURANCE } from '@/lib/revenue';
+import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
