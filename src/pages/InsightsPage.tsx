@@ -86,7 +86,8 @@ export default function InsightsPage() {
     const lost = (totalNoshowsPriv * TICKET_PRIVATE) + (totalNoshowsIns * TICKET_INSURANCE) + ((totalCancellations + totalEmpty) * AVG_TICKET);
     const occupancy = checkins.length > 0 ? checkins.reduce((s, c) => {
       const att = ((c as any).attended_private ?? (c as any).appointments_done ?? 0) + ((c as any).attended_insurance ?? 0);
-      return s + (att / CAPACITY);
+      const dayCap = getCapacityForDate(c.date, caps) || CAPACITY;
+      return s + (att / dayCap);
     }, 0) / checkins.length : 0;
     const noShowRate = totalScheduled > 0 ? totalNoShow / totalScheduled : 0;
 
