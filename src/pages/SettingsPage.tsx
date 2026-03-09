@@ -287,7 +287,7 @@ export default function SettingsPage() {
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Quais dias você atende?
             </Label>
-            <div className="flex gap-2">
+            <div className="flex justify-between gap-1.5">
               {DAY_KEYS.map((key) => {
                 const active = workingDays.includes(key);
                 return (
@@ -295,11 +295,12 @@ export default function SettingsPage() {
                     key={key}
                     type="button"
                     onClick={() => toggleDay(key)}
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-semibold transition-colors ${
+                    className={cn(
+                      'flex h-11 w-11 items-center justify-center rounded-2xl text-[13px] font-bold tracking-wide transition-all duration-200',
                       active
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                    }`}
+                        ? 'bg-primary text-primary-foreground shadow-md ring-2 ring-primary/30 scale-105'
+                        : 'bg-muted/50 text-muted-foreground hover:bg-muted/80 border border-border/40'
+                    )}
                     title={DAY_LABELS[key]}
                   >
                     {DAY_SHORT_LABELS[key]}
