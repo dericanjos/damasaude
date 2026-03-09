@@ -120,7 +120,8 @@ export default function WeeklyReportPage() {
 
   const totalRevenueEstimated = (totalAttendedPrivate * ticketPrivate) + (totalAttendedInsurance * ticketInsurance);
   const totalRevenueLost = (totalNoshowsPrivate * ticketPrivate) + (totalNoshowsInsurance * ticketInsurance) + ((totalCancellations + totalEmptySlots) * avgTicket);
-  const avgOccupancy = totalDone / (checkins.length * dailyCapacity || 1);
+  const totalCapacity = checkins.reduce((s, c) => s + (getCapacityForDate(c.date, caps) || dailyCapacity), 0);
+  const avgOccupancy = totalCapacity > 0 ? totalDone / totalCapacity : 0;
   const avgNoShow = totalNoShow / totalScheduled;
 
   const hasEnoughData = allCheckins.length >= workingDaysCount;
