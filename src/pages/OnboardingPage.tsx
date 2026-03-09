@@ -102,7 +102,7 @@ export default function OnboardingPage() {
     switch (step) {
       case 1: return doctorName.trim() && specialty;
       case 2: return clinicName.trim() && numDoctors >= 1;
-      case 3: return workingDays.length >= 1 && dailyCapacity >= 1 && (
+      case 3: return workingDays.length >= 1 && workingDays.some(d => (dailyCapacities[d] ?? 0) >= 1) && (
         paymentType === 'particular' ? ticketPrivate >= 1 :
         paymentType === 'convenio' ? ticketInsurance >= 1 :
         ticketPrivate >= 1 && ticketInsurance >= 1
