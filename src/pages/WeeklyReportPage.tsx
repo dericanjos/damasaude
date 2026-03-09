@@ -101,7 +101,8 @@ export default function WeeklyReportPage() {
   // Stats
   const scores = checkins.map(c => {
     const data = toCheckinData(c);
-    return { date: c.date, score: calculateIDEA(data, dailyCapacity, ticketPrivate, ticketInsurance), data };
+    const dayCap = getCapacityForDate(c.date, caps) || dailyCapacity;
+    return { date: c.date, score: calculateIDEA(data, dayCap, ticketPrivate, ticketInsurance), data };
   });
 
   const avgScore = scores.length > 0 ? Math.round(scores.reduce((s, c) => s + c.score, 0) / scores.length) : null;

@@ -221,7 +221,7 @@ export default function InsightsPage() {
           d.noshows_private + d.noshows_insurance,
           c.cancellations,
           c.empty_slots,
-          calculateIDEA(d, CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE),
+          calculateIDEA(d, getCapacityForDate(c.date, caps) || CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE),
         ];
       }),
       theme: 'grid',
