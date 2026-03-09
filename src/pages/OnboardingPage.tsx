@@ -46,6 +46,7 @@ const TIMEZONES = [
 ];
 
 const DAYS = [
+  { value: 'dom', label: 'Dom' },
   { value: 'seg', label: 'Seg' },
   { value: 'ter', label: 'Ter' },
   { value: 'qua', label: 'Qua' },
