@@ -4,6 +4,7 @@ import { useClinic } from '@/hooks/useClinic';
 import { useGenerateInsight } from '@/hooks/useInsights';
 import { calculateIDEA, type CheckinData } from '@/lib/idea';
 import { formatBRL, formatPercent } from '@/lib/revenue';
+import { getCapacityForDate, parseDailyCapacities, type DailyCapacities } from '@/lib/days';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
