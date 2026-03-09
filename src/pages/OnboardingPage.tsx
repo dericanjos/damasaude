@@ -86,7 +86,9 @@ export default function OnboardingPage() {
 
   // Step 3
   const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
-  const [dailyCapacity, setDailyCapacity] = useState(16);
+  const [dailyCapacities, setDailyCapacities] = useState<Record<string, number>>({
+    dom: 0, seg: 16, ter: 16, qua: 16, qui: 16, sex: 16, sab: 0,
+  });
   const [ticketPrivate, setTicketPrivate] = useState(250);
   const [ticketInsurance, setTicketInsurance] = useState(100);
   const [timezone, setTimezone] = useState(detectTimezone());
