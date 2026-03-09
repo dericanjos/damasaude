@@ -46,6 +46,7 @@ const TIMEZONES = [
 ];
 
 const DAYS = [
+  { value: 'dom', label: 'Dom' },
   { value: 'seg', label: 'Seg' },
   { value: 'ter', label: 'Ter' },
   { value: 'qua', label: 'Qua' },
@@ -85,7 +86,9 @@ export default function OnboardingPage() {
 
   // Step 3
   const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
-  const [dailyCapacity, setDailyCapacity] = useState(16);
+  const [dailyCapacities, setDailyCapacities] = useState<Record<string, number>>({
+    dom: 0, seg: 16, ter: 16, qua: 16, qui: 16, sex: 16, sab: 0,
+  });
   const [ticketPrivate, setTicketPrivate] = useState(250);
   const [ticketInsurance, setTicketInsurance] = useState(100);
   const [timezone, setTimezone] = useState(detectTimezone());
@@ -99,7 +102,7 @@ export default function OnboardingPage() {
     switch (step) {
       case 1: return doctorName.trim() && specialty;
       case 2: return clinicName.trim() && numDoctors >= 1;
-      case 3: return workingDays.length >= 1 && dailyCapacity >= 1 && (
+      case 3: return workingDays.length >= 1 && workingDays.some(d => (dailyCapacities[d] ?? 0) >= 1) && (
         paymentType === 'particular' ? ticketPrivate >= 1 :
         paymentType === 'convenio' ? ticketInsurance >= 1 :
         ticketPrivate >= 1 && ticketInsurance >= 1
@@ -129,7 +132,8 @@ export default function OnboardingPage() {
         num_doctors: numDoctors,
         payment_type: paymentType,
         working_days: workingDays,
-        daily_capacity: dailyCapacity,
+        daily_capacities: dailyCapacities,
+        daily_capacity: Math.max(...workingDays.map(d => dailyCapacities[d] ?? 0), 1),
         ticket_private: paymentType === 'convenio' ? 0 : ticketPrivate,
         ticket_insurance: paymentType === 'particular' ? 0 : ticketInsurance,
         ticket_medio: paymentType === 'ambos' ? Math.round((ticketPrivate + ticketInsurance) / 2) : (paymentType === 'particular' ? ticketPrivate : ticketInsurance),
@@ -291,10 +295,24 @@ export default function OnboardingPage() {
               </div>
               <p className="text-[11px] text-muted-foreground">Selecione os dias da semana em que você atende pacientes.</p>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Capacidade diária (consultas/dia) *</Label>
-              <Input type="number" min={1} max={100} value={dailyCapacity} onChange={e => setDailyCapacity(Number(e.target.value))} className="rounded-xl" />
-              <p className="text-[11px] text-muted-foreground">Número máximo de consultas que você consegue atender por dia.</p>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Horários de atendimento por dia *</Label>
+              <p className="text-[11px] text-muted-foreground">Quantos pacientes você consegue atender em cada dia selecionado.</p>
+              <div className="space-y-2">
+                {DAYS.filter(d => workingDays.includes(d.value)).map(day => (
+                  <div key={day.value} className="flex items-center gap-3">
+                    <span className="text-sm font-semibold text-foreground w-12">{day.label}</span>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={dailyCapacities[day.value] ?? 16}
+                      onChange={e => setDailyCapacities(prev => ({ ...prev, [day.value]: Math.max(1, Number(e.target.value)) }))}
+                      className="rounded-xl"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
             {(paymentType === 'particular' || paymentType === 'ambos') && (
               <div className="space-y-1.5">

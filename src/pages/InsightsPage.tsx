@@ -4,6 +4,7 @@ import { useClinic } from '@/hooks/useClinic';
 import { useGenerateInsight } from '@/hooks/useInsights';
 import { calculateIDEA, type CheckinData } from '@/lib/idea';
 import { formatBRL, formatPercent } from '@/lib/revenue';
+import { getCapacityForDate, parseDailyCapacities, type DailyCapacities } from '@/lib/days';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -67,7 +68,8 @@ export default function InsightsPage() {
   const TICKET_PRIVATE = (clinic as any)?.ticket_private ?? 250;
   const TICKET_INSURANCE = (clinic as any)?.ticket_insurance ?? 100;
   const AVG_TICKET = (TICKET_PRIVATE + TICKET_INSURANCE) / 2;
-  const CAPACITY = (clinic as any)?.daily_capacity ?? 16;
+  const caps: DailyCapacities = parseDailyCapacities((clinic as any)?.daily_capacities);
+  const CAPACITY = (clinic as any)?.daily_capacity ?? 16; // fallback for averages
 
   const calcWeek = (checkins: typeof thisWeek) => {
     const totalAttPrivate = checkins.reduce((s, c) => s + ((c as any).attended_private ?? (c as any).appointments_done ?? 0), 0);
@@ -84,13 +86,15 @@ export default function InsightsPage() {
     const lost = (totalNoshowsPriv * TICKET_PRIVATE) + (totalNoshowsIns * TICKET_INSURANCE) + ((totalCancellations + totalEmpty) * AVG_TICKET);
     const occupancy = checkins.length > 0 ? checkins.reduce((s, c) => {
       const att = ((c as any).attended_private ?? (c as any).appointments_done ?? 0) + ((c as any).attended_insurance ?? 0);
-      return s + (att / CAPACITY);
+      const dayCap = getCapacityForDate(c.date, caps) || CAPACITY;
+      return s + (att / dayCap);
     }, 0) / checkins.length : 0;
     const noShowRate = totalScheduled > 0 ? totalNoShow / totalScheduled : 0;
 
     const scores = checkins.map(c => {
       const d = toCheckinData(c);
-      return calculateIDEA(d, CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE);
+      const dayCap = getCapacityForDate(c.date, caps) || CAPACITY;
+      return calculateIDEA(d, dayCap, TICKET_PRIVATE, TICKET_INSURANCE);
     });
     const avgScore = scores.length > 0 ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : null;
 
@@ -115,9 +119,9 @@ export default function InsightsPage() {
     if (!thisWeek.length) return [];
     return thisWeek.map((c) => ({
       day: format(parseISO(c.date), 'EEE', { locale: ptBR }).replace(/^\w/, s => s.toUpperCase()),
-      idea: calculateIDEA(toCheckinData(c), CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE),
+      idea: calculateIDEA(toCheckinData(c), getCapacityForDate(c.date, caps) || CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE),
     }));
-  }, [thisWeek, CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE]);
+  }, [thisWeek, caps, CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE]);
 
   const compareData = useMemo(() => {
     return [
@@ -217,7 +221,7 @@ export default function InsightsPage() {
           d.noshows_private + d.noshows_insurance,
           c.cancellations,
           c.empty_slots,
-          calculateIDEA(d, CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE),
+          calculateIDEA(d, getCapacityForDate(c.date, caps) || CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE),
         ];
       }),
       theme: 'grid',

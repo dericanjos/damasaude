@@ -59,6 +59,7 @@ export type Database = {
       clinics: {
         Row: {
           created_at: string
+          daily_capacities: Json
           daily_capacity: number
           doctor_gender: string
           doctor_name: string | null
@@ -80,6 +81,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          daily_capacities?: Json
           daily_capacity?: number
           doctor_gender?: string
           doctor_name?: string | null
@@ -101,6 +103,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          daily_capacities?: Json
           daily_capacity?: number
           doctor_gender?: string
           doctor_name?: string | null

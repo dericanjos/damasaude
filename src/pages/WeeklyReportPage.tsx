@@ -5,6 +5,7 @@ import { calculateIDEA, getIdeaStatus, getIdeaLabel, type CheckinData } from '@/
 import { formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY } from '@/lib/revenue';
 import { useClinic } from '@/hooks/useClinic';
 import { supabase } from '@/integrations/supabase/client';
+import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
 import { Button } from '@/components/ui/button';
 import { startOfWeek, subWeeks, addWeeks, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -33,6 +34,7 @@ export default function WeeklyReportPage() {
   const [weekOffset, setWeekOffset] = useState(0);
   const { data: clinic } = useClinic();
   const { data: allCheckins = [] } = useAllCheckins();
+  const caps = parseDailyCapacities((clinic as any)?.daily_capacities);
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
   const workingDays: string[] = Array.isArray((clinic as any)?.working_days) ? (clinic as any).working_days : ['seg', 'ter', 'qua', 'qui', 'sex'];
   const workingDaysCount = workingDays.length;
@@ -99,7 +101,8 @@ export default function WeeklyReportPage() {
   // Stats
   const scores = checkins.map(c => {
     const data = toCheckinData(c);
-    return { date: c.date, score: calculateIDEA(data, dailyCapacity, ticketPrivate, ticketInsurance), data };
+    const dayCap = getCapacityForDate(c.date, caps) || dailyCapacity;
+    return { date: c.date, score: calculateIDEA(data, dayCap, ticketPrivate, ticketInsurance), data };
   });
 
   const avgScore = scores.length > 0 ? Math.round(scores.reduce((s, c) => s + c.score, 0) / scores.length) : null;
@@ -117,7 +120,8 @@ export default function WeeklyReportPage() {
 
   const totalRevenueEstimated = (totalAttendedPrivate * ticketPrivate) + (totalAttendedInsurance * ticketInsurance);
   const totalRevenueLost = (totalNoshowsPrivate * ticketPrivate) + (totalNoshowsInsurance * ticketInsurance) + ((totalCancellations + totalEmptySlots) * avgTicket);
-  const avgOccupancy = totalDone / (checkins.length * dailyCapacity || 1);
+  const totalCapacity = checkins.reduce((s, c) => s + (getCapacityForDate(c.date, caps) || dailyCapacity), 0);
+  const avgOccupancy = totalCapacity > 0 ? totalDone / totalCapacity : 0;
   const avgNoShow = totalNoShow / totalScheduled;
 
   const hasEnoughData = allCheckins.length >= workingDaysCount;
