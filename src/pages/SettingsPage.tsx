@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Settings, LogOut, CreditCard, ExternalLink, Minus, Plus, Percent } from 'lucide-react';
+import { Settings, LogOut, CreditCard, ExternalLink, Percent } from 'lucide-react';
+import { DAY_KEYS, DAY_LABELS, DAY_SHORT_LABELS, parseDailyCapacities, type DailyCapacities } from '@/lib/days';
 
 const statusLabels: Record<string, string> = {
   testando: 'Período de teste',
@@ -34,15 +35,6 @@ const SPECIALTIES = [
   'Psiquiatria', 'Outra',
 ];
 
-const WEEK_DAYS = [
-  { value: 'seg', label: 'S' },
-  { value: 'ter', label: 'T' },
-  { value: 'qua', label: 'Q' },
-  { value: 'qui', label: 'Q' },
-  { value: 'sex', label: 'S' },
-  { value: 'sab', label: 'S' },
-];
-
 export default function SettingsPage() {
   const { signOut } = useAuth();
   const { data: clinic } = useClinic();
@@ -61,7 +53,7 @@ export default function SettingsPage() {
   const [ticketPrivate, setTicketPrivate] = useState(250);
   const [ticketInsurance, setTicketInsurance] = useState(100);
   const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
-  const [dailyCapacity, setDailyCapacity] = useState(16);
+  const [dailyCapacities, setDailyCapacities] = useState<DailyCapacities>(parseDailyCapacities(null));
 
   // Performance goals
   const [fillRate, setFillRate] = useState(85);
@@ -72,6 +64,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (clinic) {
       const c = clinic as any;
+      const caps = parseDailyCapacities(c.daily_capacities);
       const vals = {
         name: c.name || '',
         doctorName: c.doctor_name || '',
@@ -81,7 +74,7 @@ export default function SettingsPage() {
         ticketPrivate: c.ticket_private ?? 250,
         ticketInsurance: c.ticket_insurance ?? 100,
         workingDays: c.working_days ?? ['seg', 'ter', 'qua', 'qui', 'sex'],
-        dailyCapacity: c.daily_capacity ?? 16,
+        dailyCapacities: caps,
         fillRate: Math.round(Number(c.target_fill_rate) * 100),
         noshowRate: Math.round(Number(c.target_noshow_rate) * 100),
       };
@@ -93,7 +86,7 @@ export default function SettingsPage() {
       setTicketPrivate(vals.ticketPrivate);
       setTicketInsurance(vals.ticketInsurance);
       setWorkingDays(vals.workingDays);
-      setDailyCapacity(vals.dailyCapacity);
+      setDailyCapacities(vals.dailyCapacities);
       setFillRate(vals.fillRate);
       setNoshowRate(vals.noshowRate);
       setInitial(vals);
@@ -111,14 +104,16 @@ export default function SettingsPage() {
       ticketPrivate !== initial.ticketPrivate ||
       ticketInsurance !== initial.ticketInsurance ||
       JSON.stringify(workingDays.sort()) !== JSON.stringify([...initial.workingDays].sort()) ||
-      dailyCapacity !== initial.dailyCapacity ||
+      JSON.stringify(dailyCapacities) !== JSON.stringify(initial.dailyCapacities) ||
       fillRate !== initial.fillRate ||
       noshowRate !== initial.noshowRate
     );
-  }, [initial, name, doctorName, specialty, hasSecretary, ticketPrivate, ticketInsurance, workingDays, dailyCapacity, fillRate, noshowRate]);
+  }, [initial, name, doctorName, specialty, hasSecretary, ticketPrivate, ticketInsurance, workingDays, dailyCapacities, fillRate, noshowRate]);
 
   const handleSave = async () => {
     try {
+      // Compute legacy daily_capacity as max of working day capacities
+      const maxCap = Math.max(...workingDays.map(d => dailyCapacities[d as keyof DailyCapacities] ?? 0), 1);
       await updateClinic.mutateAsync({
         name,
         doctor_name: doctorName,
@@ -128,13 +123,14 @@ export default function SettingsPage() {
         ticket_private: ticketPrivate,
         ticket_insurance: ticketInsurance,
         working_days: workingDays,
-        daily_capacity: dailyCapacity,
+        daily_capacities: dailyCapacities,
+        daily_capacity: maxCap,
         target_fill_rate: fillRate / 100,
         target_noshow_rate: noshowRate / 100,
       } as any);
       setInitial({
         name, doctorName, doctorGender, specialty, hasSecretary,
-        ticketPrivate, ticketInsurance, workingDays: [...workingDays], dailyCapacity, fillRate, noshowRate,
+        ticketPrivate, ticketInsurance, workingDays: [...workingDays], dailyCapacities: { ...dailyCapacities }, fillRate, noshowRate,
       });
       toast.success('Configurações salvas com sucesso!');
     } catch (err: any) {
@@ -159,6 +155,10 @@ export default function SettingsPage() {
     setWorkingDays(prev =>
       prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
     );
+  };
+
+  const setCapacity = (key: string, value: number) => {
+    setDailyCapacities(prev => ({ ...prev, [key]: Math.max(0, Math.min(100, value)) }));
   };
 
   return (
@@ -288,21 +288,21 @@ export default function SettingsPage() {
               Quais dias você atende?
             </Label>
             <div className="flex gap-2">
-              {WEEK_DAYS.map((day, i) => {
-                const active = workingDays.includes(day.value);
+              {DAY_KEYS.map((key) => {
+                const active = workingDays.includes(key);
                 return (
                   <button
-                    key={day.value}
+                    key={key}
                     type="button"
-                    onClick={() => toggleDay(day.value)}
+                    onClick={() => toggleDay(key)}
                     className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-semibold transition-colors ${
                       active
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                     }`}
-                    title={['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][i]}
+                    title={DAY_LABELS[key]}
                   >
-                    {day.label}
+                    {DAY_SHORT_LABELS[key]}
                   </button>
                 );
               })}
@@ -310,36 +310,31 @@ export default function SettingsPage() {
             <p className="text-[11px] text-muted-foreground">Isso define os dias do seu checklist e o cálculo de consistência.</p>
           </div>
 
-          {/* Capacidade Diária */}
-          <div className="space-y-1.5">
+          {/* Per-day capacity inputs */}
+          <div className="space-y-3">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Qual a sua capacidade máxima de atendimentos por dia?
+              Horários de atendimento por dia
             </Label>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setDailyCapacity(Math.max(1, dailyCapacity - 1))}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-              >
-                <Minus className="h-4 w-4" />
-              </button>
-              <Input
-                type="number"
-                min={1}
-                max={100}
-                value={dailyCapacity}
-                onChange={e => setDailyCapacity(Math.max(1, Number(e.target.value)))}
-                className="rounded-xl text-center"
-              />
-              <button
-                type="button"
-                onClick={() => setDailyCapacity(Math.min(100, dailyCapacity + 1))}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
+            <p className="text-[11px] text-muted-foreground">Defina quantos pacientes você atende em cada dia. Usado para calcular ocupação e o Índice IDEA.</p>
+            <div className="grid grid-cols-2 gap-2">
+              {DAY_KEYS.map((key) => {
+                const active = workingDays.includes(key);
+                return (
+                  <div key={key} className={`flex items-center gap-2 rounded-xl border border-border p-2.5 ${!active ? 'opacity-40' : ''}`}>
+                    <span className="text-xs font-semibold text-foreground w-12 shrink-0">{DAY_LABELS[key].slice(0, 3)}</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={dailyCapacities[key]}
+                      onChange={e => setCapacity(key, Number(e.target.value))}
+                      disabled={!active}
+                      className="rounded-lg h-8 text-center text-sm"
+                    />
+                  </div>
+                );
+              })}
             </div>
-            <p className="text-[11px] text-muted-foreground">Usado para calcular sua taxa de ocupação.</p>
           </div>
         </div>
       </div>

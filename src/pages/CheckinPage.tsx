@@ -156,7 +156,7 @@ export default function CheckinPage() {
     }
   }, [existing?.id, lastCheckin?.id]);
 
-  const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
+  const dailyCapacity = getCapacityForDate(new Date(), parseDailyCapacities((clinic as any)?.daily_capacities));
   const ticketPrivate = (clinic as any)?.ticket_private ?? DEFAULT_TICKET_PRIVATE;
   const ticketInsurance = (clinic as any)?.ticket_insurance ?? DEFAULT_TICKET_INSURANCE;
 

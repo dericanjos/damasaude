@@ -119,9 +119,9 @@ export default function InsightsPage() {
     if (!thisWeek.length) return [];
     return thisWeek.map((c) => ({
       day: format(parseISO(c.date), 'EEE', { locale: ptBR }).replace(/^\w/, s => s.toUpperCase()),
-      idea: calculateIDEA(toCheckinData(c), CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE),
+      idea: calculateIDEA(toCheckinData(c), getCapacityForDate(c.date, caps) || CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE),
     }));
-  }, [thisWeek, CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE]);
+  }, [thisWeek, caps, CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE]);
 
   const compareData = useMemo(() => {
     return [

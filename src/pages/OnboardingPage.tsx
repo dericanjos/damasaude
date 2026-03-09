@@ -295,10 +295,24 @@ export default function OnboardingPage() {
               </div>
               <p className="text-[11px] text-muted-foreground">Selecione os dias da semana em que você atende pacientes.</p>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Capacidade diária (consultas/dia) *</Label>
-              <Input type="number" min={1} max={100} value={dailyCapacity} onChange={e => setDailyCapacity(Number(e.target.value))} className="rounded-xl" />
-              <p className="text-[11px] text-muted-foreground">Número máximo de consultas que você consegue atender por dia.</p>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Horários de atendimento por dia *</Label>
+              <p className="text-[11px] text-muted-foreground">Quantos pacientes você consegue atender em cada dia selecionado.</p>
+              <div className="space-y-2">
+                {DAYS.filter(d => workingDays.includes(d.value)).map(day => (
+                  <div key={day.value} className="flex items-center gap-3">
+                    <span className="text-sm font-semibold text-foreground w-12">{day.label}</span>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={dailyCapacities[day.value] ?? 16}
+                      onChange={e => setDailyCapacities(prev => ({ ...prev, [day.value]: Math.max(1, Number(e.target.value)) }))}
+                      className="rounded-xl"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
             {(paymentType === 'particular' || paymentType === 'ambos') && (
               <div className="space-y-1.5">
