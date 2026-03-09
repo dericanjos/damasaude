@@ -93,7 +93,8 @@ export default function InsightsPage() {
 
     const scores = checkins.map(c => {
       const d = toCheckinData(c);
-      return calculateIDEA(d, CAPACITY, TICKET_PRIVATE, TICKET_INSURANCE);
+      const dayCap = getCapacityForDate(c.date, caps) || CAPACITY;
+      return calculateIDEA(d, dayCap, TICKET_PRIVATE, TICKET_INSURANCE);
     });
     const avgScore = scores.length > 0 ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : null;
 
