@@ -171,6 +171,11 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Location selector */}
+      {locations.length > 1 && (
+        <LocationSelector />
+      )}
+
       {/* ── VERSE MINI-CARD ── */}
       <button
         onClick={() => navigate('/versiculo')}
