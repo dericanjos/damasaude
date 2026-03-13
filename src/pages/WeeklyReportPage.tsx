@@ -40,15 +40,14 @@ export default function WeeklyReportPage() {
   const { selectedLocationId } = useLocationFilter();
   const locations = useActiveLocations();
   const { data: allCheckins = [] } = useAllCheckins(selectedLocationId);
+  const { data: allFinancials = [] } = useAllLocationFinancials();
+  const { data: allSchedules = [] } = useAllLocationSchedules();
   const caps = parseDailyCapacities((clinic as any)?.daily_capacities);
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
   const workingDays: string[] = Array.isArray((clinic as any)?.working_days) ? (clinic as any).working_days : ['seg', 'ter', 'qua', 'qui', 'sex'];
   const workingDaysCount = workingDays.length;
   const targetFillRate = clinic?.target_fill_rate ?? 0.85;
   const targetNoShowRate = clinic?.target_noshow_rate ?? 0.05;
-  const ticketPrivate = (clinic as any)?.ticket_private ?? 250;
-  const ticketInsurance = (clinic as any)?.ticket_insurance ?? 100;
-  const avgTicket = (ticketPrivate + ticketInsurance) / 2;
 
   const weekStart = useMemo(() => {
     const base = startOfWeek(new Date(), { weekStartsOn: 1 });
