@@ -208,6 +208,7 @@ export function useUpdateLocation() {
       address?: string;
       timezone?: string;
       is_active?: boolean;
+      has_secretary?: boolean;
       ticket_avg?: number;
       schedules?: { weekday: number; start_time: string; end_time: string; daily_capacity: number }[];
     }) => {
