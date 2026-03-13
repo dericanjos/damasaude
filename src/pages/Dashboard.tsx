@@ -50,9 +50,12 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: clinic } = useClinic();
-  const { data: todayCheckin } = useTodayCheckin();
-  const { data: yesterdayCheckin } = useYesterdayCheckin();
-  const { data: actions = [] } = useTodayActions();
+  const { selectedLocationId } = useLocationFilter();
+  const locations = useActiveLocations();
+  const { data: todayCheckin } = useTodayCheckin(selectedLocationId || undefined);
+  const { data: allTodayCheckins = [] } = useTodayCheckins();
+  const { data: yesterdayCheckin } = useYesterdayCheckin(selectedLocationId || undefined);
+  const { data: actions = [] } = useTodayActions(selectedLocationId);
   const completeAction = useCompleteAction();
   const { subscriptionStatus, subscriptionEnd } = useSubscription();
   const { data: latestMedicalNews } = useLatestMedicalNews();
