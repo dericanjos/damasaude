@@ -70,6 +70,7 @@ export default function OnboardingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
 
