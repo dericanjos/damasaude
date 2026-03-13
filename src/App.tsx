@@ -103,6 +103,7 @@ const App = () => {
         <BrowserRouter>
           <AuthProvider>
             <SubscriptionProvider>
+              <LocationFilterProvider>
               <Routes>
                 <Route path="/auth" element={<AuthRoute />} />
                 <Route path="/onboarding" element={<OnboardingRoute />} />
