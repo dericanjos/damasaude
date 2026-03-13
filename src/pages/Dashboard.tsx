@@ -445,7 +445,7 @@ export default function Dashboard() {
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">{action.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{action.description}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 whitespace-normal break-words">{action.description}</p>
                 </div>
               </div>
             ))}
