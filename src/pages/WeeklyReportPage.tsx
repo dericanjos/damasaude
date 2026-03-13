@@ -144,6 +144,9 @@ export default function WeeklyReportPage() {
         </div>
       </div>
 
+      {/* Location selector */}
+      {locations.length > 1 && <LocationSelector />}
+
       {/* Week navigation */}
       <div className="flex items-center justify-between bg-card border border-border/60 rounded-xl px-2 py-1 shadow-card">
         <Button variant="ghost" size="sm" className="rounded-lg" onClick={() => setWeekOffset(o => o - 1)}>
