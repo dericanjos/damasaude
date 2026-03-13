@@ -112,6 +112,7 @@ const App = () => {
                 <Route path="/institucional" element={<InstitucionalPage />} />
                 <Route path="/*" element={<ProtectedRoutes />} />
               </Routes>
+              </LocationFilterProvider>
             </SubscriptionProvider>
           </AuthProvider>
         </BrowserRouter>
