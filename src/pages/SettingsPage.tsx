@@ -70,6 +70,7 @@ function LocationEditDialog({
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [ticketAvg, setTicketAvg] = useState(250);
+  const [hasSecretaryLoc, setHasSecretaryLoc] = useState(false);
   const [activeDays, setActiveDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [schedules, setSchedules] = useState<Record<number, ScheduleEntry>>({});
 
@@ -78,6 +79,7 @@ function LocationEditDialog({
       setName(location.name);
       setAddress(location.address);
       setTicketAvg(existingFinancial?.ticket_avg ?? 250);
+      setHasSecretaryLoc(location.has_secretary ?? false);
       const days = existingSchedules.map(s => s.weekday);
       setActiveDays(days.length > 0 ? days : [1, 2, 3, 4, 5]);
       const sMap: Record<number, ScheduleEntry> = {};
@@ -94,8 +96,10 @@ function LocationEditDialog({
       setName('');
       setAddress('');
       setTicketAvg(250);
+      setHasSecretaryLoc(false);
       setActiveDays([1, 2, 3, 4, 5]);
       setSchedules({});
+    }
     }
   }, [location?.id, existingSchedules.length, existingFinancial?.ticket_avg]);
 
