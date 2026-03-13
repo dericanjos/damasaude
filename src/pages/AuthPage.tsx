@@ -9,9 +9,20 @@ import { lovable } from '@/integrations/lovable/index';
 import logoTagline from '@/assets/logo-dama-tagline.png';
 import authBg from '@/assets/auth-bg.png';
 
+const buildSocialRedirectUri = () => {
+  const redirectUrl = new URL(`${window.location.origin}/auth`);
+  const previewToken = new URLSearchParams(window.location.search).get('__lovable_token');
+
+  if (previewToken) {
+    redirectUrl.searchParams.set('__lovable_token', previewToken);
+  }
+
+  return redirectUrl.toString();
+};
+
 const handleSocialSignIn = async (provider: 'google' | 'apple') => {
   const { error } = await lovable.auth.signInWithOAuth(provider, {
-    redirect_uri: window.location.origin,
+    redirect_uri: buildSocialRedirectUri(),
   });
   if (error) throw error;
 };
