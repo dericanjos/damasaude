@@ -52,7 +52,13 @@ export function useGenerateActions() {
         .eq('location_id', locationId);
 
       const ideaScore = calculateIDEA(checkinData);
-      const hasSecretary = (clinic as any)?.has_secretary ?? false;
+      // Get has_secretary from the specific location
+      const { data: loc } = await supabase
+        .from('locations')
+        .select('has_secretary')
+        .eq('id', locationId)
+        .single();
+      const hasSecretary = (loc as any)?.has_secretary ?? (clinic as any)?.has_secretary ?? false;
       const actions = generateActions(checkinData, clinic.target_noshow_rate, ideaScore, hasSecretary);
 
       const { data, error } = await supabase

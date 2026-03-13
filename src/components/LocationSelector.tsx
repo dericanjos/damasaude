@@ -11,16 +11,16 @@ export default function LocationSelector() {
 
   return (
     <div className="flex items-center gap-2">
-      <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+      <MapPin className="h-4 w-4 text-primary shrink-0" />
       <Select
         value={selectedLocationId || 'all'}
         onValueChange={(v) => setSelectedLocationId(v === 'all' ? null : v)}
       >
-        <SelectTrigger className="h-8 rounded-xl text-xs border-border/60 bg-card">
-          <SelectValue placeholder="Todos os locais" />
+        <SelectTrigger className="h-10 rounded-xl text-sm font-medium border-border/60 bg-card shadow-sm">
+          <SelectValue placeholder="Todas as clínicas" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Todos os locais</SelectItem>
+          <SelectItem value="all">Todas as clínicas</SelectItem>
           {locations.map(loc => (
             <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
           ))}

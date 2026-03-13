@@ -2,7 +2,7 @@ import { createContext, useContext, useState, ReactNode, useEffect } from 'react
 import { useActiveLocations } from './useLocations';
 
 interface LocationFilterContextType {
-  selectedLocationId: string | null; // null = "Todos os locais"
+  selectedLocationId: string | null; // null = "Todas as clínicas"
   setSelectedLocationId: (id: string | null) => void;
 }
 

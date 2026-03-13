@@ -255,7 +255,7 @@ export default function CheckinPage() {
       });
       setShowReward(true);
 
-      const hasSecretary = (clinic as any)?.has_secretary ?? false;
+      const hasSecretary = selectedLocation?.has_secretary ?? (clinic as any)?.has_secretary ?? false;
       generateMicroInsight([submitData], 'micro', hasSecretary).then((micro) => {
         if (micro) {
           toast.success(`Check-in salvo! ✨ Dica do dia: ${micro}`, { duration: 8000 });

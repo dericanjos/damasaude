@@ -11,6 +11,7 @@ export interface Location {
   address: string;
   timezone: string;
   is_active: boolean;
+  has_secretary: boolean;
   created_at: string;
 }
 

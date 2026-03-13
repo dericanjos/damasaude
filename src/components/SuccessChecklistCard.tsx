@@ -17,6 +17,7 @@ export default function SuccessChecklistCard() {
 
   const workingDays = (clinic as any)?.working_days ?? ['seg', 'ter', 'qua', 'qui', 'sex'];
   const totalDaysPerWeek = getWorkingDaysPerWeek(workingDays as string[]);
+  // TODO: When checklist becomes per-location, use location's has_secretary
   const hasSecretary = (clinic as any)?.has_secretary ?? false;
 
   const itemCount = checklist ? checklistToItems(checklist).length : 3;
