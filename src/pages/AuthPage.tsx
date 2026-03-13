@@ -179,14 +179,7 @@ export default function AuthPage() {
                 className="flex-1 border-white/20 bg-white/10 text-white hover:bg-white/20"
                 onClick={async () => {
                   try {
-                    if (isCustomDomain()) {
-                      await handleOAuthForCustomDomain('apple');
-                    } else {
-                      const { error } = await lovable.auth.signInWithOAuth('apple', {
-                        redirect_uri: window.location.origin,
-                      });
-                      if (error) toast.error('Erro ao entrar com Apple');
-                    }
+                    await handleSocialSignIn('apple');
                   } catch (e: any) {
                     toast.error(e.message || 'Erro ao entrar com Apple');
                   }
