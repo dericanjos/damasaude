@@ -265,7 +265,19 @@ export default function WeeklyReportPage() {
             </div>
           </div>
 
-          {/* Key metrics */}
+          {/* Worst leaker - consolidated mode */}
+          {worstLeaker && isConsolidated && (
+            <div className="rounded-xl bg-card border border-revenue-loss/30 p-3.5 flex items-start gap-3 shadow-card">
+              <AlertCircle className="h-4 w-4 shrink-0 text-revenue-loss mt-0.5" />
+              <div>
+                <p className="text-[10px] font-bold text-revenue-loss uppercase tracking-wider mb-0.5">Maior vazamento da semana</p>
+                <p className="text-sm font-medium text-foreground">
+                  {worstLeaker.name}: <span className="text-revenue-loss font-bold">{formatBRL(worstLeaker.lost)}</span> perdidos
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
             <div className="px-4 pt-4 pb-2">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Indicadores da semana</p>
