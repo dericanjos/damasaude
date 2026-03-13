@@ -1,6 +1,9 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useWeekCheckins, useCheckinRange, useAllCheckins } from '@/hooks/useCheckin';
 import { useClinic } from '@/hooks/useClinic';
+import { useLocationFilter } from '@/hooks/useLocationFilter';
+import { useActiveLocations } from '@/hooks/useLocations';
+import LocationSelector from '@/components/LocationSelector';
 import { useGenerateInsight } from '@/hooks/useInsights';
 import { calculateIDEA, type CheckinData } from '@/lib/idea';
 import { formatBRL, formatPercent } from '@/lib/revenue';
@@ -43,6 +46,8 @@ function toCheckinData(c: any): CheckinData {
 
 export default function InsightsPage() {
   const { data: clinic } = useClinic();
+  const { selectedLocationId } = useLocationFilter();
+  const locations = useActiveLocations();
   const [simNoShow, setSimNoShow] = useState(50);
   const [simTicket, setSimTicket] = useState(20);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
@@ -50,18 +55,18 @@ export default function InsightsPage() {
   const thisWeekStart = useMemo(() => startOfWeek(new Date(), { weekStartsOn: 1 }), []);
   const lastWeekStart = useMemo(() => subWeeks(thisWeekStart, 1), [thisWeekStart]);
 
-  const { data: thisWeek = [] } = useWeekCheckins(thisWeekStart);
-  const { data: lastWeek = [] } = useWeekCheckins(lastWeekStart);
+  const { data: thisWeek = [] } = useWeekCheckins(thisWeekStart, selectedLocationId);
+  const { data: lastWeek = [] } = useWeekCheckins(lastWeekStart, selectedLocationId);
 
   const thirtyDaysAgo = useMemo(() => format(subDays(new Date(), 30), 'yyyy-MM-dd'), []);
   const today = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
-  const { data: last30 = [] } = useCheckinRange(thirtyDaysAgo, today);
+  const { data: last30 = [] } = useCheckinRange(thirtyDaysAgo, today, selectedLocationId);
 
-  const { data: allCheckins = [] } = useAllCheckins();
+  const { data: allCheckins = [] } = useAllCheckins(selectedLocationId);
 
   const monthStart = useMemo(() => format(startOfMonth(parseISO(selectedMonth + '-01')), 'yyyy-MM-dd'), [selectedMonth]);
   const monthEnd = useMemo(() => format(endOfMonth(parseISO(selectedMonth + '-01')), 'yyyy-MM-dd'), [selectedMonth]);
-  const { data: monthCheckins = [] } = useCheckinRange(monthStart, monthEnd);
+  const { data: monthCheckins = [] } = useCheckinRange(monthStart, monthEnd, selectedLocationId);
 
   const { generate, insight: aiInsight, loading: aiLoading, error: aiError } = useGenerateInsight();
 
@@ -266,6 +271,8 @@ export default function InsightsPage() {
         </div>
         <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-wider">Premium</Badge>
       </div>
+
+      {locations.length > 1 && <LocationSelector />}
 
       {!hasEnoughData ? (
         <div className="rounded-2xl bg-card border border-border/60 shadow-card py-12 text-center px-6">

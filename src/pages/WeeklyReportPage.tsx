@@ -4,6 +4,9 @@ import { useWeekCheckins, useAllCheckins } from '@/hooks/useCheckin';
 import { calculateIDEA, getIdeaStatus, getIdeaLabel, type CheckinData } from '@/lib/idea';
 import { formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY } from '@/lib/revenue';
 import { useClinic } from '@/hooks/useClinic';
+import { useLocationFilter } from '@/hooks/useLocationFilter';
+import { useActiveLocations } from '@/hooks/useLocations';
+import LocationSelector from '@/components/LocationSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
 import { Button } from '@/components/ui/button';
@@ -33,7 +36,9 @@ export default function WeeklyReportPage() {
   const navigate = useNavigate();
   const [weekOffset, setWeekOffset] = useState(0);
   const { data: clinic } = useClinic();
-  const { data: allCheckins = [] } = useAllCheckins();
+  const { selectedLocationId } = useLocationFilter();
+  const locations = useActiveLocations();
+  const { data: allCheckins = [] } = useAllCheckins(selectedLocationId);
   const caps = parseDailyCapacities((clinic as any)?.daily_capacities);
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
   const workingDays: string[] = Array.isArray((clinic as any)?.working_days) ? (clinic as any).working_days : ['seg', 'ter', 'qua', 'qui', 'sex'];
@@ -49,7 +54,7 @@ export default function WeeklyReportPage() {
     return weekOffset < 0 ? subWeeks(base, Math.abs(weekOffset)) : addWeeks(base, weekOffset);
   }, [weekOffset]);
 
-  const { data: checkins = [] } = useWeekCheckins(weekStart);
+  const { data: checkins = [] } = useWeekCheckins(weekStart, selectedLocationId);
   const weekStartStr = format(weekStart, 'yyyy-MM-dd');
   const weekLabel = format(weekStart, "'Semana de' dd 'de' MMMM", { locale: ptBR });
 
@@ -138,6 +143,9 @@ export default function WeeklyReportPage() {
           <p className="text-xs text-muted-foreground capitalize">{weekLabel}</p>
         </div>
       </div>
+
+      {/* Location selector */}
+      {locations.length > 1 && <LocationSelector />}
 
       {/* Week navigation */}
       <div className="flex items-center justify-between bg-card border border-border/60 rounded-xl px-2 py-1 shadow-card">

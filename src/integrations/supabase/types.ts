@@ -134,6 +134,7 @@ export type Database = {
           description: string
           done_at: string | null
           id: string
+          location_id: string | null
           status: string
           title: string
           user_id: string
@@ -146,6 +147,7 @@ export type Database = {
           description: string
           done_at?: string | null
           id?: string
+          location_id?: string | null
           status?: string
           title: string
           user_id: string
@@ -158,6 +160,7 @@ export type Database = {
           description?: string
           done_at?: string | null
           id?: string
+          location_id?: string | null
           status?: string
           title?: string
           user_id?: string
@@ -168,6 +171,13 @@ export type Database = {
             columns: ["clinic_id"]
             isOneToOne: false
             referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_actions_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
@@ -186,6 +196,7 @@ export type Database = {
           followup_done: boolean
           id: string
           insight_text: string | null
+          location_id: string | null
           new_appointments: number
           no_show: number
           noshows_insurance: number
@@ -206,6 +217,7 @@ export type Database = {
           followup_done?: boolean
           id?: string
           insight_text?: string | null
+          location_id?: string | null
           new_appointments?: number
           no_show?: number
           noshows_insurance?: number
@@ -226,6 +238,7 @@ export type Database = {
           followup_done?: boolean
           id?: string
           insight_text?: string | null
+          location_id?: string | null
           new_appointments?: number
           no_show?: number
           noshows_insurance?: number
@@ -239,6 +252,13 @@ export type Database = {
             columns: ["clinic_id"]
             isOneToOne: false
             referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_checkins_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
@@ -307,6 +327,120 @@ export type Database = {
           verse_text?: string
         }
         Relationships: []
+      }
+      location_financials: {
+        Row: {
+          id: string
+          location_id: string
+          notes: string | null
+          ticket_avg: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          location_id: string
+          notes?: string | null
+          ticket_avg?: number
+          user_id: string
+        }
+        Update: {
+          id?: string
+          location_id?: string
+          notes?: string | null
+          ticket_avg?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_financials_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: true
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      location_schedules: {
+        Row: {
+          daily_capacity: number
+          end_time: string
+          id: string
+          is_active: boolean
+          location_id: string
+          start_time: string
+          user_id: string
+          weekday: number
+        }
+        Insert: {
+          daily_capacity?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          location_id: string
+          start_time?: string
+          user_id: string
+          weekday: number
+        }
+        Update: {
+          daily_capacity?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          location_id?: string
+          start_time?: string
+          user_id?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_schedules_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locations: {
+        Row: {
+          address: string
+          clinic_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          timezone: string
+          user_id: string
+        }
+        Insert: {
+          address?: string
+          clinic_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          timezone?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          clinic_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          timezone?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locations_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       loss_reasons: {
         Row: {

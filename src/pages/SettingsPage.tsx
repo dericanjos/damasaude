@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useClinic, useUpdateClinic } from '@/hooks/useClinic';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useLocations, useCreateLocation, useUpdateLocation, useLocationSchedules, useLocationFinancial, type Location } from '@/hooks/useLocations';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,8 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Settings, LogOut, CreditCard, ExternalLink, Percent } from 'lucide-react';
+import { Settings, LogOut, CreditCard, ExternalLink, Percent, MapPin, Plus, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DAY_KEYS, DAY_LABELS, DAY_SHORT_LABELS, parseDailyCapacities, type DailyCapacities } from '@/lib/days';
 
@@ -36,11 +38,204 @@ const SPECIALTIES = [
   'Psiquiatria', 'Outra',
 ];
 
+const WEEKDAYS = [
+  { value: 0, label: 'Dom', short: 'D' },
+  { value: 1, label: 'Seg', short: 'S' },
+  { value: 2, label: 'Ter', short: 'T' },
+  { value: 3, label: 'Qua', short: 'Q' },
+  { value: 4, label: 'Qui', short: 'Q' },
+  { value: 5, label: 'Sex', short: 'S' },
+  { value: 6, label: 'Sáb', short: 'S' },
+];
+
+type ScheduleEntry = { weekday: number; start_time: string; end_time: string; daily_capacity: number };
+
+function LocationEditDialog({
+  open,
+  onOpenChange,
+  location,
+  onSave,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  location: Location | null;
+  onSave: () => void;
+}) {
+  const { user } = useAuth();
+  const createLocation = useCreateLocation();
+  const updateLocation = useUpdateLocation();
+  const { data: existingSchedules = [] } = useLocationSchedules(location?.id);
+  const { data: existingFinancial } = useLocationFinancial(location?.id);
+
+  const [name, setName] = useState('');
+  const [address, setAddress] = useState('');
+  const [ticketAvg, setTicketAvg] = useState(250);
+  const [activeDays, setActiveDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [schedules, setSchedules] = useState<Record<number, ScheduleEntry>>({});
+
+  useEffect(() => {
+    if (location) {
+      setName(location.name);
+      setAddress(location.address);
+      setTicketAvg(existingFinancial?.ticket_avg ?? 250);
+      const days = existingSchedules.map(s => s.weekday);
+      setActiveDays(days.length > 0 ? days : [1, 2, 3, 4, 5]);
+      const sMap: Record<number, ScheduleEntry> = {};
+      existingSchedules.forEach(s => {
+        sMap[s.weekday] = {
+          weekday: s.weekday,
+          start_time: s.start_time,
+          end_time: s.end_time,
+          daily_capacity: s.daily_capacity,
+        };
+      });
+      setSchedules(sMap);
+    } else {
+      setName('');
+      setAddress('');
+      setTicketAvg(250);
+      setActiveDays([1, 2, 3, 4, 5]);
+      setSchedules({});
+    }
+  }, [location?.id, existingSchedules.length, existingFinancial?.ticket_avg]);
+
+  const toggleDay = (day: number) => {
+    setActiveDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
+  };
+
+  const getSchedule = (day: number): ScheduleEntry => {
+    return schedules[day] || { weekday: day, start_time: '08:00', end_time: '18:00', daily_capacity: 16 };
+  };
+
+  const setDayCapacity = (day: number, cap: string) => {
+    const s = getSchedule(day);
+    setSchedules(prev => ({ ...prev, [day]: { ...s, daily_capacity: cap === '' ? 0 : Math.max(0, parseInt(cap) || 0) } }));
+  };
+
+  const handleSave = async () => {
+    if (!name.trim()) {
+      toast.error('Nome do local é obrigatório');
+      return;
+    }
+
+    const emptyDays = activeDays.filter(d => (getSchedule(d).daily_capacity ?? 0) === 0);
+    if (emptyDays.length > 0) {
+      const dayNames = emptyDays.map(d => WEEKDAYS.find(w => w.value === d)?.label).join(', ');
+      toast.warning(`${dayNames} está marcado mas com 0 horários.`);
+      return;
+    }
+
+    const scheduleList = activeDays.map(d => getSchedule(d));
+
+    try {
+      if (location) {
+        await updateLocation.mutateAsync({
+          id: location.id,
+          name: name.trim(),
+          address: address.trim(),
+          ticket_avg: ticketAvg,
+          schedules: scheduleList,
+        });
+        toast.success('Local atualizado!');
+      } else {
+        await createLocation.mutateAsync({
+          name: name.trim(),
+          address: address.trim(),
+          ticket_avg: ticketAvg,
+          schedules: scheduleList,
+        });
+        toast.success('Local criado!');
+      }
+      onSave();
+      onOpenChange(false);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao salvar');
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{location ? 'Editar Local' : 'Novo Local'}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome do local *</Label>
+            <Input value={name} onChange={e => setName(e.target.value)} placeholder="Consultório Centro" className="rounded-xl" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Endereço</Label>
+            <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Rua..." className="rounded-xl" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket médio (R$)</Label>
+            <Input type="number" min={1} value={ticketAvg} onChange={e => setTicketAvg(Number(e.target.value))} className="rounded-xl" />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dias de atendimento</Label>
+            <div className="flex justify-between gap-1.5">
+              {WEEKDAYS.map(day => {
+                const active = activeDays.includes(day.value);
+                return (
+                  <button
+                    key={day.value}
+                    type="button"
+                    onClick={() => toggleDay(day.value)}
+                    className={cn(
+                      'flex h-10 w-10 items-center justify-center rounded-2xl text-[13px] font-bold transition-all duration-200',
+                      active
+                        ? 'bg-primary text-primary-foreground shadow-md ring-2 ring-primary/30 scale-105'
+                        : 'bg-muted/50 text-muted-foreground hover:bg-muted/80 border border-border/40'
+                    )}
+                  >
+                    {day.short}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Capacidade por dia</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {WEEKDAYS.filter(d => activeDays.includes(d.value)).map(day => {
+                const sched = getSchedule(day.value);
+                return (
+                  <div key={day.value} className="flex items-center gap-2 rounded-xl border border-border p-2.5">
+                    <span className="text-xs font-semibold text-foreground w-10 shrink-0">{day.label}</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={sched.daily_capacity === 0 ? '' : sched.daily_capacity}
+                      onChange={e => setDayCapacity(day.value, e.target.value)}
+                      className="rounded-lg h-8 text-center text-sm"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <Button onClick={handleSave} className="w-full rounded-xl" disabled={createLocation.isPending || updateLocation.isPending}>
+            {createLocation.isPending || updateLocation.isPending ? 'Salvando...' : 'Salvar'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
 export default function SettingsPage() {
   const { signOut } = useAuth();
   const { data: clinic } = useClinic();
   const updateClinic = useUpdateClinic();
   const { subscriptionStatus, subscriptionEnd } = useSubscription();
+  const { data: locations = [], refetch: refetchLocations } = useLocations();
+  const updateLocation = useUpdateLocation();
   const [portalLoading, setPortalLoading] = useState(false);
 
   // Profile fields
@@ -53,19 +248,21 @@ export default function SettingsPage() {
   // Operation fields
   const [ticketPrivate, setTicketPrivate] = useState(250);
   const [ticketInsurance, setTicketInsurance] = useState(100);
-  const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
-  const [dailyCapacities, setDailyCapacities] = useState<DailyCapacities>(parseDailyCapacities(null));
 
   // Performance goals
   const [fillRate, setFillRate] = useState(85);
   const [noshowRate, setNoshowRate] = useState(5);
+
+  // Location editing
+  const [editingLocation, setEditingLocation] = useState<Location | null>(null);
+  const [locationDialogOpen, setLocationDialogOpen] = useState(false);
+  const [addingNew, setAddingNew] = useState(false);
 
   const [initial, setInitial] = useState<Record<string, any> | null>(null);
 
   useEffect(() => {
     if (clinic) {
       const c = clinic as any;
-      const caps = parseDailyCapacities(c.daily_capacities);
       const vals = {
         name: c.name || '',
         doctorName: c.doctor_name || '',
@@ -74,8 +271,6 @@ export default function SettingsPage() {
         hasSecretary: c.has_secretary ?? false,
         ticketPrivate: c.ticket_private ?? 250,
         ticketInsurance: c.ticket_insurance ?? 100,
-        workingDays: c.working_days ?? ['seg', 'ter', 'qua', 'qui', 'sex'],
-        dailyCapacities: caps,
         fillRate: Math.round(Number(c.target_fill_rate) * 100),
         noshowRate: Math.round(Number(c.target_noshow_rate) * 100),
       };
@@ -86,8 +281,6 @@ export default function SettingsPage() {
       setHasSecretary(vals.hasSecretary);
       setTicketPrivate(vals.ticketPrivate);
       setTicketInsurance(vals.ticketInsurance);
-      setWorkingDays(vals.workingDays);
-      setDailyCapacities(vals.dailyCapacities);
       setFillRate(vals.fillRate);
       setNoshowRate(vals.noshowRate);
       setInitial(vals);
@@ -104,25 +297,13 @@ export default function SettingsPage() {
       hasSecretary !== initial.hasSecretary ||
       ticketPrivate !== initial.ticketPrivate ||
       ticketInsurance !== initial.ticketInsurance ||
-      JSON.stringify(workingDays.sort()) !== JSON.stringify([...initial.workingDays].sort()) ||
-      JSON.stringify(dailyCapacities) !== JSON.stringify(initial.dailyCapacities) ||
       fillRate !== initial.fillRate ||
       noshowRate !== initial.noshowRate
     );
-  }, [initial, name, doctorName, specialty, hasSecretary, ticketPrivate, ticketInsurance, workingDays, dailyCapacities, fillRate, noshowRate]);
+  }, [initial, name, doctorName, specialty, hasSecretary, ticketPrivate, ticketInsurance, fillRate, noshowRate]);
 
   const handleSave = async () => {
-    // Validate: warn if any active day has capacity 0
-    const emptyDays = workingDays.filter(d => (dailyCapacities[d as keyof DailyCapacities] ?? 0) === 0);
-    if (emptyDays.length > 0) {
-      const dayNames = emptyDays.map(d => DAY_LABELS[d as keyof typeof DAY_LABELS]).join(', ');
-      toast.warning(`Atenção: ${dayNames} está marcado como dia de atendimento mas com 0 horários. Defina a capacidade ou desmarque o dia.`);
-      return;
-    }
-
     try {
-      // Compute legacy daily_capacity as max of working day capacities
-      const maxCap = Math.max(...workingDays.map(d => dailyCapacities[d as keyof DailyCapacities] ?? 0), 1);
       await updateClinic.mutateAsync({
         name,
         doctor_name: doctorName,
@@ -131,15 +312,12 @@ export default function SettingsPage() {
         has_secretary: hasSecretary,
         ticket_private: ticketPrivate,
         ticket_insurance: ticketInsurance,
-        working_days: workingDays,
-        daily_capacities: dailyCapacities,
-        daily_capacity: maxCap,
         target_fill_rate: fillRate / 100,
         target_noshow_rate: noshowRate / 100,
       } as any);
       setInitial({
         name, doctorName, doctorGender, specialty, hasSecretary,
-        ticketPrivate, ticketInsurance, workingDays: [...workingDays], dailyCapacities: { ...dailyCapacities }, fillRate, noshowRate,
+        ticketPrivate, ticketInsurance, fillRate, noshowRate,
       });
       toast.success('Configurações salvas com sucesso!');
     } catch (err: any) {
@@ -160,20 +338,13 @@ export default function SettingsPage() {
     }
   };
 
-  const toggleDay = (day: string) => {
-    setWorkingDays(prev =>
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    );
-  };
-
-  const setCapacity = (key: string, rawValue: string) => {
-    if (rawValue === '') {
-      setDailyCapacities(prev => ({ ...prev, [key]: 0 }));
-      return;
-    }
-    const num = parseInt(rawValue, 10);
-    if (!isNaN(num)) {
-      setDailyCapacities(prev => ({ ...prev, [key]: Math.max(0, Math.min(100, num)) }));
+  const handleToggleLocation = async (loc: Location) => {
+    try {
+      await updateLocation.mutateAsync({ id: loc.id, is_active: !loc.is_active });
+      refetchLocations();
+      toast.success(loc.is_active ? 'Local desativado' : 'Local ativado');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro');
     }
   };
 
@@ -215,6 +386,65 @@ export default function SettingsPage() {
           </Button>
         </div>
       </div>
+
+      {/* Locais de Atendimento */}
+      <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+        <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-primary" />
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Locais de Atendimento</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-primary"
+            onClick={() => { setEditingLocation(null); setAddingNew(true); setLocationDialogOpen(true); }}
+          >
+            <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar
+          </Button>
+        </div>
+        <div className="px-4 pb-4 space-y-2">
+          {locations.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-3 text-center">Nenhum local cadastrado.</p>
+          ) : (
+            locations.map(loc => (
+              <div key={loc.id} className={cn(
+                'rounded-xl border p-3 flex items-start justify-between',
+                loc.is_active ? 'border-border/60' : 'border-border/30 opacity-60'
+              )}>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{loc.name}</p>
+                  {loc.address && <p className="text-xs text-muted-foreground mt-0.5">{loc.address}</p>}
+                  <Badge variant={loc.is_active ? 'default' : 'outline'} className="text-[10px] mt-1">
+                    {loc.is_active ? 'Ativo' : 'Inativo'}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => { setEditingLocation(loc); setAddingNew(false); setLocationDialogOpen(true); }}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Switch
+                    checked={loc.is_active}
+                    onCheckedChange={() => handleToggleLocation(loc)}
+                  />
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <LocationEditDialog
+        open={locationDialogOpen}
+        onOpenChange={setLocationDialogOpen}
+        location={addingNew ? null : editingLocation}
+        onSave={() => refetchLocations()}
+      />
 
       {/* Card 1: Perfil Básico */}
       <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
@@ -259,105 +489,24 @@ export default function SettingsPage() {
       {/* Card 2: Operação da Clínica */}
       <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
         <div className="px-4 pt-4 pb-2">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Operação da Clínica</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tickets Globais</p>
         </div>
         <div className="px-4 pb-4 space-y-5">
-          {/* Ticket Particular */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Ticket Particular (R$)
-            </Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$)</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
-              <Input
-                type="number"
-                min={1}
-                value={ticketPrivate}
-                onChange={e => setTicketPrivate(Number(e.target.value))}
-                className="rounded-xl pl-10"
-              />
+              <Input type="number" min={1} value={ticketPrivate} onChange={e => setTicketPrivate(Number(e.target.value))} className="rounded-xl pl-10" />
             </div>
-            <p className="text-[11px] text-muted-foreground">Valor médio cobrado por consulta particular.</p>
           </div>
-
-          {/* Ticket Convênio */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Ticket Convênio (R$)
-            </Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$)</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
-              <Input
-                type="number"
-                min={1}
-                value={ticketInsurance}
-                onChange={e => setTicketInsurance(Number(e.target.value))}
-                className="rounded-xl pl-10"
-              />
-            </div>
-            <p className="text-[11px] text-muted-foreground">Valor médio recebido por consulta de convênio.</p>
-          </div>
-
-          {/* Dias de Atendimento */}
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Quais dias você atende?
-            </Label>
-            <div className="flex justify-between gap-1.5">
-              {DAY_KEYS.map((key) => {
-                const active = workingDays.includes(key);
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => toggleDay(key)}
-                    className={cn(
-                      'flex h-11 w-11 items-center justify-center rounded-2xl text-[13px] font-bold tracking-wide transition-all duration-200',
-                      active
-                        ? 'bg-primary text-primary-foreground shadow-md ring-2 ring-primary/30 scale-105'
-                        : 'bg-muted/50 text-muted-foreground hover:bg-muted/80 border border-border/40'
-                    )}
-                    title={DAY_LABELS[key]}
-                  >
-                    {DAY_SHORT_LABELS[key]}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="text-[11px] text-muted-foreground">Isso define os dias do seu checklist e o cálculo de consistência.</p>
-          </div>
-
-          {/* Per-day capacity inputs */}
-          <div className="space-y-3">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Horários de atendimento por dia
-            </Label>
-            <p className="text-[11px] text-muted-foreground">Defina quantos pacientes você atende em cada dia. Usado para calcular ocupação e o Índice IDEA.</p>
-            <div className="grid grid-cols-2 gap-2">
-              {DAY_KEYS.map((key) => {
-                const active = workingDays.includes(key);
-                return (
-                  <div key={key} className={`flex items-center gap-2 rounded-xl border border-border p-2.5 ${!active ? 'opacity-40' : ''}`}>
-                    <span className="text-xs font-semibold text-foreground w-12 shrink-0">{DAY_LABELS[key].slice(0, 3)}</span>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={dailyCapacities[key] === 0 ? '' : dailyCapacities[key]}
-                      onChange={e => setCapacity(key, e.target.value)}
-                      onBlur={e => {
-                        if (e.target.value === '') {
-                          setDailyCapacities(prev => ({ ...prev, [key]: 0 }));
-                        }
-                      }}
-                      disabled={!active}
-                      className="rounded-lg h-8 text-center text-sm"
-                    />
-                  </div>
-                );
-              })}
+              <Input type="number" min={1} value={ticketInsurance} onChange={e => setTicketInsurance(Number(e.target.value))} className="rounded-xl pl-10" />
             </div>
           </div>
+          <p className="text-[11px] text-muted-foreground">A capacidade por dia agora é gerenciada em cada local de atendimento.</p>
         </div>
       </div>
 
@@ -368,36 +517,17 @@ export default function SettingsPage() {
         </div>
         <div className="px-4 pb-4 space-y-5">
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Meta de Ocupação da Agenda
-            </Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta de Ocupação da Agenda</Label>
             <div className="relative">
-              <Input
-                type="number"
-                min={0}
-                max={100}
-                value={fillRate}
-                onChange={e => setFillRate(Math.min(100, Math.max(0, Number(e.target.value))))}
-                className="rounded-xl pr-10"
-              />
+              <Input type="number" min={0} max={100} value={fillRate} onChange={e => setFillRate(Math.min(100, Math.max(0, Number(e.target.value))))} className="rounded-xl pr-10" />
               <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             </div>
-            <p className="text-[11px] text-muted-foreground">Recomendado: 85%. O sistema usará essa meta para gerar alertas.</p>
+            <p className="text-[11px] text-muted-foreground">Recomendado: 85%.</p>
           </div>
-
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Meta de Taxa de No-show
-            </Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta de Taxa de No-show</Label>
             <div className="relative">
-              <Input
-                type="number"
-                min={0}
-                max={100}
-                value={noshowRate}
-                onChange={e => setNoshowRate(Math.min(100, Math.max(0, Number(e.target.value))))}
-                className="rounded-xl pr-10"
-              />
+              <Input type="number" min={0} max={100} value={noshowRate} onChange={e => setNoshowRate(Math.min(100, Math.max(0, Number(e.target.value))))} className="rounded-xl pr-10" />
               <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             </div>
             <p className="text-[11px] text-muted-foreground">Recomendado: abaixo de 5%.</p>
@@ -406,11 +536,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Save Button */}
-      <Button
-        onClick={handleSave}
-        className="w-full rounded-xl"
-        disabled={!isDirty || updateClinic.isPending}
-      >
+      <Button onClick={handleSave} className="w-full rounded-xl" disabled={!isDirty || updateClinic.isPending}>
         {updateClinic.isPending ? 'Salvando...' : 'Salvar Alterações'}
       </Button>
 

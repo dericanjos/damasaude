@@ -4,21 +4,26 @@ import { useAuth } from './useAuth';
 import { useClinic } from './useClinic';
 import { format, subDays, startOfWeek, endOfWeek } from 'date-fns';
 
-export function useTodayCheckin() {
+export function useTodayCheckin(locationId?: string) {
   const { user } = useAuth();
   const { data: clinic } = useClinic();
   const today = format(new Date(), 'yyyy-MM-dd');
 
   return useQuery({
-    queryKey: ['checkin', clinic?.id, today],
+    queryKey: ['checkin', clinic?.id, today, locationId || 'any'],
     queryFn: async () => {
       if (!clinic) return null;
-      const { data, error } = await supabase
+      let query = supabase
         .from('daily_checkins')
         .select('*')
         .eq('clinic_id', clinic.id)
-        .eq('date', today)
-        .maybeSingle();
+        .eq('date', today);
+      
+      if (locationId) {
+        query = query.eq('location_id', locationId);
+      }
+
+      const { data, error } = await query.maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -26,65 +31,19 @@ export function useTodayCheckin() {
   });
 }
 
-export function useYesterdayCheckin() {
-  const { user } = useAuth();
+export function useTodayCheckins() {
   const { data: clinic } = useClinic();
-  const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
+  const today = format(new Date(), 'yyyy-MM-dd');
 
   return useQuery({
-    queryKey: ['checkin', clinic?.id, yesterday],
-    queryFn: async () => {
-      if (!clinic) return null;
-      const { data, error } = await supabase
-        .from('daily_checkins')
-        .select('*')
-        .eq('clinic_id', clinic.id)
-        .eq('date', yesterday)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!clinic,
-  });
-}
-
-export function useLastCheckin() {
-  const { data: clinic } = useClinic();
-
-  return useQuery({
-    queryKey: ['checkin-last', clinic?.id],
-    queryFn: async () => {
-      if (!clinic) return null;
-      const { data, error } = await supabase
-        .from('daily_checkins')
-        .select('*')
-        .eq('clinic_id', clinic.id)
-        .order('date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!clinic,
-  });
-}
-
-export function useWeekCheckins(weekStart?: Date) {
-  const { data: clinic } = useClinic();
-  const start = weekStart || startOfWeek(new Date(), { weekStartsOn: 1 });
-  const end = endOfWeek(start, { weekStartsOn: 1 });
-
-  return useQuery({
-    queryKey: ['checkins-week', clinic?.id, format(start, 'yyyy-MM-dd')],
+    queryKey: ['checkins-today-all', clinic?.id, today],
     queryFn: async () => {
       if (!clinic) return [];
       const { data, error } = await supabase
         .from('daily_checkins')
         .select('*')
         .eq('clinic_id', clinic.id)
-        .gte('date', format(start, 'yyyy-MM-dd'))
-        .lte('date', format(end, 'yyyy-MM-dd'))
-        .order('date', { ascending: true });
+        .eq('date', today);
       if (error) throw error;
       return data || [];
     },
@@ -92,20 +51,108 @@ export function useWeekCheckins(weekStart?: Date) {
   });
 }
 
-export function useCheckinRange(startDate: string, endDate: string) {
+export function useYesterdayCheckin(locationId?: string) {
+  const { user } = useAuth();
+  const { data: clinic } = useClinic();
+  const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
+
+  return useQuery({
+    queryKey: ['checkin', clinic?.id, yesterday, locationId || 'any'],
+    queryFn: async () => {
+      if (!clinic) return null;
+      let query = supabase
+        .from('daily_checkins')
+        .select('*')
+        .eq('clinic_id', clinic.id)
+        .eq('date', yesterday);
+
+      if (locationId) {
+        query = query.eq('location_id', locationId);
+      }
+
+      const { data, error } = await query.maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!clinic,
+  });
+}
+
+export function useLastCheckin(locationId?: string) {
   const { data: clinic } = useClinic();
 
   return useQuery({
-    queryKey: ['checkins-range', clinic?.id, startDate, endDate],
+    queryKey: ['checkin-last', clinic?.id, locationId || 'any'],
+    queryFn: async () => {
+      if (!clinic) return null;
+      let query = supabase
+        .from('daily_checkins')
+        .select('*')
+        .eq('clinic_id', clinic.id)
+        .order('date', { ascending: false })
+        .limit(1);
+
+      if (locationId) {
+        query = query.eq('location_id', locationId);
+      }
+
+      const { data, error } = await query.maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!clinic,
+  });
+}
+
+export function useWeekCheckins(weekStart?: Date, locationId?: string | null) {
+  const { data: clinic } = useClinic();
+  const start = weekStart || startOfWeek(new Date(), { weekStartsOn: 1 });
+  const end = endOfWeek(start, { weekStartsOn: 1 });
+
+  return useQuery({
+    queryKey: ['checkins-week', clinic?.id, format(start, 'yyyy-MM-dd'), locationId || 'all'],
     queryFn: async () => {
       if (!clinic) return [];
-      const { data, error } = await supabase
+      let query = supabase
+        .from('daily_checkins')
+        .select('*')
+        .eq('clinic_id', clinic.id)
+        .gte('date', format(start, 'yyyy-MM-dd'))
+        .lte('date', format(end, 'yyyy-MM-dd'))
+        .order('date', { ascending: true });
+
+      if (locationId) {
+        query = query.eq('location_id', locationId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!clinic,
+  });
+}
+
+export function useCheckinRange(startDate: string, endDate: string, locationId?: string | null) {
+  const { data: clinic } = useClinic();
+
+  return useQuery({
+    queryKey: ['checkins-range', clinic?.id, startDate, endDate, locationId || 'all'],
+    queryFn: async () => {
+      if (!clinic) return [];
+      let query = supabase
         .from('daily_checkins')
         .select('*')
         .eq('clinic_id', clinic.id)
         .gte('date', startDate)
         .lte('date', endDate)
         .order('date', { ascending: true });
+
+      if (locationId) {
+        query = query.eq('location_id', locationId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -113,18 +160,24 @@ export function useCheckinRange(startDate: string, endDate: string) {
   });
 }
 
-export function useAllCheckins() {
+export function useAllCheckins(locationId?: string | null) {
   const { data: clinic } = useClinic();
 
   return useQuery({
-    queryKey: ['checkins-all', clinic?.id],
+    queryKey: ['checkins-all', clinic?.id, locationId || 'all'],
     queryFn: async () => {
       if (!clinic) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from('daily_checkins')
         .select('*')
         .eq('clinic_id', clinic.id)
         .order('date', { ascending: true });
+
+      if (locationId) {
+        query = query.eq('location_id', locationId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -139,6 +192,7 @@ export function useSaveCheckin() {
 
   return useMutation({
     mutationFn: async (checkin: {
+      location_id: string;
       appointments_scheduled: number;
       attended_private: number;
       attended_insurance: number;
@@ -163,7 +217,7 @@ export function useSaveCheckin() {
           user_id: user.id,
           date: today,
           ...checkin,
-        } as any, { onConflict: 'clinic_id,date' })
+        } as any, { onConflict: 'clinic_id,date,location_id' })
         .select()
         .single();
 
@@ -173,6 +227,9 @@ export function useSaveCheckin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['checkin'] });
       queryClient.invalidateQueries({ queryKey: ['checkins-week'] });
+      queryClient.invalidateQueries({ queryKey: ['checkins-today-all'] });
+      queryClient.invalidateQueries({ queryKey: ['checkins-all'] });
+      queryClient.invalidateQueries({ queryKey: ['checkins-range'] });
     },
   });
 }

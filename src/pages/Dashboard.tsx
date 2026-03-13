@@ -2,17 +2,20 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ChevronDown, Info } from 'lucide-react';
 
-import { useTodayCheckin, useYesterdayCheckin } from '@/hooks/useCheckin';
+import { useTodayCheckin, useYesterdayCheckin, useTodayCheckins } from '@/hooks/useCheckin';
 import { useTodayActions, useCompleteAction } from '@/hooks/useActions';
 import { useClinic } from '@/hooks/useClinic';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useCheckinStreak } from '@/hooks/useChecklist';
+import { useLocationFilter } from '@/hooks/useLocationFilter';
+import { useActiveLocations } from '@/hooks/useLocations';
 import { calculateIDEA, getIdeaStatus, getIdeaLabel, totalAttended, totalNoshows, type CheckinData } from '@/lib/idea';
 import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET_PRIVATE, DEFAULT_TICKET_INSURANCE } from '@/lib/revenue';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import LocationSelector from '@/components/LocationSelector';
 import SuccessChecklistCard from '@/components/SuccessChecklistCard';
 import {
   TrendingDown, TrendingUp, AlertCircle, CheckCircle2,
@@ -47,9 +50,12 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: clinic } = useClinic();
-  const { data: todayCheckin } = useTodayCheckin();
-  const { data: yesterdayCheckin } = useYesterdayCheckin();
-  const { data: actions = [] } = useTodayActions();
+  const { selectedLocationId } = useLocationFilter();
+  const locations = useActiveLocations();
+  const { data: todayCheckin } = useTodayCheckin(selectedLocationId || undefined);
+  const { data: allTodayCheckins = [] } = useTodayCheckins();
+  const { data: yesterdayCheckin } = useYesterdayCheckin(selectedLocationId || undefined);
+  const { data: actions = [] } = useTodayActions(selectedLocationId);
   const completeAction = useCompleteAction();
   const { subscriptionStatus, subscriptionEnd } = useSubscription();
   const { data: latestMedicalNews } = useLatestMedicalNews();
@@ -164,6 +170,11 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
+
+      {/* Location selector */}
+      {locations.length > 1 && (
+        <LocationSelector />
+      )}
 
       {/* ── VERSE MINI-CARD ── */}
       <button

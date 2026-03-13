@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useTodayCheckin, useSaveCheckin } from '@/hooks/useCheckin';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTodayCheckin, useSaveCheckin, useTodayCheckins } from '@/hooks/useCheckin';
 import { useLastCheckin } from '@/hooks/useCheckin';
 import { useGenerateActions } from '@/hooks/useActions';
 import { useClinic } from '@/hooks/useClinic';
 import { useCheckinStreak } from '@/hooks/useChecklist';
 import { useGenerateInsight } from '@/hooks/useInsights';
+import { useTodayLocations, useLocationSchedules, useLocationFinancial, type Location } from '@/hooks/useLocations';
 import { calculateIDEA, generateInsightText, getIdeaStatus, getIdeaLabel, getTopLossSources, totalAttended, totalNoshows } from '@/lib/idea';
 import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET_PRIVATE, DEFAULT_TICKET_INSURANCE } from '@/lib/revenue';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
@@ -13,10 +14,11 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import {
   ClipboardCheck, CheckCircle2, TrendingDown, TrendingUp, ChevronRight,
-  Minus, Plus, Zap, Flame, Info
+  Minus, Plus, Zap, Flame, Info, MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -105,13 +107,36 @@ function CheckinField({
 
 export default function CheckinPage() {
   const navigate = useNavigate();
-  const { data: existing } = useTodayCheckin();
-  const { data: lastCheckin } = useLastCheckin();
+  const [searchParams] = useSearchParams();
+  const { todayLocations, allLocations } = useTodayLocations();
   const { data: clinic } = useClinic();
   const { data: streak = 0 } = useCheckinStreak();
   const saveCheckin = useSaveCheckin();
   const generateActions = useGenerateActions();
   const { generate: generateMicroInsight } = useGenerateInsight();
+
+  // Location selection
+  const paramLocationId = searchParams.get('location');
+  const [selectedLocationId, setSelectedLocationId] = useState<string>('');
+
+  // Auto-select location
+  useEffect(() => {
+    if (paramLocationId) {
+      setSelectedLocationId(paramLocationId);
+    } else if (todayLocations.length === 1) {
+      setSelectedLocationId(todayLocations[0].id);
+    } else if (allLocations.length === 1) {
+      setSelectedLocationId(allLocations[0].id);
+    }
+  }, [todayLocations, allLocations, paramLocationId]);
+
+  const selectedLocation = allLocations.find(l => l.id === selectedLocationId) || null;
+
+  const { data: existing } = useTodayCheckin(selectedLocationId || undefined);
+  const { data: lastCheckin } = useLastCheckin(selectedLocationId || undefined);
+  const { data: schedules = [] } = useLocationSchedules(selectedLocationId || undefined);
+  const { data: financial } = useLocationFinancial(selectedLocationId || undefined);
+  const { data: allTodayCheckins = [] } = useTodayCheckins();
 
   const paymentType = (clinic as any)?.payment_type ?? 'ambos';
   const [quickMode, setQuickMode] = useState(false);
@@ -157,12 +182,24 @@ export default function CheckinPage() {
     }
   }, [existing?.id, lastCheckin?.id]);
 
-  const dailyCapacity = getCapacityForDate(new Date(), parseDailyCapacities((clinic as any)?.daily_capacities));
+  // Get capacity from location schedule
+  const todayWeekday = new Date().getDay();
+  const todaySchedule = schedules.find(s => s.weekday === todayWeekday);
+  const dailyCapacity = todaySchedule?.daily_capacity || getCapacityForDate(new Date(), parseDailyCapacities((clinic as any)?.daily_capacities));
+  const ticketAvg = financial?.ticket_avg ?? 250;
   const ticketPrivate = (clinic as any)?.ticket_private ?? DEFAULT_TICKET_PRIVATE;
   const ticketInsurance = (clinic as any)?.ticket_insurance ?? DEFAULT_TICKET_INSURANCE;
 
+  // Locations already checked in today
+  const checkedInLocationIds = allTodayCheckins.map((c: any) => c.location_id).filter(Boolean);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!selectedLocationId) {
+      toast.error('Selecione um local de atendimento');
+      return;
+    }
 
     let submitData = { ...form };
 
@@ -193,14 +230,14 @@ export default function CheckinPage() {
       const insightText = generateInsightText(checkinData, ideaScore);
       const lossSources = getTopLossSources(checkinData);
 
-      // Save with legacy fields too
       await saveCheckin.mutateAsync({
         ...submitData,
+        location_id: selectedLocationId,
         appointments_done: submitData.attended_private + submitData.attended_insurance,
         no_show: submitData.noshows_private + submitData.noshows_insurance,
         insight_text: insightText,
       });
-      await generateActions.mutateAsync(checkinData);
+      await generateActions.mutateAsync({ checkinData, locationId: selectedLocationId });
 
       const rev = calculateRevenue({
         ...checkinData,
@@ -218,7 +255,6 @@ export default function CheckinPage() {
       });
       setShowReward(true);
 
-      // Fire micro-insight in background
       const hasSecretary = (clinic as any)?.has_secretary ?? false;
       generateMicroInsight([submitData], 'micro', hasSecretary).then((micro) => {
         if (micro) {
@@ -233,12 +269,101 @@ export default function CheckinPage() {
   const setField = (key: keyof FormData, value: number | boolean | string) =>
     setForm(prev => ({ ...prev, [key]: value }));
 
+  // ── LOCATION SELECTOR (if no location selected yet) ──
+  if (!selectedLocationId && allLocations.length > 0) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl gradient-primary shadow-premium">
+            <ClipboardCheck className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-foreground">Check-in Operacional</h1>
+            <p className="text-xs text-muted-foreground">Escolha o local do check-in</p>
+          </div>
+        </div>
+
+        {todayLocations.length > 0 && (
+          <div>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">📅 Locais de hoje</p>
+            <div className="space-y-2">
+              {todayLocations.map(loc => {
+                const alreadyDone = checkedInLocationIds.includes(loc.id);
+                return (
+                  <button
+                    key={loc.id}
+                    onClick={() => setSelectedLocationId(loc.id)}
+                    className={cn(
+                      'w-full rounded-2xl border p-4 text-left transition-all',
+                      alreadyDone
+                        ? 'bg-card border-revenue-gain/30'
+                        : 'bg-card border-border/60 hover:border-primary/50'
+                    )}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5 text-primary" />
+                          {loc.name}
+                        </p>
+                        {loc.address && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{loc.address}</p>
+                        )}
+                      </div>
+                      {alreadyDone && (
+                        <CheckCircle2 className="h-4 w-4 text-revenue-gain shrink-0" />
+                      )}
+                    </div>
+                    {alreadyDone && (
+                      <p className="text-[11px] text-revenue-gain mt-1">✓ Check-in já feito • Toque para editar</p>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {allLocations.filter(l => !todayLocations.some(tl => tl.id === l.id)).length > 0 && (
+          <div>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Outros locais</p>
+            <div className="space-y-2">
+              {allLocations.filter(l => !todayLocations.some(tl => tl.id === l.id)).map(loc => (
+                <button
+                  key={loc.id}
+                  onClick={() => setSelectedLocationId(loc.id)}
+                  className="w-full rounded-2xl bg-card border border-border/60 p-4 text-left hover:border-primary/50 transition-all"
+                >
+                  <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                    {loc.name}
+                  </p>
+                  {loc.address && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{loc.address}</p>
+                  )}
+                  <p className="text-[10px] text-idea-attention mt-1">Sem agenda cadastrada para hoje</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // ── REWARD SCREEN ──
   if (showReward && reward) {
     const status = getIdeaStatus(reward.score);
     const newStreak = streak + (existing ? 0 : 1);
     return (
       <div className="mx-auto max-w-lg px-4 py-8 flex flex-col items-center space-y-5 min-h-[80vh] justify-center">
+        {/* Location badge */}
+        {selectedLocation && (
+          <div className="flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1">
+            <MapPin className="h-3 w-3 text-primary" />
+            <span className="text-xs font-medium text-foreground">{selectedLocation.name}</span>
+          </div>
+        )}
         {/* Big score */}
         <div className={cn(
           'w-full rounded-3xl p-8 text-center shadow-elevated',
@@ -316,6 +441,22 @@ export default function CheckinPage() {
           </div>
         </div>
 
+        {/* Check other locations */}
+        {todayLocations.filter(l => l.id !== selectedLocationId && !checkedInLocationIds.includes(l.id)).length > 0 && (
+          <Button
+            variant="outline"
+            className="w-full rounded-xl"
+            onClick={() => {
+              setSelectedLocationId('');
+              setShowReward(false);
+              setEditMode(false);
+            }}
+          >
+            <MapPin className="h-4 w-4 mr-2" />
+            Fazer check-in em outro local
+          </Button>
+        )}
+
         <Button className="w-full h-12 rounded-xl text-sm font-semibold" onClick={() => navigate('/')}>
           Ver painel
           <ChevronRight className="h-4 w-4 ml-1" />
@@ -361,9 +502,18 @@ export default function CheckinPage() {
           </div>
           <div>
             <h1 className="text-lg font-bold text-foreground">Check-in Concluído</h1>
-            <p className="text-xs text-muted-foreground">Seu check-in de hoje já foi registrado.</p>
+            <p className="text-xs text-muted-foreground">
+              {selectedLocation ? selectedLocation.name : 'Seu check-in de hoje já foi registrado.'}
+            </p>
           </div>
         </div>
+
+        {/* Location badge */}
+        {selectedLocation?.address && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <MapPin className="h-3 w-3" /> {selectedLocation.address}
+          </div>
+        )}
 
         {/* IDEA Score mini */}
         <div className={cn(
@@ -408,6 +558,22 @@ export default function CheckinPage() {
         >
           Editar check-in de hoje
         </Button>
+
+        {/* Check other locations */}
+        {todayLocations.filter(l => l.id !== selectedLocationId && !checkedInLocationIds.includes(l.id)).length > 0 && (
+          <Button
+            variant="outline"
+            className="w-full rounded-xl"
+            onClick={() => {
+              setSelectedLocationId('');
+              setEditMode(false);
+            }}
+          >
+            <MapPin className="h-4 w-4 mr-2" />
+            Check-in em outro local
+          </Button>
+        )}
+
         <Button className="w-full h-12 rounded-xl text-sm font-semibold" onClick={() => navigate('/')}>
           Ver painel
           <ChevronRight className="h-4 w-4 ml-1" />
@@ -429,6 +595,31 @@ export default function CheckinPage() {
           <p className="text-xs text-muted-foreground">Tenha clareza da sua agenda em apenas 60 segundos.</p>
         </div>
       </div>
+
+      {/* Location indicator */}
+      {selectedLocation && (
+        <div className="mb-4 rounded-2xl bg-card border border-primary/20 p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-primary" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">{selectedLocation.name}</p>
+              {selectedLocation.address && (
+                <p className="text-[11px] text-muted-foreground">{selectedLocation.address}</p>
+              )}
+            </div>
+          </div>
+          {allLocations.length > 1 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-primary"
+              onClick={() => setSelectedLocationId('')}
+            >
+              Trocar
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Quick mode toggle */}
       <div className="mb-4 flex items-center justify-between rounded-2xl bg-card border border-border/60 p-3.5 shadow-card">
@@ -559,7 +750,7 @@ export default function CheckinPage() {
         <Button
           type="submit"
           className="w-full h-12 rounded-xl text-sm font-semibold shadow-premium"
-          disabled={saveCheckin.isPending || generateActions.isPending}
+          disabled={saveCheckin.isPending || generateActions.isPending || !selectedLocationId}
         >
           {saveCheckin.isPending ? 'Salvando...' : 'Salvar check-in'}
         </Button>
