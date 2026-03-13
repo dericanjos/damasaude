@@ -103,31 +103,48 @@ export default function WeeklyReportPage() {
     return () => { cancelled = true; };
   }, [clinic?.id, weekStartStr, checkins.length]);
 
-  // Stats
+  // Stats - use per-location aggregation
+  const isConsolidated = !selectedLocationId;
+  const locationNamesMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const l of locations) map[l.id] = l.name;
+    return map;
+  }, [locations]);
+
+  const agg = useMemo(() => {
+    if (checkins.length === 0) return null;
+    return aggregateCheckins(checkins, allFinancials, (c) => {
+      const weekday = getDay(parseISO(c.date));
+      const sched = allSchedules.find(s => s.location_id === c.location_id && s.weekday === weekday && s.is_active);
+      return sched?.daily_capacity ?? (getCapacityForDate(c.date, caps) || dailyCapacity);
+    });
+  }, [checkins, allFinancials, allSchedules, caps, dailyCapacity]);
+
+  const worstLeaker = useMemo(() => {
+    if (!agg || !isConsolidated) return null;
+    return getWorstLeaker(agg.lostByLocation, locationNamesMap);
+  }, [agg, isConsolidated, locationNamesMap]);
+
   const scores = checkins.map(c => {
     const data = toCheckinData(c);
     const dayCap = getCapacityForDate(c.date, caps) || dailyCapacity;
-    return { date: c.date, score: calculateIDEA(data, dayCap, ticketPrivate, ticketInsurance), data };
+    // For IDEA we still use clinic-level tickets as it's a composite score
+    const ticketP = (clinic as any)?.ticket_private ?? 250;
+    const ticketI = (clinic as any)?.ticket_insurance ?? 100;
+    return { date: c.date, score: calculateIDEA(data, dayCap, ticketP, ticketI), data };
   });
 
   const avgScore = scores.length > 0 ? Math.round(scores.reduce((s, c) => s + c.score, 0) / scores.length) : null;
   const avgStatus = avgScore != null ? getIdeaStatus(avgScore) : null;
 
-  const totalNoshowsPrivate = checkins.reduce((s, c) => s + ((c as any).noshows_private ?? (c as any).no_show ?? 0), 0);
-  const totalNoshowsInsurance = checkins.reduce((s, c) => s + ((c as any).noshows_insurance ?? 0), 0);
-  const totalNoShow = totalNoshowsPrivate + totalNoshowsInsurance;
-  const totalCancellations = checkins.reduce((s, c) => s + c.cancellations, 0);
-  const totalAttendedPrivate = checkins.reduce((s, c) => s + ((c as any).attended_private ?? (c as any).appointments_done ?? 0), 0);
-  const totalAttendedInsurance = checkins.reduce((s, c) => s + ((c as any).attended_insurance ?? 0), 0);
-  const totalDone = totalAttendedPrivate + totalAttendedInsurance;
-  const totalScheduled = Math.max(checkins.reduce((s, c) => s + c.appointments_scheduled, 0), 1);
-  const totalEmptySlots = checkins.reduce((s, c) => s + c.empty_slots, 0);
-
-  const totalRevenueEstimated = (totalAttendedPrivate * ticketPrivate) + (totalAttendedInsurance * ticketInsurance);
-  const totalRevenueLost = (totalNoshowsPrivate * ticketPrivate) + (totalNoshowsInsurance * ticketInsurance) + ((totalCancellations + totalEmptySlots) * avgTicket);
-  const totalCapacity = checkins.reduce((s, c) => s + (getCapacityForDate(c.date, caps) || dailyCapacity), 0);
-  const avgOccupancy = totalCapacity > 0 ? totalDone / totalCapacity : 0;
-  const avgNoShow = totalNoShow / totalScheduled;
+  const totalRevenueEstimated = agg?.totalRevenueEstimated ?? 0;
+  const totalRevenueLost = agg?.totalRevenueLost ?? 0;
+  const totalDone = agg?.totalAttended ?? 0;
+  const totalNoShow = agg?.totalNoshows ?? 0;
+  const totalCancellations = agg?.totalCancellations ?? 0;
+  const totalEmptySlots = agg?.totalEmptySlots ?? 0;
+  const avgOccupancy = agg?.occupancyRate ?? 0;
+  const avgNoShow = agg?.noShowRate ?? 0;
 
   const hasEnoughData = allCheckins.length >= workingDaysCount;
 
