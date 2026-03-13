@@ -112,6 +112,14 @@ export default function SettingsPage() {
   }, [initial, name, doctorName, specialty, hasSecretary, ticketPrivate, ticketInsurance, workingDays, dailyCapacities, fillRate, noshowRate]);
 
   const handleSave = async () => {
+    // Validate: warn if any active day has capacity 0
+    const emptyDays = workingDays.filter(d => (dailyCapacities[d as keyof DailyCapacities] ?? 0) === 0);
+    if (emptyDays.length > 0) {
+      const dayNames = emptyDays.map(d => DAY_LABELS[d as keyof typeof DAY_LABELS]).join(', ');
+      toast.warning(`Atenção: ${dayNames} está marcado como dia de atendimento mas com 0 horários. Defina a capacidade ou desmarque o dia.`);
+      return;
+    }
+
     try {
       // Compute legacy daily_capacity as max of working day capacities
       const maxCap = Math.max(...workingDays.map(d => dailyCapacities[d as keyof DailyCapacities] ?? 0), 1);
