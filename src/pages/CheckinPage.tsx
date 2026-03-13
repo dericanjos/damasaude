@@ -620,7 +620,7 @@ export default function CheckinPage() {
               variant="ghost"
               size="sm"
               className="text-xs text-primary"
-              onClick={() => setSelectedLocationId('')}
+              onClick={() => handleClearLocation()}
             >
               Trocar
             </Button>
