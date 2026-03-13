@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -68,6 +69,7 @@ function detectTimezone(): string {
 export default function OnboardingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
@@ -157,6 +159,7 @@ export default function OnboardingPage() {
       // Mark onboarding as completed
       await supabase.from('profiles').update({ onboarding_completed: true, display_name: displayName || doctorName } as any).eq('user_id', user.id);
 
+      await queryClient.invalidateQueries({ queryKey: ['onboarding-status'] });
       setShowCompletion(true);
       setTimeout(() => navigate('/', { replace: true }), 2500);
     } catch (err: any) {
