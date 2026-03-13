@@ -69,7 +69,7 @@ function detectTimezone(): string {
 export default function OnboardingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
 
