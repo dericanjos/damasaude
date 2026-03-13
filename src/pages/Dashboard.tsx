@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ChevronDown, Info } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 import { useTodayCheckin, useYesterdayCheckin, useTodayCheckins } from '@/hooks/useCheckin';
 import { useTodayActions, useCompleteAction } from '@/hooks/useActions';
