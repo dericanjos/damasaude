@@ -5,17 +5,18 @@ import { calculateIDEA, getIdeaStatus, getIdeaLabel, type CheckinData } from '@/
 import { formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY } from '@/lib/revenue';
 import { useClinic } from '@/hooks/useClinic';
 import { useLocationFilter } from '@/hooks/useLocationFilter';
-import { useActiveLocations } from '@/hooks/useLocations';
+import { useActiveLocations, useAllLocationFinancials, useAllLocationSchedules } from '@/hooks/useLocations';
 import LocationSelector from '@/components/LocationSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
 import { Button } from '@/components/ui/button';
-import { startOfWeek, subWeeks, addWeeks, format } from 'date-fns';
+import { startOfWeek, subWeeks, addWeeks, format, getDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, BarChart3, TrendingUp, TrendingDown, Loader2, Sparkles, Mail, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BarChart3, TrendingUp, TrendingDown, Loader2, Sparkles, Mail, Info, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
+import { aggregateCheckins, getWorstLeaker } from '@/lib/aggregation';
 
 /** Helper to convert a DB checkin row to CheckinData */
 function toCheckinData(c: any): CheckinData {
