@@ -45,6 +45,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (!error && data.user) {
+      const { error: profileError } = await supabase.from('profiles').upsert(
+        {
+          user_id: data.user.id,
+          email: data.user.email ?? email,
+          display_name: doctorName,
+          onboarding_completed: false,
+        } as any,
+        { onConflict: 'user_id' }
+      );
+      if (profileError) return { error: profileError };
+
       // Create clinic for the user
       const { error: clinicError } = await supabase.from('clinics').insert({
         user_id: data.user.id,

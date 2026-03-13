@@ -146,20 +146,33 @@ export default function OnboardingPage() {
       };
 
       if (existingClinic) {
-        await supabase.from('clinics').update(clinicData as any).eq('user_id', user.id);
+        const { error: clinicError } = await supabase.from('clinics').update(clinicData as any).eq('user_id', user.id);
+        if (clinicError) throw clinicError;
       } else {
-        await supabase.from('clinics').insert({ ...clinicData, user_id: user.id } as any);
+        const { error: clinicError } = await supabase.from('clinics').insert({ ...clinicData, user_id: user.id } as any);
+        if (clinicError) throw clinicError;
       }
 
       // Update user metadata
-      await supabase.auth.updateUser({
+      const { error: authUpdateError } = await supabase.auth.updateUser({
         data: { doctor_name: doctorName },
       });
+      if (authUpdateError) throw authUpdateError;
 
-      // Mark onboarding as completed
-      await supabase.from('profiles').update({ onboarding_completed: true, display_name: displayName || doctorName } as any).eq('user_id', user.id);
+      // Mark onboarding as completed (create profile if missing)
+      const { error: profileError } = await supabase.from('profiles').upsert(
+        {
+          user_id: user.id,
+          email: user.email ?? null,
+          onboarding_completed: true,
+          display_name: displayName || doctorName,
+        } as any,
+        { onConflict: 'user_id' }
+      );
+      if (profileError) throw profileError;
 
-      await queryClient.invalidateQueries({ queryKey: ['onboarding-status'] });
+      queryClient.setQueryData(['onboarding-status', user.id], true);
+      await queryClient.invalidateQueries({ queryKey: ['onboarding-status', user.id] });
       setShowCompletion(true);
       setTimeout(() => navigate('/', { replace: true }), 2500);
     } catch (err: any) {
