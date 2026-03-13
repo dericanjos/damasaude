@@ -93,7 +93,8 @@ function AuthRoute() {
   return <AuthPage />;
 }
 
-const App = () => (
+const App = () => {
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
