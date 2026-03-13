@@ -178,6 +178,14 @@ function LocationEditDialog({
             <Input type="number" min={1} value={ticketAvg} onChange={e => setTicketAvg(Number(e.target.value))} className="rounded-xl" />
           </div>
 
+          <div className="flex items-center justify-between rounded-xl border border-border p-3">
+            <div>
+              <Label className="text-sm font-semibold text-foreground">Tem secretária neste local?</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Adapta a linguagem das sugestões e ações</p>
+            </div>
+            <Switch checked={hasSecretaryLoc} onCheckedChange={setHasSecretaryLoc} />
+          </div>
+
           <div className="space-y-2">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dias de atendimento</Label>
             <div className="flex justify-between gap-1.5">
