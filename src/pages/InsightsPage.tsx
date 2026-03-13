@@ -272,6 +272,8 @@ export default function InsightsPage() {
         <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-wider">Premium</Badge>
       </div>
 
+      {locations.length > 1 && <LocationSelector />}
+
       {!hasEnoughData ? (
         <div className="rounded-2xl bg-card border border-border/60 shadow-card py-12 text-center px-6">
           <Sparkles className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
