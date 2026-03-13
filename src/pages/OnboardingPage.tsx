@@ -153,6 +153,28 @@ export default function OnboardingPage() {
         if (clinicError) throw clinicError;
       }
 
+      // Create default location from clinic data
+      const { data: clinicRow2 } = await supabase.from('clinics').select('id').eq('user_id', user.id).maybeSingle();
+      if (clinicRow2) {
+        const { data: existingLoc } = await supabase.from('locations').select('id').eq('user_id', user.id).maybeSingle();
+        if (!existingLoc) {
+          const { data: newLoc, error: locError } = await supabase.from('locations').insert({
+            user_id: user.id, clinic_id: clinicRow2.id, name: clinicName || 'Principal', address: '', timezone,
+          } as any).select().single();
+          if (locError) throw locError;
+          await supabase.from('location_financials').insert({
+            user_id: user.id, location_id: newLoc.id,
+            ticket_avg: paymentType === 'ambos' ? Math.round((ticketPrivate + ticketInsurance) / 2) : (paymentType === 'particular' ? ticketPrivate : ticketInsurance),
+          } as any);
+          const dayMap: Record<string, number> = { dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
+          const scheduleRows = workingDays.filter(d => (dailyCapacities[d] ?? 0) > 0).map(d => ({
+            user_id: user.id, location_id: newLoc.id, weekday: dayMap[d],
+            daily_capacity: dailyCapacities[d] ?? 16, start_time: '08:00', end_time: '18:00',
+          }));
+          if (scheduleRows.length > 0) await supabase.from('location_schedules').insert(scheduleRows as any);
+        }
+      }
+
       // Update user metadata
       const { error: authUpdateError } = await supabase.auth.updateUser({
         data: { doctor_name: doctorName },
