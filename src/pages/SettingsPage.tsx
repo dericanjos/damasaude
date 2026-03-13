@@ -100,7 +100,6 @@ function LocationEditDialog({
       setActiveDays([1, 2, 3, 4, 5]);
       setSchedules({});
     }
-    }
   }, [location?.id, existingSchedules.length, existingFinancial?.ticket_avg]);
 
   const toggleDay = (day: number) => {
