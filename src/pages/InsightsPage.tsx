@@ -1,7 +1,9 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useWeekCheckins, useCheckinRange, useAllCheckins } from '@/hooks/useCheckin';
 import { useClinic } from '@/hooks/useClinic';
-import { useGenerateInsight } from '@/hooks/useInsights';
+import { useLocationFilter } from '@/hooks/useLocationFilter';
+import { useActiveLocations } from '@/hooks/useLocations';
+import LocationSelector from '@/components/LocationSelector';
 import { calculateIDEA, type CheckinData } from '@/lib/idea';
 import { formatBRL, formatPercent } from '@/lib/revenue';
 import { getCapacityForDate, parseDailyCapacities, type DailyCapacities } from '@/lib/days';
