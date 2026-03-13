@@ -64,6 +64,8 @@ export default function Dashboard() {
   const { data: oldNews } = useLatestNews();
   const { data: streak = 0 } = useCheckinStreak();
   const { data: hasBadge } = useEfficiencyBadge();
+  const { data: allFinancials = [] } = useAllLocationFinancials();
+  const { data: allSchedules = [] } = useAllLocationSchedules();
 
   const [checkinCollapsed, setCheckinCollapsed] = useState(true);
 
@@ -79,6 +81,28 @@ export default function Dashboard() {
   const dailyCapacity = getCapacityForDate(new Date(), caps);
   const ticketPrivate = (clinic as any)?.ticket_private ?? DEFAULT_TICKET_PRIVATE;
   const ticketInsurance = (clinic as any)?.ticket_insurance ?? DEFAULT_TICKET_INSURANCE;
+
+  // Consolidated aggregation for "Todos os locais"
+  const isConsolidated = !selectedLocationId && allTodayCheckins.length > 0;
+  const locationNamesMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const l of locations) map[l.id] = l.name;
+    return map;
+  }, [locations]);
+
+  const consolidated = useMemo(() => {
+    if (!isConsolidated) return null;
+    const todayWeekday = new Date().getDay();
+    return aggregateCheckins(allTodayCheckins, allFinancials, (c) => {
+      const sched = allSchedules.find(s => s.location_id === c.location_id && s.weekday === todayWeekday && s.is_active);
+      return sched?.daily_capacity ?? dailyCapacity;
+    });
+  }, [isConsolidated, allTodayCheckins, allFinancials, allSchedules, dailyCapacity]);
+
+  const worstLeaker = useMemo(() => {
+    if (!consolidated) return null;
+    return getWorstLeaker(consolidated.lostByLocation, locationNamesMap);
+  }, [consolidated, locationNamesMap]);
 
   // Renewal warning
   const showRenewalBanner = (() => {
@@ -107,6 +131,33 @@ export default function Dashboard() {
         ticket_insurance: ticketInsurance,
       })
     : null;
+
+  // Use consolidated metrics when in "Todos" mode, otherwise use single-location revenue
+  const displayRevenue = useMemo(() => {
+    if (consolidated) {
+      return {
+        estimated: consolidated.totalRevenueEstimated,
+        lost: consolidated.totalRevenueLost,
+        occupancyRate: consolidated.occupancyRate,
+        noShowRate: consolidated.noShowRate,
+        totalAttended: consolidated.totalAttended,
+        totalNoshows: consolidated.totalNoshows,
+        totalLosses: consolidated.totalNoshows + consolidated.totalCancellations + consolidated.totalEmptySlots,
+      };
+    }
+    if (revenue && checkinData) {
+      return {
+        estimated: revenue.estimated,
+        lost: revenue.lost,
+        occupancyRate: revenue.occupancyRate,
+        noShowRate: revenue.noShowRate,
+        totalAttended: revenue.totalAttended,
+        totalNoshows: revenue.totalNoshows,
+        totalLosses: revenue.totalNoshows + checkinData.cancellations + checkinData.empty_slots,
+      };
+    }
+    return null;
+  }, [consolidated, revenue, checkinData]);
   const ideaStatus = todayScore != null ? getIdeaStatus(todayScore) : null;
 
   // IDEA status description
