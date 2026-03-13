@@ -158,8 +158,15 @@ export default function SettingsPage() {
     );
   };
 
-  const setCapacity = (key: string, value: number) => {
-    setDailyCapacities(prev => ({ ...prev, [key]: Math.max(0, Math.min(100, value)) }));
+  const setCapacity = (key: string, rawValue: string) => {
+    if (rawValue === '') {
+      setDailyCapacities(prev => ({ ...prev, [key]: 0 }));
+      return;
+    }
+    const num = parseInt(rawValue, 10);
+    if (!isNaN(num)) {
+      setDailyCapacities(prev => ({ ...prev, [key]: Math.max(0, Math.min(100, num)) }));
+    }
   };
 
   return (
