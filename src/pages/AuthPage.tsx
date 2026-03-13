@@ -15,17 +15,24 @@ const isCustomDomain = () =>
   !window.location.hostname.includes('lovableproject.com') &&
   window.location.hostname !== 'localhost';
 
-const handleOAuthForCustomDomain = async (provider: 'google' | 'apple') => {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo: window.location.origin,
-      skipBrowserRedirect: true,
-    },
-  });
-  if (error) throw error;
-  if (data?.url) {
-    window.location.href = data.url;
+const handleSocialSignIn = async (provider: 'google' | 'apple') => {
+  if (isCustomDomain()) {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: window.location.origin,
+        skipBrowserRedirect: true,
+      },
+    });
+    if (error) throw error;
+    if (data?.url) {
+      window.location.href = data.url;
+    }
+  } else {
+    const { error } = await lovable.auth.signInWithOAuth(provider, {
+      redirect_uri: window.location.origin,
+    });
+    if (error) throw error;
   }
 };
 
@@ -157,14 +164,7 @@ export default function AuthPage() {
                 className="flex-1 border-white/20 bg-white/10 text-white hover:bg-white/20"
                 onClick={async () => {
                   try {
-                    if (isCustomDomain()) {
-                      await handleOAuthForCustomDomain('google');
-                    } else {
-                      const { error } = await lovable.auth.signInWithOAuth('google', {
-                        redirect_uri: window.location.origin,
-                      });
-                      if (error) toast.error('Erro ao entrar com Google');
-                    }
+                    await handleSocialSignIn('google');
                   } catch (e: any) {
                     toast.error(e.message || 'Erro ao entrar com Google');
                   }
@@ -179,14 +179,7 @@ export default function AuthPage() {
                 className="flex-1 border-white/20 bg-white/10 text-white hover:bg-white/20"
                 onClick={async () => {
                   try {
-                    if (isCustomDomain()) {
-                      await handleOAuthForCustomDomain('apple');
-                    } else {
-                      const { error } = await lovable.auth.signInWithOAuth('apple', {
-                        redirect_uri: window.location.origin,
-                      });
-                      if (error) toast.error('Erro ao entrar com Apple');
-                    }
+                    await handleSocialSignIn('apple');
                   } catch (e: any) {
                     toast.error(e.message || 'Erro ao entrar com Apple');
                   }
