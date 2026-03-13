@@ -38,8 +38,12 @@ export function LocationFilterProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const defaultValue: LocationFilterContextType = {
+  selectedLocationId: null,
+  setSelectedLocationId: () => {},
+};
+
 export function useLocationFilter() {
   const context = useContext(LocationFilterContext);
-  if (!context) throw new Error('useLocationFilter must be used within LocationFilterProvider');
-  return context;
+  return context ?? defaultValue;
 }
