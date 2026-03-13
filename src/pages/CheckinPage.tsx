@@ -338,7 +338,7 @@ export default function CheckinPage() {
               {allLocations.filter(l => !todayLocations.some(tl => tl.id === l.id)).map(loc => (
                 <button
                   key={loc.id}
-                  onClick={() => setSelectedLocationId(loc.id)}
+                  onClick={() => { setSelectedLocationId(loc.id); setManuallyCleared(false); }}
                   className="w-full rounded-2xl bg-card border border-border/60 p-4 text-left hover:border-primary/50 transition-all"
                 >
                   <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
