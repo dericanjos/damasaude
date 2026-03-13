@@ -15,17 +15,24 @@ const isCustomDomain = () =>
   !window.location.hostname.includes('lovableproject.com') &&
   window.location.hostname !== 'localhost';
 
-const handleOAuthForCustomDomain = async (provider: 'google' | 'apple') => {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo: window.location.origin,
-      skipBrowserRedirect: true,
-    },
-  });
-  if (error) throw error;
-  if (data?.url) {
-    window.location.href = data.url;
+const handleSocialSignIn = async (provider: 'google' | 'apple') => {
+  if (isCustomDomain()) {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: window.location.origin,
+        skipBrowserRedirect: true,
+      },
+    });
+    if (error) throw error;
+    if (data?.url) {
+      window.location.href = data.url;
+    }
+  } else {
+    const { error } = await lovable.auth.signInWithOAuth(provider, {
+      redirect_uri: window.location.origin,
+    });
+    if (error) throw error;
   }
 };
 
