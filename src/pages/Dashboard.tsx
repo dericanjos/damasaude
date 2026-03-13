@@ -388,55 +388,68 @@ export default function Dashboard() {
           </button>
         </div>
       )}
-      {revenue && (
+      {displayRevenue && (
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
             <div className="flex items-center gap-1.5 mb-2">
               <TrendingUp className="h-3.5 w-3.5 text-revenue-gain" />
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Receita est.</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatBRL(revenue.estimated)}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{revenue.totalAttended} consultas</p>
+            <p className="text-2xl font-bold text-foreground">{formatBRL(displayRevenue.estimated)}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{displayRevenue.totalAttended} consultas</p>
           </div>
           <div className="rounded-2xl bg-card border border-revenue-loss/40 p-4 shadow-card">
             <div className="flex items-center gap-1.5 mb-2">
               <TrendingDown className="h-3.5 w-3.5 text-revenue-loss" />
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Receita perdida</span>
             </div>
-            <p className="text-2xl font-bold text-revenue-loss">{formatBRL(revenue.lost)}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{revenue.totalNoshows + (checkinData?.cancellations ?? 0) + (checkinData?.empty_slots ?? 0)} perdas</p>
+            <p className="text-2xl font-bold text-revenue-loss">{formatBRL(displayRevenue.lost)}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{displayRevenue.totalLosses} perdas</p>
+          </div>
+        </div>
+      )}
+
+      {/* Worst leaker card - only in consolidated mode */}
+      {worstLeaker && isConsolidated && (
+        <div className="rounded-xl bg-card border border-revenue-loss/30 p-3.5 flex items-start gap-3 shadow-card">
+          <AlertCircle className="h-4 w-4 shrink-0 text-revenue-loss mt-0.5" />
+          <div>
+            <p className="text-[10px] font-bold text-revenue-loss uppercase tracking-wider mb-0.5">Maior vazamento hoje</p>
+            <p className="text-sm font-medium text-foreground">
+              {worstLeaker.name}: <span className="text-revenue-loss font-bold">{formatBRL(worstLeaker.lost)}</span> perdidos
+            </p>
           </div>
         </div>
       )}
 
       {/* ── OCCUPANCY + NO-SHOW ── */}
-      {revenue && (
+      {displayRevenue && (
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Ocupação</p>
             <div className="flex items-end justify-between">
-              <p className="text-2xl font-bold text-foreground">{formatPercent(revenue.occupancyRate)}</p>
+              <p className="text-2xl font-bold text-foreground">{formatPercent(displayRevenue.occupancyRate)}</p>
               <p className="text-xs text-muted-foreground">meta {formatPercent(targetFillRate)}</p>
             </div>
             <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
               <div
-                className={cn('h-full rounded-full transition-all', revenue.occupancyRate >= targetFillRate ? 'bg-idea-stable' : 'bg-idea-attention')}
-                style={{ width: `${Math.min(100, revenue.occupancyRate * 100)}%` }}
+                className={cn('h-full rounded-full transition-all', displayRevenue.occupancyRate >= targetFillRate ? 'bg-idea-stable' : 'bg-idea-attention')}
+                style={{ width: `${Math.min(100, displayRevenue.occupancyRate * 100)}%` }}
               />
             </div>
           </div>
           <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">No-show</p>
             <div className="flex items-end justify-between">
-              <p className={cn('text-2xl font-bold', revenue.noShowRate > targetNoShowRate ? 'text-destructive' : 'text-foreground')}>
-                {formatPercent(revenue.noShowRate)}
+              <p className={cn('text-2xl font-bold', displayRevenue.noShowRate > targetNoShowRate ? 'text-destructive' : 'text-foreground')}>
+                {formatPercent(displayRevenue.noShowRate)}
               </p>
               <p className="text-xs text-muted-foreground">meta {formatPercent(targetNoShowRate)}</p>
             </div>
             <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
               <div
-                className={cn('h-full rounded-full', revenue.noShowRate <= targetNoShowRate ? 'bg-idea-stable' : 'bg-destructive')}
-                style={{ width: `${Math.min(100, revenue.noShowRate * 100 * 4)}%` }}
+                className={cn('h-full rounded-full', displayRevenue.noShowRate <= targetNoShowRate ? 'bg-idea-stable' : 'bg-destructive')}
+                style={{ width: `${Math.min(100, displayRevenue.noShowRate * 100 * 4)}%` }}
               />
             </div>
           </div>
