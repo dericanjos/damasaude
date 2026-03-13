@@ -93,27 +93,29 @@ function AuthRoute() {
   return <AuthPage />;
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <SubscriptionProvider>
-            <Routes>
-              <Route path="/auth" element={<AuthRoute />} />
-              <Route path="/onboarding" element={<OnboardingRoute />} />
-              <Route path="/versiculo" element={<VerseRoute />} />
-              <Route path="/assinatura" element={<SubscriptionRoute />} />
-              <Route path="/institucional" element={<InstitucionalPage />} />
-              <Route path="/*" element={<ProtectedRoutes />} />
-            </Routes>
-          </SubscriptionProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <SubscriptionProvider>
+              <Routes>
+                <Route path="/auth" element={<AuthRoute />} />
+                <Route path="/onboarding" element={<OnboardingRoute />} />
+                <Route path="/versiculo" element={<VerseRoute />} />
+                <Route path="/assinatura" element={<SubscriptionRoute />} />
+                <Route path="/institucional" element={<InstitucionalPage />} />
+                <Route path="/*" element={<ProtectedRoutes />} />
+              </Routes>
+            </SubscriptionProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
