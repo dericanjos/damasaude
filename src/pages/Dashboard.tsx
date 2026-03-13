@@ -206,8 +206,11 @@ export default function Dashboard() {
         <div>
           <h1 className="text-xl font-bold text-foreground">
             Olá, {nameAlreadyHasPrefix ? '' : `${prefix} `}{firstName} {hasBadge && <span title="Selo de Clínica Eficiente">🏅</span>} 👋
-          </h1>
+           </h1>
           <p className="text-sm text-muted-foreground">Visão do dia</p>
+          <p className="text-xs text-muted-foreground/70 capitalize">
+            {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {showRenewalBanner && (
