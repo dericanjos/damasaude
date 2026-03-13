@@ -68,7 +68,7 @@ export default function ActionsList({ actions, onComplete, onRegenerate, loading
               )}>
                 {action.title}
               </p>
-              <p className="text-xs text-muted-foreground mt-0.5">{action.description}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 whitespace-normal break-words">{action.description}</p>
             </div>
           </div>
         ))}
