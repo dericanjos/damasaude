@@ -158,8 +158,15 @@ export default function SettingsPage() {
     );
   };
 
-  const setCapacity = (key: string, value: number) => {
-    setDailyCapacities(prev => ({ ...prev, [key]: Math.max(0, Math.min(100, value)) }));
+  const setCapacity = (key: string, rawValue: string) => {
+    if (rawValue === '') {
+      setDailyCapacities(prev => ({ ...prev, [key]: 0 }));
+      return;
+    }
+    const num = parseInt(rawValue, 10);
+    if (!isNaN(num)) {
+      setDailyCapacities(prev => ({ ...prev, [key]: Math.max(0, Math.min(100, num)) }));
+    }
   };
 
   return (
@@ -328,8 +335,13 @@ export default function SettingsPage() {
                       type="number"
                       min={0}
                       max={100}
-                      value={dailyCapacities[key]}
-                      onChange={e => setCapacity(key, Number(e.target.value))}
+                      value={dailyCapacities[key] === 0 ? '' : dailyCapacities[key]}
+                      onChange={e => setCapacity(key, e.target.value)}
+                      onBlur={e => {
+                        if (e.target.value === '') {
+                          setDailyCapacities(prev => ({ ...prev, [key]: 0 }));
+                        }
+                      }}
                       disabled={!active}
                       className="rounded-lg h-8 text-center text-sm"
                     />

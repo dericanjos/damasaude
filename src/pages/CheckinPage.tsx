@@ -121,6 +121,7 @@ export default function CheckinPage() {
 
   const [showReward, setShowReward] = useState(false);
   const [reward, setReward] = useState<RewardData | null>(null);
+  const [editMode, setEditMode] = useState(false);
 
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
 
@@ -315,6 +316,98 @@ export default function CheckinPage() {
           </div>
         </div>
 
+        <Button className="w-full h-12 rounded-xl text-sm font-semibold" onClick={() => navigate('/')}>
+          Ver painel
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+    );
+  }
+
+  // ── SUMMARY SCREEN (checkin already done today) ──
+  if (existing && !editMode && !showReward) {
+    const e = existing as any;
+    const attended = (e.attended_private ?? 0) + (e.attended_insurance ?? 0);
+    const noshows = (e.noshows_private ?? 0) + (e.noshows_insurance ?? 0);
+    const checkinData = {
+      appointments_scheduled: e.appointments_scheduled,
+      attended_private: e.attended_private ?? 0,
+      attended_insurance: e.attended_insurance ?? 0,
+      noshows_private: e.noshows_private ?? 0,
+      noshows_insurance: e.noshows_insurance ?? 0,
+      cancellations: e.cancellations,
+      new_appointments: e.new_appointments,
+      empty_slots: e.empty_slots,
+      followup_done: e.followup_done,
+    };
+    const ideaScore = calculateIDEA(checkinData, dailyCapacity, ticketPrivate, ticketInsurance);
+    const status = getIdeaStatus(ideaScore);
+
+    const summaryItems = [
+      { label: 'Agendados', value: e.appointments_scheduled },
+      { label: 'Atendidos', value: attended },
+      { label: 'No-shows', value: noshows },
+      { label: 'Cancelamentos', value: e.cancellations },
+      { label: 'Novos agendamentos', value: e.new_appointments },
+      { label: 'Buracos', value: e.empty_slots },
+    ];
+
+    return (
+      <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl gradient-primary shadow-premium">
+            <CheckCircle2 className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-foreground">Check-in Concluído</h1>
+            <p className="text-xs text-muted-foreground">Seu check-in de hoje já foi registrado.</p>
+          </div>
+        </div>
+
+        {/* IDEA Score mini */}
+        <div className={cn(
+          'rounded-2xl p-5 text-center',
+          status === 'critical' && 'idea-critical',
+          status === 'attention' && 'idea-attention',
+          status === 'stable' && 'idea-stable',
+        )}>
+          <p className="text-xs font-bold text-white/70 uppercase tracking-widest">Índice DAMA</p>
+          <p className="text-5xl font-extrabold text-white mt-1">{ideaScore}</p>
+          <p className="text-sm font-semibold text-white/90 mt-1">{getIdeaLabel(status)}</p>
+        </div>
+
+        {/* Summary card */}
+        <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-3">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Resumo do dia</p>
+          {summaryItems.map(item => (
+            <div key={item.label} className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">{item.label}</span>
+              <span className="text-sm font-bold text-foreground">{item.value}</span>
+            </div>
+          ))}
+          {e.followup_done && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Follow-up</span>
+              <span className="text-sm font-bold text-revenue-gain">✓ Feito</span>
+            </div>
+          )}
+          {e.notes && (
+            <div className="pt-2 border-t border-border/40">
+              <p className="text-xs text-muted-foreground">Observações</p>
+              <p className="text-sm text-foreground mt-1">{e.notes}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <Button
+          variant="outline"
+          className="w-full rounded-xl"
+          onClick={() => setEditMode(true)}
+        >
+          Editar check-in de hoje
+        </Button>
         <Button className="w-full h-12 rounded-xl text-sm font-semibold" onClick={() => navigate('/')}>
           Ver painel
           <ChevronRight className="h-4 w-4 ml-1" />
