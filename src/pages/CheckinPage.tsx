@@ -118,9 +118,16 @@ export default function CheckinPage() {
   // Location selection
   const paramLocationId = searchParams.get('location');
   const [selectedLocationId, setSelectedLocationId] = useState<string>('');
+  const [manuallyCleared, setManuallyCleared] = useState(false);
 
-  // Auto-select location
+  const handleClearLocation = () => {
+    setSelectedLocationId('');
+    setManuallyCleared(true);
+  };
+
+  // Auto-select location (only if not manually cleared)
   useEffect(() => {
+    if (manuallyCleared) return;
     if (paramLocationId) {
       setSelectedLocationId(paramLocationId);
     } else if (todayLocations.length === 1) {
@@ -128,7 +135,7 @@ export default function CheckinPage() {
     } else if (allLocations.length === 1) {
       setSelectedLocationId(allLocations[0].id);
     }
-  }, [todayLocations, allLocations, paramLocationId]);
+  }, [todayLocations, allLocations, paramLocationId, manuallyCleared]);
 
   const selectedLocation = allLocations.find(l => l.id === selectedLocationId) || null;
 
