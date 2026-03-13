@@ -6,34 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { lovable } from '@/integrations/lovable/index';
-import { supabase } from '@/integrations/supabase/client';
 import logoTagline from '@/assets/logo-dama-tagline.png';
 import authBg from '@/assets/auth-bg.png';
 
-const isCustomDomain = () =>
-  !window.location.hostname.includes('lovable.app') &&
-  !window.location.hostname.includes('lovableproject.com') &&
-  window.location.hostname !== 'localhost';
-
 const handleSocialSignIn = async (provider: 'google' | 'apple') => {
-  if (isCustomDomain()) {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: window.location.origin,
-        skipBrowserRedirect: true,
-      },
-    });
-    if (error) throw error;
-    if (data?.url) {
-      window.location.href = data.url;
-    }
-  } else {
-    const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin,
-    });
-    if (error) throw error;
-  }
+  const { error } = await lovable.auth.signInWithOAuth(provider, {
+    redirect_uri: window.location.origin,
+  });
+  if (error) throw error;
 };
 
 export default function AuthPage() {
