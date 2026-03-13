@@ -118,9 +118,16 @@ export default function CheckinPage() {
   // Location selection
   const paramLocationId = searchParams.get('location');
   const [selectedLocationId, setSelectedLocationId] = useState<string>('');
+  const [manuallyCleared, setManuallyCleared] = useState(false);
 
-  // Auto-select location
+  const handleClearLocation = () => {
+    setSelectedLocationId('');
+    setManuallyCleared(true);
+  };
+
+  // Auto-select location (only if not manually cleared)
   useEffect(() => {
+    if (manuallyCleared) return;
     if (paramLocationId) {
       setSelectedLocationId(paramLocationId);
     } else if (todayLocations.length === 1) {
@@ -128,7 +135,7 @@ export default function CheckinPage() {
     } else if (allLocations.length === 1) {
       setSelectedLocationId(allLocations[0].id);
     }
-  }, [todayLocations, allLocations, paramLocationId]);
+  }, [todayLocations, allLocations, paramLocationId, manuallyCleared]);
 
   const selectedLocation = allLocations.find(l => l.id === selectedLocationId) || null;
 
@@ -292,7 +299,7 @@ export default function CheckinPage() {
                 return (
                   <button
                     key={loc.id}
-                    onClick={() => setSelectedLocationId(loc.id)}
+                    onClick={() => { setSelectedLocationId(loc.id); setManuallyCleared(false); }}
                     className={cn(
                       'w-full rounded-2xl border p-4 text-left transition-all',
                       alreadyDone
@@ -331,7 +338,7 @@ export default function CheckinPage() {
               {allLocations.filter(l => !todayLocations.some(tl => tl.id === l.id)).map(loc => (
                 <button
                   key={loc.id}
-                  onClick={() => setSelectedLocationId(loc.id)}
+                  onClick={() => { setSelectedLocationId(loc.id); setManuallyCleared(false); }}
                   className="w-full rounded-2xl bg-card border border-border/60 p-4 text-left hover:border-primary/50 transition-all"
                 >
                   <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
@@ -447,7 +454,7 @@ export default function CheckinPage() {
             variant="outline"
             className="w-full rounded-xl"
             onClick={() => {
-              setSelectedLocationId('');
+              handleClearLocation();
               setShowReward(false);
               setEditMode(false);
             }}
@@ -565,7 +572,7 @@ export default function CheckinPage() {
             variant="outline"
             className="w-full rounded-xl"
             onClick={() => {
-              setSelectedLocationId('');
+              handleClearLocation();
               setEditMode(false);
             }}
           >
@@ -613,7 +620,7 @@ export default function CheckinPage() {
               variant="ghost"
               size="sm"
               className="text-xs text-primary"
-              onClick={() => setSelectedLocationId('')}
+              onClick={() => handleClearLocation()}
             >
               Trocar
             </Button>
