@@ -164,14 +164,7 @@ export default function AuthPage() {
                 className="flex-1 border-white/20 bg-white/10 text-white hover:bg-white/20"
                 onClick={async () => {
                   try {
-                    if (isCustomDomain()) {
-                      await handleOAuthForCustomDomain('google');
-                    } else {
-                      const { error } = await lovable.auth.signInWithOAuth('google', {
-                        redirect_uri: window.location.origin,
-                      });
-                      if (error) toast.error('Erro ao entrar com Google');
-                    }
+                    await handleSocialSignIn('google');
                   } catch (e: any) {
                     toast.error(e.message || 'Erro ao entrar com Google');
                   }
