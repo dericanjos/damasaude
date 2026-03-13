@@ -4,6 +4,7 @@ import { useClinic } from '@/hooks/useClinic';
 import { useLocationFilter } from '@/hooks/useLocationFilter';
 import { useActiveLocations } from '@/hooks/useLocations';
 import LocationSelector from '@/components/LocationSelector';
+import { useGenerateInsight } from '@/hooks/useInsights';
 import { calculateIDEA, type CheckinData } from '@/lib/idea';
 import { formatBRL, formatPercent } from '@/lib/revenue';
 import { getCapacityForDate, parseDailyCapacities, type DailyCapacities } from '@/lib/days';
