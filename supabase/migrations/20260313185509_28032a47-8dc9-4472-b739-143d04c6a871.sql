@@ -1,0 +1,1 @@
+ALTER TABLE locations ADD COLUMN has_secretary boolean NOT NULL DEFAULT false;

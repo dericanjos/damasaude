@@ -406,6 +406,7 @@ export type Database = {
           address: string
           clinic_id: string | null
           created_at: string
+          has_secretary: boolean
           id: string
           is_active: boolean
           name: string
@@ -416,6 +417,7 @@ export type Database = {
           address?: string
           clinic_id?: string | null
           created_at?: string
+          has_secretary?: boolean
           id?: string
           is_active?: boolean
           name: string
@@ -426,6 +428,7 @@ export type Database = {
           address?: string
           clinic_id?: string | null
           created_at?: string
+          has_secretary?: boolean
           id?: string
           is_active?: boolean
           name?: string

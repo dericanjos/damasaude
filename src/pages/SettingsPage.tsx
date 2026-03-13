@@ -70,6 +70,7 @@ function LocationEditDialog({
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [ticketAvg, setTicketAvg] = useState(250);
+  const [hasSecretaryLoc, setHasSecretaryLoc] = useState(false);
   const [activeDays, setActiveDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [schedules, setSchedules] = useState<Record<number, ScheduleEntry>>({});
 
@@ -78,6 +79,7 @@ function LocationEditDialog({
       setName(location.name);
       setAddress(location.address);
       setTicketAvg(existingFinancial?.ticket_avg ?? 250);
+      setHasSecretaryLoc(location.has_secretary ?? false);
       const days = existingSchedules.map(s => s.weekday);
       setActiveDays(days.length > 0 ? days : [1, 2, 3, 4, 5]);
       const sMap: Record<number, ScheduleEntry> = {};
@@ -94,6 +96,7 @@ function LocationEditDialog({
       setName('');
       setAddress('');
       setTicketAvg(250);
+      setHasSecretaryLoc(false);
       setActiveDays([1, 2, 3, 4, 5]);
       setSchedules({});
     }
@@ -134,6 +137,7 @@ function LocationEditDialog({
           name: name.trim(),
           address: address.trim(),
           ticket_avg: ticketAvg,
+          has_secretary: hasSecretaryLoc,
           schedules: scheduleList,
         });
         toast.success('Local atualizado!');
@@ -142,6 +146,7 @@ function LocationEditDialog({
           name: name.trim(),
           address: address.trim(),
           ticket_avg: ticketAvg,
+          has_secretary: hasSecretaryLoc,
           schedules: scheduleList,
         });
         toast.success('Local criado!');
@@ -171,6 +176,14 @@ function LocationEditDialog({
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket médio (R$)</Label>
             <Input type="number" min={1} value={ticketAvg} onChange={e => setTicketAvg(Number(e.target.value))} className="rounded-xl" />
+          </div>
+
+          <div className="flex items-center justify-between rounded-xl border border-border p-3">
+            <div>
+              <Label className="text-sm font-semibold text-foreground">Tem secretária neste local?</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Adapta a linguagem das sugestões e ações</p>
+            </div>
+            <Switch checked={hasSecretaryLoc} onCheckedChange={setHasSecretaryLoc} />
           </div>
 
           <div className="space-y-2">

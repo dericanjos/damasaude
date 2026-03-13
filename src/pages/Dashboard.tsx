@@ -82,7 +82,7 @@ export default function Dashboard() {
   const ticketPrivate = (clinic as any)?.ticket_private ?? DEFAULT_TICKET_PRIVATE;
   const ticketInsurance = (clinic as any)?.ticket_insurance ?? DEFAULT_TICKET_INSURANCE;
 
-  // Consolidated aggregation for "Todos os locais"
+  // Consolidated aggregation for "Todas as clínicas"
   const isConsolidated = !selectedLocationId && allTodayCheckins.length > 0;
   const locationNamesMap = useMemo(() => {
     const map: Record<string, string> = {};
