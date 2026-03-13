@@ -54,7 +54,7 @@ export default function WeeklyReportPage() {
     return weekOffset < 0 ? subWeeks(base, Math.abs(weekOffset)) : addWeeks(base, weekOffset);
   }, [weekOffset]);
 
-  const { data: checkins = [] } = useWeekCheckins(weekStart);
+  const { data: checkins = [] } = useWeekCheckins(weekStart, selectedLocationId);
   const weekStartStr = format(weekStart, 'yyyy-MM-dd');
   const weekLabel = format(weekStart, "'Semana de' dd 'de' MMMM", { locale: ptBR });
 
