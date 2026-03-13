@@ -299,7 +299,7 @@ export default function CheckinPage() {
                 return (
                   <button
                     key={loc.id}
-                    onClick={() => setSelectedLocationId(loc.id)}
+                    onClick={() => { setSelectedLocationId(loc.id); setManuallyCleared(false); }}
                     className={cn(
                       'w-full rounded-2xl border p-4 text-left transition-all',
                       alreadyDone
