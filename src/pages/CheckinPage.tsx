@@ -572,7 +572,7 @@ export default function CheckinPage() {
             variant="outline"
             className="w-full rounded-xl"
             onClick={() => {
-              setSelectedLocationId('');
+              handleClearLocation();
               setEditMode(false);
             }}
           >
