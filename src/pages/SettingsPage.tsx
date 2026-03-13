@@ -137,6 +137,7 @@ function LocationEditDialog({
           name: name.trim(),
           address: address.trim(),
           ticket_avg: ticketAvg,
+          has_secretary: hasSecretaryLoc,
           schedules: scheduleList,
         });
         toast.success('Local atualizado!');
