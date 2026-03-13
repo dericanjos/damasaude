@@ -113,6 +113,24 @@ export function useLocationFinancial(locationId?: string) {
   });
 }
 
+export function useAllLocationFinancials() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['location-financials-all', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('location_financials')
+        .select('*')
+        .eq('user_id', user.id);
+      if (error) throw error;
+      return (data || []) as LocationFinancial[];
+    },
+    enabled: !!user,
+  });
+}
+
 export function useCreateLocation() {
   const queryClient = useQueryClient();
   const { user } = useAuth();

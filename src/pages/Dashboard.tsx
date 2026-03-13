@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ChevronDown, Info } from 'lucide-react';
 
@@ -8,10 +8,11 @@ import { useClinic } from '@/hooks/useClinic';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useCheckinStreak } from '@/hooks/useChecklist';
 import { useLocationFilter } from '@/hooks/useLocationFilter';
-import { useActiveLocations } from '@/hooks/useLocations';
+import { useActiveLocations, useAllLocationFinancials, useAllLocationSchedules } from '@/hooks/useLocations';
 import { calculateIDEA, getIdeaStatus, getIdeaLabel, totalAttended, totalNoshows, type CheckinData } from '@/lib/idea';
 import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET_PRIVATE, DEFAULT_TICKET_INSURANCE } from '@/lib/revenue';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
+import { aggregateCheckins, getWorstLeaker } from '@/lib/aggregation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -63,6 +64,8 @@ export default function Dashboard() {
   const { data: oldNews } = useLatestNews();
   const { data: streak = 0 } = useCheckinStreak();
   const { data: hasBadge } = useEfficiencyBadge();
+  const { data: allFinancials = [] } = useAllLocationFinancials();
+  const { data: allSchedules = [] } = useAllLocationSchedules();
 
   const [checkinCollapsed, setCheckinCollapsed] = useState(true);
 
@@ -78,6 +81,28 @@ export default function Dashboard() {
   const dailyCapacity = getCapacityForDate(new Date(), caps);
   const ticketPrivate = (clinic as any)?.ticket_private ?? DEFAULT_TICKET_PRIVATE;
   const ticketInsurance = (clinic as any)?.ticket_insurance ?? DEFAULT_TICKET_INSURANCE;
+
+  // Consolidated aggregation for "Todos os locais"
+  const isConsolidated = !selectedLocationId && allTodayCheckins.length > 0;
+  const locationNamesMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const l of locations) map[l.id] = l.name;
+    return map;
+  }, [locations]);
+
+  const consolidated = useMemo(() => {
+    if (!isConsolidated) return null;
+    const todayWeekday = new Date().getDay();
+    return aggregateCheckins(allTodayCheckins, allFinancials, (c) => {
+      const sched = allSchedules.find(s => s.location_id === c.location_id && s.weekday === todayWeekday && s.is_active);
+      return sched?.daily_capacity ?? dailyCapacity;
+    });
+  }, [isConsolidated, allTodayCheckins, allFinancials, allSchedules, dailyCapacity]);
+
+  const worstLeaker = useMemo(() => {
+    if (!consolidated) return null;
+    return getWorstLeaker(consolidated.lostByLocation, locationNamesMap);
+  }, [consolidated, locationNamesMap]);
 
   // Renewal warning
   const showRenewalBanner = (() => {
@@ -106,6 +131,33 @@ export default function Dashboard() {
         ticket_insurance: ticketInsurance,
       })
     : null;
+
+  // Use consolidated metrics when in "Todos" mode, otherwise use single-location revenue
+  const displayRevenue = useMemo(() => {
+    if (consolidated) {
+      return {
+        estimated: consolidated.totalRevenueEstimated,
+        lost: consolidated.totalRevenueLost,
+        occupancyRate: consolidated.occupancyRate,
+        noShowRate: consolidated.noShowRate,
+        totalAttended: consolidated.totalAttended,
+        totalNoshows: consolidated.totalNoshows,
+        totalLosses: consolidated.totalNoshows + consolidated.totalCancellations + consolidated.totalEmptySlots,
+      };
+    }
+    if (revenue && checkinData) {
+      return {
+        estimated: revenue.estimated,
+        lost: revenue.lost,
+        occupancyRate: revenue.occupancyRate,
+        noShowRate: revenue.noShowRate,
+        totalAttended: revenue.totalAttended,
+        totalNoshows: revenue.totalNoshows,
+        totalLosses: revenue.totalNoshows + checkinData.cancellations + checkinData.empty_slots,
+      };
+    }
+    return null;
+  }, [consolidated, revenue, checkinData]);
   const ideaStatus = todayScore != null ? getIdeaStatus(todayScore) : null;
 
   // IDEA status description
@@ -336,55 +388,68 @@ export default function Dashboard() {
           </button>
         </div>
       )}
-      {revenue && (
+      {displayRevenue && (
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
             <div className="flex items-center gap-1.5 mb-2">
               <TrendingUp className="h-3.5 w-3.5 text-revenue-gain" />
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Receita est.</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatBRL(revenue.estimated)}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{revenue.totalAttended} consultas</p>
+            <p className="text-2xl font-bold text-foreground">{formatBRL(displayRevenue.estimated)}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{displayRevenue.totalAttended} consultas</p>
           </div>
           <div className="rounded-2xl bg-card border border-revenue-loss/40 p-4 shadow-card">
             <div className="flex items-center gap-1.5 mb-2">
               <TrendingDown className="h-3.5 w-3.5 text-revenue-loss" />
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Receita perdida</span>
             </div>
-            <p className="text-2xl font-bold text-revenue-loss">{formatBRL(revenue.lost)}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{revenue.totalNoshows + (checkinData?.cancellations ?? 0) + (checkinData?.empty_slots ?? 0)} perdas</p>
+            <p className="text-2xl font-bold text-revenue-loss">{formatBRL(displayRevenue.lost)}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{displayRevenue.totalLosses} perdas</p>
+          </div>
+        </div>
+      )}
+
+      {/* Worst leaker card - only in consolidated mode */}
+      {worstLeaker && isConsolidated && (
+        <div className="rounded-xl bg-card border border-revenue-loss/30 p-3.5 flex items-start gap-3 shadow-card">
+          <AlertCircle className="h-4 w-4 shrink-0 text-revenue-loss mt-0.5" />
+          <div>
+            <p className="text-[10px] font-bold text-revenue-loss uppercase tracking-wider mb-0.5">Maior vazamento hoje</p>
+            <p className="text-sm font-medium text-foreground">
+              {worstLeaker.name}: <span className="text-revenue-loss font-bold">{formatBRL(worstLeaker.lost)}</span> perdidos
+            </p>
           </div>
         </div>
       )}
 
       {/* ── OCCUPANCY + NO-SHOW ── */}
-      {revenue && (
+      {displayRevenue && (
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Ocupação</p>
             <div className="flex items-end justify-between">
-              <p className="text-2xl font-bold text-foreground">{formatPercent(revenue.occupancyRate)}</p>
+              <p className="text-2xl font-bold text-foreground">{formatPercent(displayRevenue.occupancyRate)}</p>
               <p className="text-xs text-muted-foreground">meta {formatPercent(targetFillRate)}</p>
             </div>
             <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
               <div
-                className={cn('h-full rounded-full transition-all', revenue.occupancyRate >= targetFillRate ? 'bg-idea-stable' : 'bg-idea-attention')}
-                style={{ width: `${Math.min(100, revenue.occupancyRate * 100)}%` }}
+                className={cn('h-full rounded-full transition-all', displayRevenue.occupancyRate >= targetFillRate ? 'bg-idea-stable' : 'bg-idea-attention')}
+                style={{ width: `${Math.min(100, displayRevenue.occupancyRate * 100)}%` }}
               />
             </div>
           </div>
           <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">No-show</p>
             <div className="flex items-end justify-between">
-              <p className={cn('text-2xl font-bold', revenue.noShowRate > targetNoShowRate ? 'text-destructive' : 'text-foreground')}>
-                {formatPercent(revenue.noShowRate)}
+              <p className={cn('text-2xl font-bold', displayRevenue.noShowRate > targetNoShowRate ? 'text-destructive' : 'text-foreground')}>
+                {formatPercent(displayRevenue.noShowRate)}
               </p>
               <p className="text-xs text-muted-foreground">meta {formatPercent(targetNoShowRate)}</p>
             </div>
             <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
               <div
-                className={cn('h-full rounded-full', revenue.noShowRate <= targetNoShowRate ? 'bg-idea-stable' : 'bg-destructive')}
-                style={{ width: `${Math.min(100, revenue.noShowRate * 100 * 4)}%` }}
+                className={cn('h-full rounded-full', displayRevenue.noShowRate <= targetNoShowRate ? 'bg-idea-stable' : 'bg-destructive')}
+                style={{ width: `${Math.min(100, displayRevenue.noShowRate * 100 * 4)}%` }}
               />
             </div>
           </div>

@@ -5,17 +5,18 @@ import { calculateIDEA, getIdeaStatus, getIdeaLabel, type CheckinData } from '@/
 import { formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY } from '@/lib/revenue';
 import { useClinic } from '@/hooks/useClinic';
 import { useLocationFilter } from '@/hooks/useLocationFilter';
-import { useActiveLocations } from '@/hooks/useLocations';
+import { useActiveLocations, useAllLocationFinancials, useAllLocationSchedules } from '@/hooks/useLocations';
 import LocationSelector from '@/components/LocationSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
 import { Button } from '@/components/ui/button';
-import { startOfWeek, subWeeks, addWeeks, format } from 'date-fns';
+import { startOfWeek, subWeeks, addWeeks, format, getDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, BarChart3, TrendingUp, TrendingDown, Loader2, Sparkles, Mail, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BarChart3, TrendingUp, TrendingDown, Loader2, Sparkles, Mail, Info, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
+import { aggregateCheckins, getWorstLeaker } from '@/lib/aggregation';
 
 /** Helper to convert a DB checkin row to CheckinData */
 function toCheckinData(c: any): CheckinData {
@@ -39,15 +40,14 @@ export default function WeeklyReportPage() {
   const { selectedLocationId } = useLocationFilter();
   const locations = useActiveLocations();
   const { data: allCheckins = [] } = useAllCheckins(selectedLocationId);
+  const { data: allFinancials = [] } = useAllLocationFinancials();
+  const { data: allSchedules = [] } = useAllLocationSchedules();
   const caps = parseDailyCapacities((clinic as any)?.daily_capacities);
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
   const workingDays: string[] = Array.isArray((clinic as any)?.working_days) ? (clinic as any).working_days : ['seg', 'ter', 'qua', 'qui', 'sex'];
   const workingDaysCount = workingDays.length;
   const targetFillRate = clinic?.target_fill_rate ?? 0.85;
   const targetNoShowRate = clinic?.target_noshow_rate ?? 0.05;
-  const ticketPrivate = (clinic as any)?.ticket_private ?? 250;
-  const ticketInsurance = (clinic as any)?.ticket_insurance ?? 100;
-  const avgTicket = (ticketPrivate + ticketInsurance) / 2;
 
   const weekStart = useMemo(() => {
     const base = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -103,31 +103,48 @@ export default function WeeklyReportPage() {
     return () => { cancelled = true; };
   }, [clinic?.id, weekStartStr, checkins.length]);
 
-  // Stats
+  // Stats - use per-location aggregation
+  const isConsolidated = !selectedLocationId;
+  const locationNamesMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const l of locations) map[l.id] = l.name;
+    return map;
+  }, [locations]);
+
+  const agg = useMemo(() => {
+    if (checkins.length === 0) return null;
+    return aggregateCheckins(checkins, allFinancials, (c) => {
+      const weekday = getDay(parseISO(c.date));
+      const sched = allSchedules.find(s => s.location_id === c.location_id && s.weekday === weekday && s.is_active);
+      return sched?.daily_capacity ?? (getCapacityForDate(c.date, caps) || dailyCapacity);
+    });
+  }, [checkins, allFinancials, allSchedules, caps, dailyCapacity]);
+
+  const worstLeaker = useMemo(() => {
+    if (!agg || !isConsolidated) return null;
+    return getWorstLeaker(agg.lostByLocation, locationNamesMap);
+  }, [agg, isConsolidated, locationNamesMap]);
+
   const scores = checkins.map(c => {
     const data = toCheckinData(c);
     const dayCap = getCapacityForDate(c.date, caps) || dailyCapacity;
-    return { date: c.date, score: calculateIDEA(data, dayCap, ticketPrivate, ticketInsurance), data };
+    // For IDEA we still use clinic-level tickets as it's a composite score
+    const ticketP = (clinic as any)?.ticket_private ?? 250;
+    const ticketI = (clinic as any)?.ticket_insurance ?? 100;
+    return { date: c.date, score: calculateIDEA(data, dayCap, ticketP, ticketI), data };
   });
 
   const avgScore = scores.length > 0 ? Math.round(scores.reduce((s, c) => s + c.score, 0) / scores.length) : null;
   const avgStatus = avgScore != null ? getIdeaStatus(avgScore) : null;
 
-  const totalNoshowsPrivate = checkins.reduce((s, c) => s + ((c as any).noshows_private ?? (c as any).no_show ?? 0), 0);
-  const totalNoshowsInsurance = checkins.reduce((s, c) => s + ((c as any).noshows_insurance ?? 0), 0);
-  const totalNoShow = totalNoshowsPrivate + totalNoshowsInsurance;
-  const totalCancellations = checkins.reduce((s, c) => s + c.cancellations, 0);
-  const totalAttendedPrivate = checkins.reduce((s, c) => s + ((c as any).attended_private ?? (c as any).appointments_done ?? 0), 0);
-  const totalAttendedInsurance = checkins.reduce((s, c) => s + ((c as any).attended_insurance ?? 0), 0);
-  const totalDone = totalAttendedPrivate + totalAttendedInsurance;
-  const totalScheduled = Math.max(checkins.reduce((s, c) => s + c.appointments_scheduled, 0), 1);
-  const totalEmptySlots = checkins.reduce((s, c) => s + c.empty_slots, 0);
-
-  const totalRevenueEstimated = (totalAttendedPrivate * ticketPrivate) + (totalAttendedInsurance * ticketInsurance);
-  const totalRevenueLost = (totalNoshowsPrivate * ticketPrivate) + (totalNoshowsInsurance * ticketInsurance) + ((totalCancellations + totalEmptySlots) * avgTicket);
-  const totalCapacity = checkins.reduce((s, c) => s + (getCapacityForDate(c.date, caps) || dailyCapacity), 0);
-  const avgOccupancy = totalCapacity > 0 ? totalDone / totalCapacity : 0;
-  const avgNoShow = totalNoShow / totalScheduled;
+  const totalRevenueEstimated = agg?.totalRevenueEstimated ?? 0;
+  const totalRevenueLost = agg?.totalRevenueLost ?? 0;
+  const totalDone = agg?.totalAttended ?? 0;
+  const totalNoShow = agg?.totalNoshows ?? 0;
+  const totalCancellations = agg?.totalCancellations ?? 0;
+  const totalEmptySlots = agg?.totalEmptySlots ?? 0;
+  const avgOccupancy = agg?.occupancyRate ?? 0;
+  const avgNoShow = agg?.noShowRate ?? 0;
 
   const hasEnoughData = allCheckins.length >= workingDaysCount;
 
@@ -248,7 +265,19 @@ export default function WeeklyReportPage() {
             </div>
           </div>
 
-          {/* Key metrics */}
+          {/* Worst leaker - consolidated mode */}
+          {worstLeaker && isConsolidated && (
+            <div className="rounded-xl bg-card border border-revenue-loss/30 p-3.5 flex items-start gap-3 shadow-card">
+              <AlertCircle className="h-4 w-4 shrink-0 text-revenue-loss mt-0.5" />
+              <div>
+                <p className="text-[10px] font-bold text-revenue-loss uppercase tracking-wider mb-0.5">Maior vazamento da semana</p>
+                <p className="text-sm font-medium text-foreground">
+                  {worstLeaker.name}: <span className="text-revenue-loss font-bold">{formatBRL(worstLeaker.lost)}</span> perdidos
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
             <div className="px-4 pt-4 pb-2">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Indicadores da semana</p>
