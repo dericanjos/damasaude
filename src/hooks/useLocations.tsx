@@ -143,6 +143,7 @@ export function useCreateLocation() {
       address: string;
       timezone?: string;
       ticket_avg?: number;
+      has_secretary?: boolean;
       schedules?: { weekday: number; start_time: string; end_time: string; daily_capacity: number }[];
     }) => {
       if (!user) throw new Error('Not authenticated');
@@ -156,6 +157,7 @@ export function useCreateLocation() {
           name: input.name,
           address: input.address,
           timezone: input.timezone || 'America/Sao_Paulo',
+          has_secretary: input.has_secretary ?? false,
         } as any)
         .select()
         .single();
