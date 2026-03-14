@@ -642,24 +642,23 @@ export default function CheckinPage() {
 
       {/* Validation warnings */}
       {(() => {
-        const totalAtendidosNoshows = form.attended_private + form.attended_insurance + form.noshows_private + form.noshows_insurance + form.cancellations;
-        const warnings: string[] = [];
-        if (!quickMode && form.appointments_scheduled > 0 && totalAtendidosNoshows > form.appointments_scheduled) {
-          warnings.push(`Atendidos + Faltas + Cancelamentos (${totalAtendidosNoshows}) é maior que os agendados (${form.appointments_scheduled}).`);
+        const totalOutcomes = form.attended_private + form.attended_insurance + form.noshows_private + form.noshows_insurance + form.cancellations;
+        const warnings: { msg: string; blocking: boolean }[] = [];
+        if (!quickMode && form.appointments_scheduled > 0 && totalOutcomes > form.appointments_scheduled) {
+          warnings.push({ msg: `Atendidos + Faltas + Cancelamentos (${totalOutcomes}) é maior que os agendados (${form.appointments_scheduled}). Corrija antes de salvar.`, blocking: true });
         }
-        if (!quickMode && form.appointments_scheduled > dailyCapacity) {
-          warnings.push(`Agendados (${form.appointments_scheduled}) excede a capacidade do dia (${dailyCapacity}).`);
+        if (!quickMode && totalOutcomes > dailyCapacity) {
+          warnings.push({ msg: `Total de desfechos (${totalOutcomes}) excede a capacidade do dia (${dailyCapacity}). Verifique os números.`, blocking: true });
         }
         if (warnings.length === 0) return null;
         return (
-          <div className="rounded-2xl bg-idea-attention/10 border border-idea-attention/30 p-3.5 space-y-1">
+          <div className="rounded-2xl bg-destructive/10 border border-destructive/30 p-3.5 space-y-1">
             {warnings.map((w, i) => (
-              <p key={i} className="text-xs text-idea-attention flex items-start gap-1.5">
+              <p key={i} className="text-xs text-destructive flex items-start gap-1.5">
                 <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                {w}
+                {w.msg}
               </p>
             ))}
-            <p className="text-[10px] text-muted-foreground mt-1">Revise os valores antes de salvar.</p>
           </div>
         );
       })()}
