@@ -551,7 +551,7 @@ export default function CheckinPage() {
       { label: 'Atendidos', value: attended },
       { label: 'No-shows', value: noshows },
       { label: 'Cancelamentos', value: e.cancellations },
-      { label: 'Novos agendamentos', value: e.new_appointments },
+      { label: 'Reagendamentos', value: e.new_appointments },
       { label: 'Buracos', value: e.empty_slots },
     ];
 
