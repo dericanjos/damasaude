@@ -683,25 +683,7 @@ export default function CheckinPage() {
         <Switch checked={quickMode} onCheckedChange={setQuickMode} />
       </div>
 
-      {/* Validation warnings */}
-      {(() => {
-        if (quickMode || effectiveCapacity === 0) return null;
-        const warnings: string[] = [];
-        if (totalOutcomes > effectiveCapacity) {
-          warnings.push(`Total de desfechos (${totalOutcomes}) excede a capacidade efetiva (${effectiveCapacity}). Reduza os valores ou adicione encaixes.`);
-        }
-        if (warnings.length === 0) return null;
-        return (
-          <div className="rounded-2xl bg-destructive/10 border border-destructive/30 p-3.5 space-y-1">
-            {warnings.map((w, i) => (
-              <p key={i} className="text-xs text-destructive flex items-start gap-1.5">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                {w}
-              </p>
-            ))}
-          </div>
-        );
-      })()}
+      {/* Validation warnings removed from here – shown inside losses section only */}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {quickMode ? (
