@@ -140,6 +140,7 @@ export default function CheckinPage() {
 
   // Location selection
   const paramLocationId = searchParams.get('location');
+  const paramSection = searchParams.get('section') as 'encaixes' | 'perdas' | null;
   const [selectedLocationId, setSelectedLocationId] = useState<string>('');
   const [manuallyCleared, setManuallyCleared] = useState(false);
 
