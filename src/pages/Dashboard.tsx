@@ -106,12 +106,11 @@ export default function Dashboard() {
 
   const consolidated = useMemo(() => {
     if (!isConsolidated) return null;
-    const todayWeekday = new Date().getDay();
     return aggregateCheckins(allTodayCheckins, allFinancials, (c) => {
-      const sched = allSchedules.find(s => s.location_id === c.location_id && s.weekday === todayWeekday && s.is_active);
-      return sched?.daily_capacity ?? dailyCapacity;
+      const sched = allSchedules.find(s => s.location_id === c.location_id && s.weekday === todayWeekdayDash && s.is_active);
+      return sched?.daily_capacity ?? clinicCapacity;
     });
-  }, [isConsolidated, allTodayCheckins, allFinancials, allSchedules, dailyCapacity]);
+  }, [isConsolidated, allTodayCheckins, allFinancials, allSchedules, todayWeekdayDash, clinicCapacity]);
 
   const worstLeaker = useMemo(() => {
     if (!consolidated) return null;
