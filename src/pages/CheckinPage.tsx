@@ -876,6 +876,7 @@ export default function CheckinPage() {
                 </p>
               </div>
             </div>
+            )}
 
             {/* ── SEÇÃO 4: OUTROS INDICADORES ── */}
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
