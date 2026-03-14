@@ -534,8 +534,10 @@ export default function CheckinPage() {
     const ideaScore = calculateIDEA(checkinData, dailyCapacity, ticketPrivate, ticketInsurance);
     const status = getIdeaStatus(ideaScore);
 
+    const extraAppts = e.extra_appointments ?? 0;
     const summaryItems = [
       { label: 'Agendados', value: e.appointments_scheduled },
+      ...(extraAppts > 0 ? [{ label: 'Encaixes', value: extraAppts }] : []),
       { label: 'Atendidos', value: attended },
       { label: 'No-shows', value: noshows },
       { label: 'Cancelamentos', value: e.cancellations },
