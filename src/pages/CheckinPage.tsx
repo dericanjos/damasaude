@@ -114,7 +114,7 @@ function CheckinField({
   return (
     <div className="flex w-full flex-col gap-2.5">
       <div className="flex items-center justify-between">
-        <Label className="whitespace-normal text-left text-sm font-semibold leading-snug text-foreground">
+        <Label className="whitespace-normal text-left text-xs font-medium leading-snug text-muted-foreground">
           {label}
         </Label>
         {max !== undefined && (
