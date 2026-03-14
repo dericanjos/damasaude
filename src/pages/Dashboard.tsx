@@ -14,7 +14,7 @@ import { useActiveLocations, useAllLocationFinancials, useAllLocationSchedules }
 import { calculateIDEA, getIdeaStatus, getIdeaLabel, totalAttended, totalNoshows, type CheckinData } from '@/lib/idea';
 import { calculateRevenue, formatBRL, formatPercent, safePercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET_PRIVATE, DEFAULT_TICKET_INSURANCE } from '@/lib/revenue';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
-import { aggregateCheckins, getWorstLeaker } from '@/lib/aggregation';
+import { aggregateCheckins, getWorstLeaker, getMostEfficient } from '@/lib/aggregation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
