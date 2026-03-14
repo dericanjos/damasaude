@@ -1086,8 +1086,6 @@ export default function CheckinPage() {
                   <p className="text-sm font-extrabold text-foreground uppercase tracking-wider">📊 Buracos na Agenda</p>
                   <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
                     auto
-                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                    auto
                   </span>
                 </div>
                 <p className="text-center text-2xl font-bold text-foreground">{form.empty_slots}</p>
