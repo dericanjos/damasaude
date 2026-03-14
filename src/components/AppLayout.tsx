@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, ClipboardCheck, BarChart3, Sparkles, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import logoDama from '@/assets/logo-dama.png';
+import { useNotificationReminders } from '@/hooks/useNotificationReminders';
 
 const tabs = [
   { path: '/', icon: LayoutDashboard, label: 'Hoje' },
