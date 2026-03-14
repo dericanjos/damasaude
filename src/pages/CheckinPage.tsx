@@ -572,7 +572,7 @@ export default function CheckinPage() {
 
         <Button
           className="w-full h-12 rounded-xl text-sm font-semibold shadow-premium"
-          onClick={handleSaveSection}
+          onClick={() => handleSaveSection('encaixes')}
           disabled={saveCheckin.isPending}
         >
           {saveCheckin.isPending ? 'Salvando...' : 'Salvar encaixes'}
