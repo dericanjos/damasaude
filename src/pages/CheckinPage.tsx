@@ -775,6 +775,29 @@ export default function CheckinPage() {
             </div>
             )}
 
+            {/* ── ENCAIXES (só após save) ── */}
+            {form.appointments_scheduled > 0 && (existing || editMode) && (
+            <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-4">
+              <div>
+                <p className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5" />
+                  Encaixes (consultas extras)
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Pacientes atendidos fora da agenda original</p>
+              </div>
+              <CheckinField
+                label="Quantos encaixes hoje?"
+                value={form.extra_appointments}
+                onChange={v => setField('extra_appointments', v)}
+              />
+              {form.extra_appointments > 0 && (
+                <p className="text-[10px] text-primary font-medium">
+                  ✨ Capacidade efetiva: {effectiveCapacity} ({dailyCapacity} agendadas + {form.extra_appointments} encaixes)
+                </p>
+              )}
+            </div>
+            )}
+
             {/* ── SEÇÃO 3: PERDAS (só aparece depois do primeiro save) ── */}
             {form.appointments_scheduled > 0 && (existing || editMode) && (
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
