@@ -198,9 +198,12 @@ export default function CheckinPage() {
         noshows_private: e.noshows_private ?? e.no_show ?? 0,
         noshows_insurance: e.noshows_insurance ?? 0,
         cancellations: e.cancellations,
+        cancellations_private: e.cancellations_private ?? e.cancellations ?? 0,
+        cancellations_insurance: e.cancellations_insurance ?? 0,
         new_appointments: e.new_appointments,
         empty_slots: e.empty_slots,
         extra_appointments: e.extra_appointments ?? 0,
+        rescheduled: e.rescheduled ?? 0,
         followup_done: e.followup_done,
         notes: e.notes ?? '',
       });
