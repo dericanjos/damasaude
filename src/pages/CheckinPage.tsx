@@ -196,23 +196,11 @@ export default function CheckinPage() {
         followup_done: e.followup_done,
         notes: e.notes ?? '',
       });
-    } else if (lastCheckin) {
-      const l = lastCheckin as any;
-      setForm({
-        appointments_scheduled: l.appointments_scheduled,
-        attended_private: l.attended_private ?? l.appointments_done ?? 0,
-        attended_insurance: l.attended_insurance ?? 0,
-        noshows_private: l.noshows_private ?? l.no_show ?? 0,
-        noshows_insurance: l.noshows_insurance ?? 0,
-        cancellations: l.cancellations,
-        new_appointments: l.new_appointments,
-        empty_slots: l.empty_slots,
-        extra_appointments: l.extra_appointments ?? 0,
-        followup_done: false,
-        notes: '',
-      });
+    } else {
+      // New checkin: only pre-fill scheduling info, losses start at zero
+      setForm(EMPTY_FORM);
     }
-  }, [existing?.id, lastCheckin?.id]);
+  }, [existing?.id]);
 
   // Get capacity from location schedule
   const todayWeekday = new Date().getDay();
@@ -695,25 +683,7 @@ export default function CheckinPage() {
         <Switch checked={quickMode} onCheckedChange={setQuickMode} />
       </div>
 
-      {/* Validation warnings */}
-      {(() => {
-        if (quickMode || effectiveCapacity === 0) return null;
-        const warnings: string[] = [];
-        if (totalOutcomes > effectiveCapacity) {
-          warnings.push(`Total de desfechos (${totalOutcomes}) excede a capacidade efetiva (${effectiveCapacity}). Reduza os valores ou adicione encaixes.`);
-        }
-        if (warnings.length === 0) return null;
-        return (
-          <div className="rounded-2xl bg-destructive/10 border border-destructive/30 p-3.5 space-y-1">
-            {warnings.map((w, i) => (
-              <p key={i} className="text-xs text-destructive flex items-start gap-1.5">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                {w}
-              </p>
-            ))}
-          </div>
-        );
-      })()}
+      {/* Validation warnings removed from here – shown inside losses section only */}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {quickMode ? (
@@ -821,9 +791,17 @@ export default function CheckinPage() {
             </div>
             )}
 
-            {/* ── SEÇÃO 3: PERDAS (ao longo do dia / fim do dia) ── */}
-            {form.appointments_scheduled > 0 && totalAttendedNow > 0 && (
+            {/* ── SEÇÃO 3: PERDAS (só aparece depois do primeiro save) ── */}
+            {form.appointments_scheduled > 0 && (existing || editMode) && (
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
+              {hasValidationError && (
+                <div className="rounded-xl bg-destructive/10 border border-destructive/30 p-3">
+                  <p className="text-xs text-destructive flex items-start gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    Total de desfechos ({totalOutcomes}) excede a capacidade efetiva ({effectiveCapacity}). Reduza os valores ou adicione encaixes.
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">⚠️ Perdas e desfechos</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">Registre conforme ocorrerem ou ao final do dia</p>
@@ -878,11 +856,13 @@ export default function CheckinPage() {
             </div>
             )}
 
-            {/* ── SEÇÃO 4: OUTROS INDICADORES ── */}
+            {/* ── SEÇÃO 4: OUTROS INDICADORES (só após save) ── */}
+            {(existing || editMode) && (
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">📊 Outros indicadores</p>
               <CheckinField label="Reagendamentos" value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
             </div>
+            )}
 
             <div className="flex items-center justify-between rounded-2xl bg-card border border-border/60 p-4 shadow-card">
               <div>
@@ -915,7 +895,7 @@ export default function CheckinPage() {
           className="w-full h-12 rounded-xl text-sm font-semibold shadow-premium"
           disabled={saveCheckin.isPending || generateActions.isPending || !selectedLocationId || hasValidationError}
         >
-          {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : 'Salvar check-in'}
+          {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : existing ? 'Atualizar check-in' : 'Salvar agenda do dia'}
         </Button>
       </form>
     </div>
