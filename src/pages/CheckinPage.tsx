@@ -236,6 +236,16 @@ export default function CheckinPage() {
   const maxCancellations = Math.max(0, effectiveCapacity - totalAttendedNow - totalNoshowsNow);
 
   const totalOutcomes = totalAttendedNow + totalNoshowsNow + form.cancellations;
+
+  // Auto-calculate empty_slots = scheduled - outcomes (buracos are only from scheduled slots)
+  const autoEmptySlots = Math.max(0, form.appointments_scheduled - totalOutcomes);
+
+  // Keep empty_slots in sync automatically
+  useEffect(() => {
+    if (!quickMode) {
+      setForm(prev => ({ ...prev, empty_slots: autoEmptySlots }));
+    }
+  }, [autoEmptySlots, quickMode]);
   const hasValidationError = !quickMode && effectiveCapacity > 0 && totalOutcomes > effectiveCapacity;
 
   const handleSubmit = async (e: React.FormEvent) => {
