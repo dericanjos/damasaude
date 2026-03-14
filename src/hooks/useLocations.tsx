@@ -216,6 +216,8 @@ export function useUpdateLocation() {
       is_active?: boolean;
       has_secretary?: boolean;
       ticket_avg?: number;
+      ticket_private?: number;
+      ticket_insurance?: number;
       schedules?: { weekday: number; start_time: string; end_time: string; daily_capacity: number }[];
     }) => {
       const { id, ticket_avg, schedules, ...updates } = input;
