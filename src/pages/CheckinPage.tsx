@@ -317,6 +317,7 @@ export default function CheckinPage() {
         ticket_private: ticketPrivate,
         ticket_insurance: ticketInsurance,
       });
+      const lossMap = calculateLossMap(checkinData, ticketAvg);
       setReward({
         score: ideaScore,
         estimated: rev.estimated,
@@ -324,6 +325,10 @@ export default function CheckinPage() {
         occupancyRate: rev.occupancyRate,
         insightText,
         lossSources,
+        lossNoshow: lossMap.noshow,
+        lossCancel: lossMap.cancel,
+        lossBuracos: lossMap.buracos,
+        lossBiggest: lossMap.biggest,
       });
       setShowReward(true);
 
