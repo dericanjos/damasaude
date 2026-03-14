@@ -55,9 +55,12 @@ const EMPTY_FORM: FormData = {
   noshows_private: 0,
   noshows_insurance: 0,
   cancellations: 0,
+  cancellations_private: 0,
+  cancellations_insurance: 0,
   new_appointments: 0,
   empty_slots: 0,
   extra_appointments: 0,
+  rescheduled: 0,
   followup_done: false,
   notes: '',
 };
