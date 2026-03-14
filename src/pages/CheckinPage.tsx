@@ -46,6 +46,10 @@ type RewardData = {
   occupancyRate: number;
   insightText: string;
   lossSources: string[];
+  lossNoshow: number;
+  lossCancel: number;
+  lossBuracos: number;
+  lossBiggest: 'noshow' | 'cancel' | 'buracos' | null;
 };
 
 const EMPTY_FORM: FormData = {

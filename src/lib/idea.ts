@@ -134,67 +134,167 @@ export interface ActionRule {
   action_type: string;
   title: string;
   description: string;
+  is_critical?: boolean;
 }
 
-export function generateActions(data: CheckinData, targetNoshowRate: number, ideaScore: number, hasSecretary = false): ActionRule[] {
-  const actions: ActionRule[] = [];
-  const scheduled = Math.max(data.appointments_scheduled, 1);
-  const noshows = totalNoshows(data);
-  const noShowRate = noshows / scheduled;
+export interface LossMap {
+  noshow: number;
+  cancel: number;
+  buracos: number;
+  total: number;
+  biggest: 'noshow' | 'cancel' | 'buracos' | null;
+}
 
+export function calculateLossMap(
+  data: CheckinData,
+  ticketAvg: number,
+): LossMap {
+  const noshow = totalNoshows(data) * ticketAvg;
+  const cancel = data.cancellations * ticketAvg;
+  const buracos = data.empty_slots * ticketAvg;
+  const total = noshow + cancel + buracos;
+
+  let biggest: LossMap['biggest'] = null;
+  const max = Math.max(noshow, cancel, buracos);
+  if (max > 0) {
+    if (noshow === max) biggest = 'noshow';
+    else if (cancel === max) biggest = 'cancel';
+    else biggest = 'buracos';
+  }
+
+  return { noshow, cancel, buracos, total, biggest };
+}
+
+export function generateActions(
+  data: CheckinData,
+  targetNoshowRate: number,
+  ideaScore: number,
+  hasSecretary = false,
+  ticketAvg = 250,
+): ActionRule[] {
   const sec = hasSecretary;
+  const lossMap = calculateLossMap(data, ticketAvg);
+  const noshows = totalNoshows(data);
 
-  if (data.empty_slots > 0) {
-    actions.push({
-      action_type: 'fix_empty_slots',
-      title: sec ? 'Orientar secretária a preencher buracos' : 'Ativar preenchimento de buracos',
+  // ── Build candidate pool ──
+  const candidates: (ActionRule & { lossValue: number; priority: number })[] = [];
+
+  if (noshows > 0) {
+    candidates.push({
+      action_type: 'map_noshow',
+      title: 'Mapear concentração de no-show',
       description: sec
-        ? `Você tem ${data.empty_slots} vaga${data.empty_slots > 1 ? 's' : ''} aberta${data.empty_slots > 1 ? 's' : ''} hoje. Oriente sua secretária a acionar a lista de espera, entrar em contato com pacientes que pediram encaixe ou antecipar consultas futuras para preencher esses horários vagos.`
-        : `Você tem ${data.empty_slots} vaga${data.empty_slots > 1 ? 's' : ''} aberta${data.empty_slots > 1 ? 's' : ''} hoje. Use o WhatsApp Business para acionar sua lista de espera, entre em contato com pacientes que pediram encaixe ou antecipe consultas futuras para preencher esses horários vagos.`,
+        ? `${noshows} paciente${noshows > 1 ? 's' : ''} não compareceu hoje. Peça à secretária para identificar em quais horários e tipos de consulta o no-show se concentrou para ajustar a confirmação.`
+        : `${noshows} paciente${noshows > 1 ? 's' : ''} não compareceu hoje. Identifique em quais horários e tipos de consulta o no-show se concentrou para ajustar seu protocolo de confirmação.`,
+      lossValue: lossMap.noshow,
+      priority: 1,
     });
   }
 
-  if (noShowRate >= targetNoshowRate) {
-    actions.push({
-      action_type: 'confirmations',
-      title: sec ? 'Pedir à secretária para revisar confirmações' : 'Revisar protocolo de confirmação',
+  if (data.cancellations > 0) {
+    candidates.push({
+      action_type: 'review_cancellations',
+      title: 'Revisar padrão de reagendamento do dia',
       description: sec
-        ? `O no-show de hoje está em ${Math.round(noShowRate * 100)}% (${noshows} paciente${noshows > 1 ? 's' : ''}). Peça à sua secretária para revisar se a confirmação em duas etapas está sendo feita: lembrete no dia anterior (D-1) e confirmação na manhã do atendimento (D-0).`
-        : `O no-show de hoje está em ${Math.round(noShowRate * 100)}% (${noshows} paciente${noshows > 1 ? 's' : ''}). Faça você mesmo a confirmação em duas etapas: envie lembrete no dia anterior (D-1) via WhatsApp e confirme novamente na manhã do atendimento (D-0).`,
+        ? `${data.cancellations} cancelamento${data.cancellations > 1 ? 's' : ''} hoje. Oriente a secretária a verificar se houve remarcação e identificar o motivo para reduzir recorrência.`
+        : `${data.cancellations} cancelamento${data.cancellations > 1 ? 's' : ''} hoje. Verifique se houve remarcação e identifique o motivo para reduzir recorrência nos próximos dias.`,
+      lossValue: lossMap.cancel,
+      priority: 1,
+    });
+  }
+
+  if (data.empty_slots >= 2) {
+    candidates.push({
+      action_type: 'fill_slots_2x',
+      title: 'Rodar rotina de preenchimento 2x hoje',
+      description: sec
+        ? `${data.empty_slots} buracos na agenda. Oriente a secretária a acionar a lista de espera agora e novamente no meio da tarde para maximizar o preenchimento.`
+        : `${data.empty_slots} buracos na agenda. Acione sua lista de espera agora e novamente no meio da tarde para maximizar o preenchimento.`,
+      lossValue: lossMap.buracos,
+      priority: 1,
+    });
+  } else if (data.empty_slots === 1) {
+    candidates.push({
+      action_type: 'fill_slots',
+      title: 'Preencher vaga aberta',
+      description: sec
+        ? `1 buraco na agenda. Oriente a secretária a acionar a lista de espera ou antecipar uma consulta futura.`
+        : `1 buraco na agenda. Acione sua lista de espera ou antecipe uma consulta futura para preencher.`,
+      lossValue: lossMap.buracos,
+      priority: 2,
     });
   }
 
   if (!data.followup_done) {
-    actions.push({
-      action_type: 'reactivation',
-      title: sec ? 'Delegar follow-up à secretária' : 'Executar rotina de follow-up',
+    candidates.push({
+      action_type: 'followup_2x',
+      title: 'Executar follow-up em 2 janelas',
       description: sec
-        ? 'O follow-up de hoje ainda não foi feito. Peça à sua secretária para entrar em contato com pacientes que precisam de retorno ou acompanhamento. Quanto mais rápido o contato, maior a chance de manter o paciente ativo na sua agenda.'
-        : 'Você ainda não fez o follow-up de hoje. Use o WhatsApp Business para entrar em contato com pacientes que precisam de retorno ou acompanhamento. Quanto mais rápido o contato, maior a chance de manter o paciente ativo na sua agenda.',
+        ? 'Follow-up pendente. Peça à secretária para fazer contato pela manhã e uma segunda rodada à tarde com pacientes que precisam de retorno.'
+        : 'Follow-up pendente. Faça contato pela manhã e uma segunda rodada à tarde com pacientes que precisam de retorno ou acompanhamento.',
+      lossValue: 0,
+      priority: 2,
     });
   }
 
-  if (ideaScore >= 80 && actions.length === 0) {
-    actions.push({
-      action_type: 'collect_nps',
-      title: sec ? 'Pedir à secretária para coletar avaliações' : 'Pedir avaliações hoje',
-      description: sec
-        ? 'Seu dia está indo muito bem. Oriente sua secretária a pedir avaliações dos pacientes no Google ou redes sociais após o atendimento. Isso fortalece sua reputação online e gera novas indicações.'
-        : 'Seu dia está indo muito bem. Aproveite a boa experiência dos pacientes para pedir avaliações no Google ou redes sociais. Isso fortalece sua reputação online e gera novas indicações.',
+  if (ideaScore < 70) {
+    candidates.push({
+      action_type: 'plan_tomorrow',
+      title: 'Escolher 1 decisão para amanhã',
+      description: `Score em ${ideaScore}. Escolha uma única ação preventiva para aplicar amanhã: melhorar confirmação, ajustar encaixes ou revisar horários de maior perda.`,
+      lossValue: 0,
+      priority: 3,
     });
   }
 
-  if (actions.length < 3) {
-    actions.push({
+  if (ideaScore >= 80 && lossMap.total === 0) {
+    candidates.push({
+      action_type: 'maintain',
+      title: 'Manter consistência amanhã',
+      description: 'Dia eficiente sem vazamentos. Mantenha o mesmo protocolo amanhã para consolidar o resultado.',
+      lossValue: 0,
+      priority: 3,
+    });
+  }
+
+  // Fallback filler
+  candidates.push({
+    action_type: 'schedule_admin_block',
+    title: 'Bloquear 30 min para gestão',
+    description: sec
+      ? 'Reserve 30 minutos no final do dia com sua secretária para analisar os números da semana e revisar a agenda dos próximos dias.'
+      : 'Reserve 30 minutos no final do dia para analisar seus números da semana e revisar a agenda dos próximos dias.',
+    lossValue: 0,
+    priority: 4,
+  });
+
+  // ── Select: 1 critical (highest loss) + 2 secondary ──
+  candidates.sort((a, b) => b.lossValue - a.lossValue || a.priority - b.priority);
+
+  const critical = candidates[0];
+  critical.is_critical = true;
+
+  const secondary = candidates.slice(1);
+  // De-duplicate by action_type and pick top 2
+  const seen = new Set([critical.action_type]);
+  const picked: ActionRule[] = [critical];
+  for (const c of secondary) {
+    if (picked.length >= 3) break;
+    if (seen.has(c.action_type)) continue;
+    seen.add(c.action_type);
+    picked.push(c);
+  }
+
+  // Ensure always 3
+  while (picked.length < 3) {
+    picked.push({
       action_type: 'schedule_admin_block',
       title: 'Bloquear 30 min para gestão',
-      description: sec
-        ? 'Reserve 30 minutos no final do dia com sua secretária para analisar os números da semana, revisar a agenda dos próximos dias e identificar horários que precisam de atenção.'
-        : 'Reserve 30 minutos no final do dia para analisar seus números da semana, revisar a agenda dos próximos dias e identificar horários que precisam de atenção.',
+      description: 'Reserve 30 minutos para revisar seus números e planejar o próximo dia.',
     });
   }
 
-  return actions.slice(0, 3);
+  return picked.slice(0, 3);
 }
 
 // Legacy alias kept for compatibility
