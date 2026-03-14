@@ -91,17 +91,38 @@ function CheckinField({
   label,
   value,
   onChange,
+  max,
+  hint,
 }: {
   label: string;
   value: number;
   onChange: (v: number) => void;
+  max?: number;
+  hint?: string;
 }) {
+  const atMax = max !== undefined && value >= max;
   return (
     <div className="flex w-full flex-col gap-2.5">
-      <Label className="w-full whitespace-normal text-left text-sm font-semibold leading-snug text-foreground">
-        {label}
-      </Label>
-      <Stepper value={value} onChange={onChange} />
+      <div className="flex items-center justify-between">
+        <Label className="whitespace-normal text-left text-sm font-semibold leading-snug text-foreground">
+          {label}
+        </Label>
+        {max !== undefined && (
+          <span className={cn(
+            "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
+            atMax ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"
+          )}>
+            máx: {max}
+          </span>
+        )}
+      </div>
+      <Stepper value={value} onChange={v => onChange(max !== undefined ? Math.min(v, max) : v)} />
+      {hint && (
+        <p className="text-[10px] text-idea-attention flex items-center gap-1">
+          <AlertCircle className="h-3 w-3 shrink-0" />
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
