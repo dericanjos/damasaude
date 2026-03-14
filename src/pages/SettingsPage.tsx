@@ -70,6 +70,8 @@ function LocationEditDialog({
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [ticketAvg, setTicketAvg] = useState(250);
+  const [ticketPrivLoc, setTicketPrivLoc] = useState(250);
+  const [ticketInsLoc, setTicketInsLoc] = useState(100);
   const [hasSecretaryLoc, setHasSecretaryLoc] = useState(false);
   const [activeDays, setActiveDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [schedules, setSchedules] = useState<Record<number, ScheduleEntry>>({});
@@ -79,6 +81,8 @@ function LocationEditDialog({
       setName(location.name);
       setAddress(location.address);
       setTicketAvg(existingFinancial?.ticket_avg ?? 250);
+      setTicketPrivLoc((existingFinancial as any)?.ticket_private ?? 250);
+      setTicketInsLoc((existingFinancial as any)?.ticket_insurance ?? 100);
       setHasSecretaryLoc(location.has_secretary ?? false);
       const days = existingSchedules.map(s => s.weekday);
       setActiveDays(days.length > 0 ? days : [1, 2, 3, 4, 5]);
@@ -96,6 +100,8 @@ function LocationEditDialog({
       setName('');
       setAddress('');
       setTicketAvg(250);
+      setTicketPrivLoc(250);
+      setTicketInsLoc(100);
       setHasSecretaryLoc(false);
       setActiveDays([1, 2, 3, 4, 5]);
       setSchedules({});
