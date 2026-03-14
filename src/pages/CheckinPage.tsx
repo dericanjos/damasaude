@@ -236,6 +236,16 @@ export default function CheckinPage() {
   const maxCancellations = Math.max(0, effectiveCapacity - totalAttendedNow - totalNoshowsNow);
 
   const totalOutcomes = totalAttendedNow + totalNoshowsNow + form.cancellations;
+
+  // Auto-calculate empty_slots = scheduled - outcomes (buracos are only from scheduled slots)
+  const autoEmptySlots = Math.max(0, form.appointments_scheduled - totalOutcomes);
+
+  // Keep empty_slots in sync automatically
+  useEffect(() => {
+    if (!quickMode) {
+      setForm(prev => ({ ...prev, empty_slots: autoEmptySlots }));
+    }
+  }, [autoEmptySlots, quickMode]);
   const hasValidationError = !quickMode && effectiveCapacity > 0 && totalOutcomes > effectiveCapacity;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -841,7 +851,20 @@ export default function CheckinPage() {
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Outros indicadores</p>
               <CheckinField label="Novos Agendamentos" value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
-              <CheckinField label="Buracos na Agenda" value={form.empty_slots} onChange={v => setField('empty_slots', v)} />
+              <div className="flex w-full flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <Label className="whitespace-normal text-left text-sm font-semibold leading-snug text-foreground">
+                    Buracos na Agenda
+                  </Label>
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    auto
+                  </span>
+                </div>
+                <p className="text-center text-2xl font-bold text-foreground">{form.empty_slots}</p>
+                <p className="text-[10px] text-muted-foreground text-center">
+                  Calculado automaticamente: {form.appointments_scheduled} agendados − {totalOutcomes} desfechos
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center justify-between rounded-2xl bg-card border border-border/60 p-4 shadow-card">
