@@ -70,6 +70,8 @@ export default function Dashboard() {
   const { data: allFinancials = [] } = useAllLocationFinancials();
   const { data: allSchedules = [] } = useAllLocationSchedules();
 
+  useCheckinRealtime();
+
   const [checkinCollapsed, setCheckinCollapsed] = useState(true);
 
   const doctorName = (clinic as any)?.doctor_name || user?.user_metadata?.doctor_name || '';
