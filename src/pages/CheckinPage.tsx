@@ -207,6 +207,7 @@ export default function CheckinPage() {
         cancellations: l.cancellations,
         new_appointments: l.new_appointments,
         empty_slots: l.empty_slots,
+        extra_appointments: l.extra_appointments ?? 0,
         followup_done: false,
         notes: '',
       });
