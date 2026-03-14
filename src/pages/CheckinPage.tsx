@@ -238,12 +238,12 @@ export default function CheckinPage() {
   // Effective capacity = scheduled slots + extra (encaixes)
   const effectiveCapacity = form.appointments_scheduled + form.extra_appointments;
 
-  // Cascading limits
+  // Symmetric limits: each outcome type competes equally for remaining capacity
   const totalAttendedNow = form.attended_private + form.attended_insurance;
-  const maxAttendedTotal = effectiveCapacity; // can't attend more than effective capacity
-  const maxNoshowsTotal = effectiveCapacity - totalAttendedNow; // remaining after attended
   const totalNoshowsNow = form.noshows_private + form.noshows_insurance;
   const totalCancellationsNow = form.cancellations_private + form.cancellations_insurance;
+  const maxAttendedTotal = Math.max(0, effectiveCapacity - totalNoshowsNow - totalCancellationsNow);
+  const maxNoshowsTotal = Math.max(0, effectiveCapacity - totalAttendedNow - totalCancellationsNow);
   const maxCancellationsTotal = Math.max(0, effectiveCapacity - totalAttendedNow - totalNoshowsNow);
 
   const totalOutcomes = totalAttendedNow + totalNoshowsNow + totalCancellationsNow;
@@ -1001,15 +1001,15 @@ export default function CheckinPage() {
                     label="Atendimentos Particular"
                     value={form.attended_private}
                     onChange={v => setField('attended_private', v)}
-                    max={Math.max(0, effectiveCapacity - form.attended_insurance)}
-                    hint={totalAttendedNow >= effectiveCapacity ? `Limite de ${effectiveCapacity} atendimentos atingido.` : undefined}
+                    max={Math.max(0, maxAttendedTotal - form.attended_insurance)}
+                    hint={totalAttendedNow >= maxAttendedTotal && maxAttendedTotal < effectiveCapacity ? `Restam ${maxAttendedTotal} vagas (descontando perdas já registradas).` : undefined}
                   />
                   <CheckinField
                     label="Atendimentos Convênio"
                     value={form.attended_insurance}
                     onChange={v => setField('attended_insurance', v)}
-                    max={Math.max(0, effectiveCapacity - form.attended_private)}
-                    hint={totalAttendedNow >= effectiveCapacity ? `Limite de ${effectiveCapacity} atendimentos atingido.` : undefined}
+                    max={Math.max(0, maxAttendedTotal - form.attended_private)}
+                    hint={totalAttendedNow >= maxAttendedTotal && maxAttendedTotal < effectiveCapacity ? `Restam ${maxAttendedTotal} vagas (descontando perdas já registradas).` : undefined}
                   />
                 </>
               ) : (
