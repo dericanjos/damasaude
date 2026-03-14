@@ -630,7 +630,7 @@ export default function CheckinPage() {
               </p>
             </div>
           )}
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">⚠️ No-shows</p>
+          <p className="text-sm font-extrabold text-foreground uppercase tracking-wider">⚠️ No-shows</p>
           {paymentType === 'ambos' ? (
             <>
               <CheckinField
