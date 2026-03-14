@@ -140,11 +140,14 @@ export interface LossMap {
 
 export function calculateLossMap(
   data: CheckinData,
-  ticketAvg: number,
+  ticketPrivate = DEFAULT_TICKET_PRIVATE,
+  ticketInsurance = DEFAULT_TICKET_INSURANCE,
+  ticketAvg?: number,
 ): LossMap {
-  const noshow = totalNoshows(data) * ticketAvg;
-  const cancel = data.cancellations * ticketAvg;
-  const buracos = data.empty_slots * ticketAvg;
+  const noshow = (data.noshows_private * ticketPrivate) + (data.noshows_insurance * ticketInsurance);
+  const avg = ticketAvg ?? ((ticketPrivate + ticketInsurance) / 2);
+  const cancel = data.cancellations * avg;
+  const buracos = data.empty_slots * avg;
   const total = noshow + cancel + buracos;
 
   let biggest: LossMap['biggest'] = null;
@@ -158,63 +161,69 @@ export function calculateLossMap(
   return { noshow, cancel, buracos, total, biggest };
 }
 
-const PROTECTION = 'O mais importante é consistência; ajuste ao seu fluxo.';
+const CTA_DAMA = 'Se quiser, a DAMA te entrega isso pronto com secretária e rotina montada.';
 
 export function generateActions(
   data: CheckinData,
   targetNoshowRate: number,
   ideaScore: number,
   hasSecretary = false,
-  ticketAvg = 250,
+  ticketPrivate = DEFAULT_TICKET_PRIVATE,
+  ticketInsurance = DEFAULT_TICKET_INSURANCE,
+  ticketAvg?: number,
 ): ActionRule[] {
   const sec = hasSecretary;
-  const lossMap = calculateLossMap(data, ticketAvg);
+  const lossMap = calculateLossMap(data, ticketPrivate, ticketInsurance, ticketAvg);
   const noshows = totalNoshows(data);
+  const isCritical = ideaScore < 70;
 
   // ── Build candidate pool ──
   const candidates: (ActionRule & { lossValue: number; priority: number })[] = [];
 
   if (noshows > 0) {
+    const impacto = `${noshows} falta${noshows > 1 ? 's' : ''} = R$${lossMap.noshow} perdidos.`;
     candidates.push({
       action_type: 'map_noshow',
-      title: 'Mapear concentração de no-show',
+      title: 'Confirmar pacientes de amanhã agora',
       description: sec
-        ? `${noshows} falta${noshows > 1 ? 's' : ''} hoje. Uma prática comum é pedir à secretária para verificar em quais horários o no-show se concentrou (manhã vs tarde, tipo de consulta). ${PROTECTION}`
-        : `${noshows} falta${noshows > 1 ? 's' : ''} hoje. Uma prática comum é verificar em quais horários o no-show se concentrou e reforçar confirmação nesses blocos (D-1 e D-0). ${PROTECTION}`,
+        ? `${impacto} Faça assim hoje: (1) Secretária envia WhatsApp de confirmação D-1 para todos de amanhã. (2) Quem não respondeu em 2h, ligação. (3) Sem resposta = acione lista de espera. ⏱ 15 min. ${isCritical ? CTA_DAMA : ''}`
+        : `${impacto} Faça assim hoje: (1) Envie WhatsApp de confirmação D-1 para todos de amanhã. (2) Quem não respondeu em 2h, mande "Posso liberar seu horário?". (3) Sem OK = encaixe da lista de espera. ⏱ 10 min.`,
       lossValue: lossMap.noshow,
       priority: 1,
     });
   }
 
   if (data.cancellations > 0) {
+    const impacto = `${data.cancellations} cancelamento${data.cancellations > 1 ? 's' : ''} = R$${lossMap.cancel} perdidos.`;
     candidates.push({
       action_type: 'review_cancellations',
-      title: 'Revisar padrão de reagendamento do dia',
+      title: 'Reagendar cancelamentos de hoje',
       description: sec
-        ? `${data.cancellations} cancelamento${data.cancellations > 1 ? 's' : ''} hoje. Uma prática comum é a secretária verificar se houve remarcação e registrar o motivo. ${PROTECTION}`
-        : `${data.cancellations} cancelamento${data.cancellations > 1 ? 's' : ''} hoje. Uma prática comum é verificar se houve remarcação e registrar o motivo principal. ${PROTECTION}`,
+        ? `${impacto} Roteiro rápido: (1) Secretária liga para quem cancelou e oferece 2 datas alternativas. (2) Se não reagendar, registre o motivo. (3) Preencha o horário com lista de espera. ⏱ 10 min. ${isCritical ? CTA_DAMA : ''}`
+        : `${impacto} Roteiro rápido: (1) Mande WhatsApp: "Vi que precisou desmarcar. Tenho [data] ou [data], qual prefere?". (2) Se não reagendar, registre o motivo. ⏱ 5 min.`,
       lossValue: lossMap.cancel,
       priority: 1,
     });
   }
 
   if (data.empty_slots >= 2) {
+    const impacto = `${data.empty_slots} buracos = R$${lossMap.buracos} perdidos.`;
     candidates.push({
       action_type: 'fill_slots_2x',
-      title: 'Rodar rotina de preenchimento 2x hoje',
+      title: 'Preencher buracos da agenda',
       description: sec
-        ? `${data.empty_slots} buracos na agenda. Uma prática comum é acionar a lista de espera pela manhã e novamente à tarde. ${PROTECTION}`
-        : `${data.empty_slots} buracos na agenda. Uma prática comum é acionar a lista de espera agora e uma segunda vez à tarde. ${PROTECTION}`,
+        ? `${impacto} Faça assim: (1) Secretária aciona lista de espera agora. (2) Segunda rodada às 14h. (3) Se sobrar vaga, ofereça encaixe para pacientes de retorno. ⏱ 20 min total. ${isCritical ? CTA_DAMA : ''}`
+        : `${impacto} Faça assim: (1) Acione sua lista de espera via WhatsApp agora. (2) Segunda tentativa às 14h. (3) Antecipe retornos se possível. ⏱ 10 min.`,
       lossValue: lossMap.buracos,
       priority: 1,
     });
   } else if (data.empty_slots === 1) {
     candidates.push({
       action_type: 'fill_slots',
-      title: 'Preencher vaga aberta',
+      title: 'Preencher 1 vaga aberta',
       description: sec
-        ? `1 buraco na agenda. Uma prática comum é acionar a lista de espera ou antecipar uma consulta futura. ${PROTECTION}`
-        : `1 buraco na agenda. Uma prática comum é acionar a lista de espera ou antecipar uma consulta futura. ${PROTECTION}`,
+        ? `1 buraco na agenda = R$${lossMap.buracos} perdidos. Secretária: acione lista de espera ou antecipe um retorno. ⏱ 5 min.`
+        : `1 buraco na agenda = R$${lossMap.buracos} perdidos. Acione lista de espera ou antecipe um retorno. ⏱ 5 min.`,
       lossValue: lossMap.buracos,
       priority: 2,
     });
@@ -223,10 +232,10 @@ export function generateActions(
   if (!data.followup_done) {
     candidates.push({
       action_type: 'followup_2x',
-      title: 'Executar follow-up em 2 janelas',
+      title: 'Fazer follow-up dos pacientes de hoje',
       description: sec
-        ? `Follow-up pendente. Uma prática comum é fazer contato pela manhã e uma segunda rodada à tarde (WhatsApp ou ligação). ${PROTECTION}`
-        : `Follow-up pendente. Uma prática comum é fazer contato pela manhã e uma segunda rodada à tarde. ${PROTECTION}`,
+        ? `Follow-up pendente. Faça assim: (1) Secretária envia mensagem de pós-consulta até 18h. (2) Pacientes que faltaram: "Notamos que não conseguiu vir. Quer reagendar?". ⏱ 10 min.`
+        : `Follow-up pendente. Copie e cole: "Olá [nome], como está se sentindo após a consulta?" Para quem faltou: "Vi que não conseguiu vir. Posso agendar outro horário?". ⏱ 10 min.`,
       lossValue: 0,
       priority: 2,
     });
@@ -235,8 +244,8 @@ export function generateActions(
   if (ideaScore < 70) {
     candidates.push({
       action_type: 'plan_tomorrow',
-      title: 'Escolher 1 decisão para amanhã',
-      description: `Score em ${ideaScore}. Uma prática comum é escolher uma única ação preventiva para amanhã: melhorar confirmação D-1, ajustar encaixes ou revisar horários de maior perda. ${PROTECTION}`,
+      title: 'Definir 1 ação preventiva para amanhã',
+      description: `Score em ${ideaScore} — dia difícil, mas recuperável. Escolha UMA ação: reforçar confirmação D-1, abrir encaixes extras ou ajustar horários de maior perda. Impacto estimado: até R$${Math.round(lossMap.total * 0.3)} recuperáveis.`,
       lossValue: 0,
       priority: 3,
     });
@@ -245,8 +254,8 @@ export function generateActions(
   if (ideaScore >= 80 && lossMap.total === 0) {
     candidates.push({
       action_type: 'maintain',
-      title: 'Manter consistência amanhã',
-      description: `Dia eficiente sem vazamentos. Uma prática comum é manter o mesmo protocolo amanhã para consolidar o resultado. ${PROTECTION}`,
+      title: 'Manter o ritmo amanhã',
+      description: `Dia eficiente sem vazamentos — parabéns. Mantenha o mesmo protocolo de confirmação e preenchimento amanhã para consolidar.`,
       lossValue: 0,
       priority: 3,
     });
@@ -255,10 +264,10 @@ export function generateActions(
   // Fallback filler
   candidates.push({
     action_type: 'schedule_admin_block',
-    title: 'Bloquear 30 min para gestão',
+    title: 'Revisar números do dia em 5 min',
     description: sec
-      ? `Uma prática comum é reservar 30 min no fim do dia com a secretária para revisar números da semana. ${PROTECTION}`
-      : `Uma prática comum é reservar 30 min no fim do dia para revisar seus números e planejar o próximo dia. ${PROTECTION}`,
+      ? `Reserve 5 min com a secretária no fim do expediente: quantos atendeu, quantos faltaram, agenda de amanhã lotada? Essa rotina simples evita surpresas.`
+      : `Reserve 5 min no fim do expediente: quantos atendeu, quantos faltaram, amanhã está lotado? Essa rotina evita surpresas.`,
     lossValue: 0,
     priority: 4,
   });
@@ -269,11 +278,9 @@ export function generateActions(
   const critical = candidates[0];
   critical.is_critical = true;
 
-  const secondary = candidates.slice(1);
-  // De-duplicate by action_type and pick top 2
   const seen = new Set([critical.action_type]);
   const picked: ActionRule[] = [critical];
-  for (const c of secondary) {
+  for (const c of candidates.slice(1)) {
     if (picked.length >= 3) break;
     if (seen.has(c.action_type)) continue;
     seen.add(c.action_type);
@@ -284,8 +291,8 @@ export function generateActions(
   while (picked.length < 3) {
     picked.push({
       action_type: 'schedule_admin_block',
-      title: 'Bloquear 30 min para gestão',
-      description: `Uma prática comum é reservar 30 min para revisar seus números e planejar o próximo dia. ${PROTECTION}`,
+      title: 'Revisar números do dia em 5 min',
+      description: `Reserve 5 min no fim do expediente para revisar números e planejar amanhã.`,
     });
   }
 

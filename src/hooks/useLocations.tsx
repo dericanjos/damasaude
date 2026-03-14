@@ -31,6 +31,8 @@ export interface LocationFinancial {
   user_id: string;
   location_id: string;
   ticket_avg: number;
+  ticket_private: number;
+  ticket_insurance: number;
   notes: string | null;
 }
 
