@@ -225,11 +225,18 @@ export default function CheckinPage() {
   // Locations already checked in today
   const checkedInLocationIds = allTodayCheckins.map((c: any) => c.location_id).filter(Boolean);
 
-  const totalOutcomes = form.attended_private + form.attended_insurance + form.noshows_private + form.noshows_insurance + form.cancellations;
-  const hasValidationError = !quickMode && (
-    (form.appointments_scheduled > 0 && totalOutcomes > form.appointments_scheduled) ||
-    totalOutcomes > dailyCapacity
-  );
+  // Effective capacity = scheduled slots + extra (encaixes)
+  const effectiveCapacity = form.appointments_scheduled + form.extra_appointments;
+
+  // Cascading limits
+  const totalAttendedNow = form.attended_private + form.attended_insurance;
+  const maxAttendedTotal = effectiveCapacity; // can't attend more than effective capacity
+  const maxNoshowsTotal = effectiveCapacity - totalAttendedNow; // remaining after attended
+  const totalNoshowsNow = form.noshows_private + form.noshows_insurance;
+  const maxCancellations = Math.max(0, effectiveCapacity - totalAttendedNow - totalNoshowsNow);
+
+  const totalOutcomes = totalAttendedNow + totalNoshowsNow + form.cancellations;
+  const hasValidationError = !quickMode && effectiveCapacity > 0 && totalOutcomes > effectiveCapacity;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
