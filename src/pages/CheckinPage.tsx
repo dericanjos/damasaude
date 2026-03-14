@@ -630,7 +630,7 @@ export default function CheckinPage() {
               </p>
             </div>
           )}
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">⚠️ No-shows</p>
+          <p className="text-sm font-extrabold text-foreground uppercase tracking-wider">⚠️ No-shows</p>
           {paymentType === 'ambos' ? (
             <>
               <CheckinField
@@ -654,7 +654,7 @@ export default function CheckinPage() {
               max={Math.max(0, maxNoshowsTotal)}
             />
           )}
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">🚫 Cancelamentos</p>
+          <p className="text-sm font-extrabold text-foreground uppercase tracking-wider mt-4 pt-4 border-t border-border/40">🚫 Cancelamentos</p>
           {paymentType === 'ambos' ? (
             <>
               <CheckinField
@@ -679,11 +679,9 @@ export default function CheckinPage() {
             />
           )}
           {/* Buracos auto */}
-          <div className="flex w-full flex-col gap-2.5 border-t border-border/40 pt-4">
+          <div className="flex w-full flex-col gap-2.5 border-t border-border/40 pt-4 mt-4">
             <div className="flex items-center justify-between">
-              <Label className="whitespace-normal text-left text-sm font-semibold leading-snug text-foreground">
-                Buracos na Agenda
-              </Label>
+              <p className="text-sm font-extrabold text-foreground uppercase tracking-wider">📊 Buracos na Agenda</p>
               <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
                 auto
               </span>
@@ -694,7 +692,7 @@ export default function CheckinPage() {
             </p>
           </div>
 
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">🔄 Remarcações</p>
+          <p className="text-sm font-extrabold text-foreground uppercase tracking-wider mt-4 pt-4 border-t border-border/40">🔄 Remarcações</p>
           <CheckinField
             label="Consultas remarcadas"
             value={form.rescheduled}
@@ -1027,7 +1025,7 @@ export default function CheckinPage() {
                 </div>
               )}
               <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">⚠️ Consultas não realizadas</p>
+                <p className="text-sm font-extrabold text-foreground uppercase tracking-wider">⚠️ No-shows</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">Registre conforme ocorrerem ou ao final do dia</p>
               </div>
               {paymentType === 'ambos' ? (
@@ -1055,7 +1053,7 @@ export default function CheckinPage() {
                   max={Math.max(0, maxNoshowsTotal)}
                 />
               )}
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">🚫 Cancelamentos</p>
+              <p className="text-sm font-extrabold text-foreground uppercase tracking-wider mt-4 pt-4 border-t border-border/40">🚫 Cancelamentos</p>
               {paymentType === 'ambos' ? (
                 <>
                   <CheckinField
@@ -1083,11 +1081,9 @@ export default function CheckinPage() {
                 />
               )}
               {/* Buracos auto */}
-              <div className="flex w-full flex-col gap-2.5 border-t border-border/40 pt-4">
+              <div className="flex w-full flex-col gap-2.5 border-t border-border/40 pt-4 mt-4">
                 <div className="flex items-center justify-between">
-                  <Label className="whitespace-normal text-left text-sm font-semibold leading-snug text-foreground">
-                    Buracos na Agenda
-                  </Label>
+                  <p className="text-sm font-extrabold text-foreground uppercase tracking-wider">📊 Buracos na Agenda</p>
                   <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
                     auto
                   </span>
@@ -1097,7 +1093,7 @@ export default function CheckinPage() {
                   Calculado automaticamente: {form.appointments_scheduled} agendados − {totalOutcomes} desfechos
                 </p>
               </div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">🔄 Remarcações</p>
+              <p className="text-sm font-extrabold text-foreground uppercase tracking-wider mt-4 pt-4 border-t border-border/40">🔄 Remarcações</p>
               <CheckinField label="Consultas remarcadas" value={form.rescheduled} onChange={v => setField('rescheduled', v)} />
             </div>
             )}
