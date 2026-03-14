@@ -362,6 +362,31 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* ── QUICK UPDATE BUTTONS (only after check-in) ── */}
+      {todayScore != null && (
+        <div className="space-y-2">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">🔄 Atualize durante o dia</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => navigate('/checkin?section=encaixes')}
+              className="rounded-2xl bg-card border border-border/60 p-3.5 text-left transition-all hover:border-primary/40 active:scale-[0.98] shadow-card"
+            >
+              <Zap className="h-4 w-4 text-primary mb-1.5" />
+              <p className="text-sm font-semibold text-foreground">Encaixes</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Consultas extras</p>
+            </button>
+            <button
+              onClick={() => navigate('/checkin?section=perdas')}
+              className="rounded-2xl bg-card border border-border/60 p-3.5 text-left transition-all hover:border-primary/40 active:scale-[0.98] shadow-card"
+            >
+              <FileX className="h-4 w-4 text-idea-attention mb-1.5" />
+              <p className="text-sm font-semibold text-foreground">Não realizadas</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">No-shows e cancelamentos</p>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── LOSS RADAR / TREND ALERT (only after check-in) ── */}
       {todayScore != null && <LossRadarCard />}
 
