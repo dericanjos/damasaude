@@ -200,11 +200,22 @@ export default function CheckinPage() {
   // Locations already checked in today
   const checkedInLocationIds = allTodayCheckins.map((c: any) => c.location_id).filter(Boolean);
 
+  const totalOutcomes = form.attended_private + form.attended_insurance + form.noshows_private + form.noshows_insurance + form.cancellations;
+  const hasValidationError = !quickMode && (
+    (form.appointments_scheduled > 0 && totalOutcomes > form.appointments_scheduled) ||
+    totalOutcomes > dailyCapacity
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedLocationId) {
       toast.error('Selecione um local de atendimento');
+      return;
+    }
+
+    if (hasValidationError) {
+      toast.error('Corrija os valores inconsistentes antes de salvar.');
       return;
     }
 
