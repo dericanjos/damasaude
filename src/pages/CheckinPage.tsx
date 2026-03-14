@@ -29,9 +29,12 @@ type FormData = {
   noshows_private: number;
   noshows_insurance: number;
   cancellations: number;
+  cancellations_private: number;
+  cancellations_insurance: number;
   new_appointments: number;
   empty_slots: number;
   extra_appointments: number;
+  rescheduled: number;
   followup_done: boolean;
   notes: string;
 };
@@ -52,9 +55,12 @@ const EMPTY_FORM: FormData = {
   noshows_private: 0,
   noshows_insurance: 0,
   cancellations: 0,
+  cancellations_private: 0,
+  cancellations_insurance: 0,
   new_appointments: 0,
   empty_slots: 0,
   extra_appointments: 0,
+  rescheduled: 0,
   followup_done: false,
   notes: '',
 };
@@ -192,9 +198,12 @@ export default function CheckinPage() {
         noshows_private: e.noshows_private ?? e.no_show ?? 0,
         noshows_insurance: e.noshows_insurance ?? 0,
         cancellations: e.cancellations,
+        cancellations_private: e.cancellations_private ?? e.cancellations ?? 0,
+        cancellations_insurance: e.cancellations_insurance ?? 0,
         new_appointments: e.new_appointments,
         empty_slots: e.empty_slots,
         extra_appointments: e.extra_appointments ?? 0,
+        rescheduled: e.rescheduled ?? 0,
         followup_done: e.followup_done,
         notes: e.notes ?? '',
       });
@@ -230,9 +239,10 @@ export default function CheckinPage() {
   const maxAttendedTotal = effectiveCapacity; // can't attend more than effective capacity
   const maxNoshowsTotal = effectiveCapacity - totalAttendedNow; // remaining after attended
   const totalNoshowsNow = form.noshows_private + form.noshows_insurance;
-  const maxCancellations = Math.max(0, effectiveCapacity - totalAttendedNow - totalNoshowsNow);
+  const totalCancellationsNow = form.cancellations_private + form.cancellations_insurance;
+  const maxCancellationsTotal = Math.max(0, effectiveCapacity - totalAttendedNow - totalNoshowsNow);
 
-  const totalOutcomes = totalAttendedNow + totalNoshowsNow + form.cancellations;
+  const totalOutcomes = totalAttendedNow + totalNoshowsNow + totalCancellationsNow;
 
   // Auto-calculate empty_slots = scheduled - outcomes (buracos are only from scheduled slots)
   const autoEmptySlots = Math.max(0, form.appointments_scheduled - totalOutcomes);
@@ -277,7 +287,7 @@ export default function CheckinPage() {
         attended_insurance: submitData.attended_insurance,
         noshows_private: submitData.noshows_private,
         noshows_insurance: submitData.noshows_insurance,
-        cancellations: submitData.cancellations,
+        cancellations: submitData.cancellations_private + submitData.cancellations_insurance,
         new_appointments: submitData.new_appointments,
         empty_slots: submitData.empty_slots,
         followup_done: submitData.followup_done,
@@ -289,6 +299,7 @@ export default function CheckinPage() {
 
       await saveCheckin.mutateAsync({
         ...submitData,
+        cancellations: submitData.cancellations_private + submitData.cancellations_insurance,
         location_id: selectedLocationId,
         appointments_done: submitData.attended_private + submitData.attended_insurance,
         no_show: submitData.noshows_private + submitData.noshows_insurance,
@@ -527,6 +538,7 @@ export default function CheckinPage() {
     try {
       await saveCheckin.mutateAsync({
         ...form,
+        cancellations: form.cancellations_private + form.cancellations_insurance,
         location_id: selectedLocationId,
         appointments_done: form.attended_private + form.attended_insurance,
         no_show: form.noshows_private + form.noshows_insurance,
@@ -642,12 +654,30 @@ export default function CheckinPage() {
               max={Math.max(0, maxNoshowsTotal)}
             />
           )}
-          <CheckinField
-            label="Cancelamentos"
-            value={form.cancellations}
-            onChange={v => setField('cancellations', v)}
-            max={Math.max(0, maxCancellations)}
-          />
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">🚫 Cancelamentos</p>
+          {paymentType === 'ambos' ? (
+            <>
+              <CheckinField
+                label="Cancelamentos Particular"
+                value={form.cancellations_private}
+                onChange={v => setField('cancellations_private', v)}
+                max={Math.max(0, maxCancellationsTotal - form.cancellations_insurance)}
+              />
+              <CheckinField
+                label="Cancelamentos Convênio"
+                value={form.cancellations_insurance}
+                onChange={v => setField('cancellations_insurance', v)}
+                max={Math.max(0, maxCancellationsTotal - form.cancellations_private)}
+              />
+            </>
+          ) : (
+            <CheckinField
+              label="Cancelamentos"
+              value={paymentType === 'particular' ? form.cancellations_private : form.cancellations_insurance}
+              onChange={v => setField(paymentType === 'particular' ? 'cancellations_private' : 'cancellations_insurance', v)}
+              max={Math.max(0, maxCancellationsTotal)}
+            />
+          )}
           {/* Buracos auto */}
           <div className="flex w-full flex-col gap-2.5 border-t border-border/40 pt-4">
             <div className="flex items-center justify-between">
@@ -663,6 +693,13 @@ export default function CheckinPage() {
               Calculado: {form.appointments_scheduled} agendados − {totalOutcomes} desfechos
             </p>
           </div>
+
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">🔄 Remarcações</p>
+          <CheckinField
+            label="Consultas remarcadas"
+            value={form.rescheduled}
+            onChange={v => setField('rescheduled', v)}
+          />
         </div>
 
         <Button
@@ -763,8 +800,8 @@ export default function CheckinPage() {
             ...(extraAppts > 0 ? [{ label: 'Encaixes', value: extraAppts }] : []),
             { label: 'Atendidos', value: attended },
             { label: 'No-shows', value: noshows },
-            { label: 'Cancelamentos', value: e.cancellations },
-            { label: 'Reagendamentos', value: e.new_appointments },
+            { label: 'Cancelamentos', value: (e.cancellations_private ?? 0) + (e.cancellations_insurance ?? 0) || e.cancellations },
+            { label: 'Remarcações', value: e.rescheduled ?? 0 },
             { label: 'Buracos', value: e.empty_slots },
           ].map(item => (
             <div key={item.label} className="flex items-center justify-between">
@@ -1018,13 +1055,33 @@ export default function CheckinPage() {
                   max={Math.max(0, maxNoshowsTotal)}
                 />
               )}
-              <CheckinField
-                label="Cancelamentos"
-                value={form.cancellations}
-                onChange={v => setField('cancellations', v)}
-                max={Math.max(0, maxCancellations)}
-                hint={maxCancellations <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
-              />
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">🚫 Cancelamentos</p>
+              {paymentType === 'ambos' ? (
+                <>
+                  <CheckinField
+                    label="Cancelamentos Particular"
+                    value={form.cancellations_private}
+                    onChange={v => setField('cancellations_private', v)}
+                    max={Math.max(0, maxCancellationsTotal - form.cancellations_insurance)}
+                    hint={maxCancellationsTotal <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
+                  />
+                  <CheckinField
+                    label="Cancelamentos Convênio"
+                    value={form.cancellations_insurance}
+                    onChange={v => setField('cancellations_insurance', v)}
+                    max={Math.max(0, maxCancellationsTotal - form.cancellations_private)}
+                    hint={maxCancellationsTotal <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
+                  />
+                </>
+              ) : (
+                <CheckinField
+                  label="Cancelamentos"
+                  value={paymentType === 'particular' ? form.cancellations_private : form.cancellations_insurance}
+                  onChange={v => setField(paymentType === 'particular' ? 'cancellations_private' : 'cancellations_insurance', v)}
+                  max={Math.max(0, maxCancellationsTotal)}
+                  hint={maxCancellationsTotal <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
+                />
+              )}
               {/* Buracos auto */}
               <div className="flex w-full flex-col gap-2.5 border-t border-border/40 pt-4">
                 <div className="flex items-center justify-between">
@@ -1040,14 +1097,8 @@ export default function CheckinPage() {
                   Calculado automaticamente: {form.appointments_scheduled} agendados − {totalOutcomes} desfechos
                 </p>
               </div>
-            </div>
-            )}
-
-            {/* ── SEÇÃO 4: OUTROS INDICADORES (só após save) ── */}
-            {(existing || editMode) && (
-            <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">📊 Outros indicadores</p>
-              <CheckinField label="Reagendamentos" value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">🔄 Remarcações</p>
+              <CheckinField label="Consultas remarcadas" value={form.rescheduled} onChange={v => setField('rescheduled', v)} />
             </div>
             )}
 
