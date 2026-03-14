@@ -7,7 +7,7 @@ import { useClinic } from '@/hooks/useClinic';
 import { useCheckinStreak } from '@/hooks/useChecklist';
 import { useGenerateInsight } from '@/hooks/useInsights';
 import { useTodayLocations, useLocationSchedules, useLocationFinancial, type Location } from '@/hooks/useLocations';
-import { calculateIDEA, generateInsightText, getIdeaStatus, getIdeaLabel, getTopLossSources, totalAttended, totalNoshows } from '@/lib/idea';
+import { calculateIDEA, generateInsightText, getIdeaStatus, getIdeaLabel, getTopLossSources, totalAttended, totalNoshows, calculateLossMap } from '@/lib/idea';
 import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET_PRIVATE, DEFAULT_TICKET_INSURANCE } from '@/lib/revenue';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
 import { Button } from '@/components/ui/button';
@@ -46,6 +46,10 @@ type RewardData = {
   occupancyRate: number;
   insightText: string;
   lossSources: string[];
+  lossNoshow: number;
+  lossCancel: number;
+  lossBuracos: number;
+  lossBiggest: 'noshow' | 'cancel' | 'buracos' | null;
 };
 
 const EMPTY_FORM: FormData = {
@@ -110,7 +114,7 @@ function CheckinField({
   return (
     <div className="flex w-full flex-col gap-2.5">
       <div className="flex items-center justify-between">
-        <Label className="whitespace-normal text-left text-sm font-semibold leading-snug text-foreground">
+        <Label className="whitespace-normal text-left text-xs font-medium leading-snug text-muted-foreground">
           {label}
         </Label>
         {max !== undefined && (
@@ -313,6 +317,7 @@ export default function CheckinPage() {
         ticket_private: ticketPrivate,
         ticket_insurance: ticketInsurance,
       });
+      const lossMap = calculateLossMap(checkinData, ticketAvg);
       setReward({
         score: ideaScore,
         estimated: rev.estimated,
@@ -320,6 +325,10 @@ export default function CheckinPage() {
         occupancyRate: rev.occupancyRate,
         insightText,
         lossSources,
+        lossNoshow: lossMap.noshow,
+        lossCancel: lossMap.cancel,
+        lossBuracos: lossMap.buracos,
+        lossBiggest: lossMap.biggest,
       });
       setShowReward(true);
 
@@ -468,11 +477,35 @@ export default function CheckinPage() {
         {/* Top loss sources */}
         {reward.lossSources.length > 0 && (
           <div className="w-full rounded-2xl bg-card border border-border/60 p-4 shadow-card">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5">O que puxou o score hoje</p>
-            <div className="space-y-1.5">
-              {reward.lossSources.map((s, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-foreground">
-                  <span className="text-destructive font-bold">↓</span> {s}
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">🗺️ Mapa do vazamento do dia</p>
+            <div className="space-y-2.5">
+              {[
+                { label: 'No-shows', value: reward.lossNoshow, key: 'noshow' as const, emoji: '⚠️' },
+                { label: 'Cancelamentos', value: reward.lossCancel, key: 'cancel' as const, emoji: '🚫' },
+                { label: 'Buracos', value: reward.lossBuracos, key: 'buracos' as const, emoji: '📊' },
+              ].map(item => (
+                <div
+                  key={item.key}
+                  className={cn(
+                    'flex items-center justify-between rounded-xl px-3 py-2.5 transition-all',
+                    item.key === reward.lossBiggest
+                      ? 'bg-destructive/10 border border-destructive/30'
+                      : 'bg-muted/30'
+                  )}
+                >
+                  <span className={cn(
+                    'text-sm font-medium',
+                    item.key === reward.lossBiggest ? 'text-destructive font-bold' : 'text-foreground'
+                  )}>
+                    {item.emoji} {item.label}
+                    {item.key === reward.lossBiggest && <span className="ml-1.5 text-[10px] font-bold uppercase">maior perda</span>}
+                  </span>
+                  <span className={cn(
+                    'text-sm font-bold',
+                    item.key === reward.lossBiggest ? 'text-destructive' : 'text-foreground'
+                  )}>
+                    {formatBRL(item.value)}
+                  </span>
                 </div>
               ))}
             </div>
