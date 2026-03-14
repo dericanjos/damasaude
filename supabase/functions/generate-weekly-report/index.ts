@@ -74,12 +74,25 @@ serve(async (req) => {
       });
     }
 
-    // Fetch clinic info for context
+    // Fetch clinic info
     const { data: clinic } = await supabase
       .from("clinics")
       .select("ticket_private, ticket_insurance, daily_capacity, target_fill_rate, target_noshow_rate, working_days, has_secretary")
       .eq("id", clinic_id)
       .single();
+
+    // Fetch per-location financials
+    const { data: locationFinancials } = await supabase
+      .from("location_financials")
+      .select("location_id, ticket_private, ticket_insurance, ticket_avg")
+      .eq("user_id", userId);
+
+    // Fetch locations for names
+    const { data: locations } = await supabase
+      .from("locations")
+      .select("id, name")
+      .eq("user_id", userId)
+      .eq("is_active", true);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -87,28 +100,95 @@ serve(async (req) => {
     const workingDays: string[] = Array.isArray(clinic?.working_days) ? clinic.working_days : ["seg", "ter", "qua", "qui", "sex"];
     const workingDaysCount = workingDays.length;
 
-    const ticketPrivate = clinic?.ticket_private ?? 250;
-    const ticketInsurance = clinic?.ticket_insurance ?? 100;
-    const avgTicket = (ticketPrivate + ticketInsurance) / 2;
+    const clinicTicketPriv = clinic?.ticket_private ?? 250;
+    const clinicTicketIns = clinic?.ticket_insurance ?? 100;
     const capacity = clinic?.daily_capacity ?? 16;
 
-    const totalAttPrivate = checkins.reduce((s: number, c: any) => s + (c.attended_private ?? c.appointments_done ?? 0), 0);
-    const totalAttInsurance = checkins.reduce((s: number, c: any) => s + (c.attended_insurance ?? 0), 0);
-    const totalDone = totalAttPrivate + totalAttInsurance;
-    const totalScheduled = checkins.reduce((s: number, c: any) => s + c.appointments_scheduled, 0);
-    const totalNoshowPriv = checkins.reduce((s: number, c: any) => s + (c.noshows_private ?? c.no_show ?? 0), 0);
-    const totalNoshowIns = checkins.reduce((s: number, c: any) => s + (c.noshows_insurance ?? 0), 0);
-    const totalNoShow = totalNoshowPriv + totalNoshowIns;
-    const totalCancel = checkins.reduce((s: number, c: any) => s + c.cancellations, 0);
-    const totalEmpty = checkins.reduce((s: number, c: any) => s + c.empty_slots, 0);
+    // Build per-location ticket maps
+    const locFinMap: Record<string, { ticketPriv: number; ticketIns: number; ticketAvg: number }> = {};
+    for (const f of (locationFinancials || [])) {
+      locFinMap[(f as any).location_id] = {
+        ticketPriv: (f as any).ticket_private ?? clinicTicketPriv,
+        ticketIns: (f as any).ticket_insurance ?? clinicTicketIns,
+        ticketAvg: (f as any).ticket_avg ?? 250,
+      };
+    }
 
-    const revenueEstimated = (totalAttPrivate * ticketPrivate) + (totalAttInsurance * ticketInsurance);
-    const revenueLost = (totalNoshowPriv * ticketPrivate) + (totalNoshowIns * ticketInsurance) + ((totalCancel + totalEmpty) * avgTicket);
+    const locNameMap: Record<string, string> = {};
+    for (const l of (locations || [])) {
+      locNameMap[l.id] = l.name;
+    }
+
+    // Aggregate using split tickets
+    let totalAttPrivate = 0, totalAttInsurance = 0, totalNoshowPriv = 0, totalNoshowIns = 0;
+    let totalCancel = 0, totalEmpty = 0, totalScheduled = 0;
+    let revenueEstimated = 0, revenueLost = 0;
+    const perLocation: Record<string, { attended: number; lost: number; noshows: number; capacity: number }> = {};
+
+    for (const c of checkins) {
+      const locId = c.location_id || "unknown";
+      const fin = locFinMap[locId] ?? { ticketPriv: clinicTicketPriv, ticketIns: clinicTicketIns, ticketAvg: 250 };
+
+      const attP = c.attended_private ?? c.appointments_done ?? 0;
+      const attI = c.attended_insurance ?? 0;
+      const nsP = c.noshows_private ?? c.no_show ?? 0;
+      const nsI = c.noshows_insurance ?? 0;
+      const cancel = c.cancellations ?? 0;
+      const empty = c.empty_slots ?? 0;
+
+      totalAttPrivate += attP;
+      totalAttInsurance += attI;
+      totalNoshowPriv += nsP;
+      totalNoshowIns += nsI;
+      totalCancel += cancel;
+      totalEmpty += empty;
+      totalScheduled += c.appointments_scheduled ?? 0;
+
+      const est = (attP * fin.ticketPriv) + (attI * fin.ticketIns);
+      const lostNs = (nsP * fin.ticketPriv) + (nsI * fin.ticketIns);
+      const lostGen = (cancel + empty) * fin.ticketAvg;
+      const lost = lostNs + lostGen;
+
+      revenueEstimated += est;
+      revenueLost += lost;
+
+      if (!perLocation[locId]) perLocation[locId] = { attended: 0, lost: 0, noshows: 0, capacity: 0 };
+      perLocation[locId].attended += (attP + attI);
+      perLocation[locId].lost += lost;
+      perLocation[locId].noshows += (nsP + nsI);
+      perLocation[locId].capacity += capacity;
+    }
+
+    const totalDone = totalAttPrivate + totalAttInsurance;
+    const totalNoShow = totalNoshowPriv + totalNoshowIns;
 
     const isPartial = checkins.length < workingDaysCount;
     const partialNote = isPartial
-      ? `\n\n---\n*Relatório parcial — você completou ${checkins.length} de ${workingDaysCount} dias de atendimento esta semana.*`
+      ? `\n\n---\n*Relatório parcial — ${checkins.length} de ${workingDaysCount} dias de atendimento.*`
       : "";
+
+    // Determine if multi-location
+    const uniqueLocations = [...new Set(checkins.map((c: any) => c.location_id).filter(Boolean))];
+    const isMultiLocation = uniqueLocations.length > 1;
+
+    // Build comparison block for multi-location
+    let comparisonBlock = "";
+    if (isMultiLocation) {
+      let worstLeakerName = "", worstLeakerLost = 0;
+      let bestOccName = "", bestOcc = -1;
+      let worstNoshowName = "", worstNoshowRate = -1;
+
+      for (const [locId, data] of Object.entries(perLocation)) {
+        const name = locNameMap[locId] || "Local";
+        if (data.lost > worstLeakerLost) { worstLeakerLost = data.lost; worstLeakerName = name; }
+        const occ = data.capacity > 0 ? data.attended / data.capacity : 0;
+        if (occ > bestOcc) { bestOcc = occ; bestOccName = name; }
+        const nsRate = data.attended + data.noshows > 0 ? data.noshows / (data.attended + data.noshows) : 0;
+        if (nsRate > worstNoshowRate) { worstNoshowRate = nsRate; worstNoshowName = name; }
+      }
+
+      comparisonBlock = `\n\n**Comparativo entre locais:**\n• Maior vazamento (R$): ${worstLeakerName} — R$${Math.round(worstLeakerLost)}\n• Maior no-show: ${worstNoshowName} — ${Math.round(worstNoshowRate * 100)}%\n• Melhor ocupação: ${bestOccName} — ${Math.round(bestOcc * 100)}%`;
+    }
 
     const summary = {
       dias_com_checkin: checkins.length,
@@ -125,12 +205,17 @@ serve(async (req) => {
       total_buracos: totalEmpty,
       receita_estimada: revenueEstimated,
       receita_perdida: revenueLost,
-      ticket_particular: ticketPrivate,
-      ticket_convenio: ticketInsurance,
-      taxa_ocupacao_media: `${Math.round((totalDone / (checkins.length * capacity)) * 100)}%`,
+      taxa_ocupacao_media: `${checkins.length > 0 ? Math.round((totalDone / (checkins.length * Math.max(capacity, 1))) * 100) : 0}%`,
       taxa_noshow: `${totalScheduled > 0 ? Math.round((totalNoShow / totalScheduled) * 100) : 0}%`,
       meta_ocupacao: `${Math.round((clinic?.target_fill_rate ?? 0.85) * 100)}%`,
       meta_noshow: `${Math.round((clinic?.target_noshow_rate ?? 0.05) * 100)}%`,
+      multi_local: isMultiLocation,
+      locais: isMultiLocation ? Object.entries(perLocation).map(([id, d]) => ({
+        nome: locNameMap[id] || id,
+        atendidos: d.attended,
+        perdido: Math.round(d.lost),
+        noshows: d.noshows,
+      })) : undefined,
     };
 
     const hasSecretary = clinic?.has_secretary ?? false;
@@ -138,16 +223,30 @@ serve(async (req) => {
       ? "O médico TEM secretária. No plano de ação, sugira delegação de tarefas operacionais à secretária."
       : "O médico NÃO tem secretária. No plano de ação, sugira automação, uso de WhatsApp Business e ações diretas.";
 
-    const systemPrompt = `Você é um consultor de negócios especialista em clínicas médicas. ${secretaryContext}
+    const multiLocInstructions = isMultiLocation
+      ? `\nEste relatório é CONSOLIDADO de ${uniqueLocations.length} locais. Inclua:
+1. Parágrafo de visão geral da rede (receita total, perdida, ocupação, no-show).
+2. Bloco comparativo direto entre locais (maior vazamento, maior no-show, melhor ocupação).
+3. Plano de ação com 3 tarefas focadas no local com maior vazamento.`
+      : "";
+
+    const systemPrompt = `Você é um consultor de negócios especialista em clínicas médicas. ${secretaryContext}${multiLocInstructions}
 
 Analise os dados da última semana e gere um relatório estratégico conciso em 3 seções:
-1. **👍 O que foi bem:** Destaque 1 ou 2 pontos positivos (ex: baixa taxa de no-show, alta ocupação).
-2. **⚠️ Pontos de atenção:** Identifique o maior problema da semana (ex: muitos buracos na agenda, queda no faturamento).
-3. **🎯 Plano de Ação para a próxima semana:** Sugira 2 a 3 ações práticas e específicas para resolver os pontos de atenção.
+1. **👍 O que foi bem:** Destaque 1 ou 2 pontos positivos.
+2. **⚠️ Pontos de atenção:** Identifique o maior problema da semana com impacto em R$.
+3. **🎯 Plano de Ação (3 tarefas):** Ações práticas e diretas. Para cada ação: o que fazer, tempo estimado e impacto esperado em R$. Tom direto e operacional ("Faça assim:", "Roteiro rápido:"). Máximo 3 tarefas + 1 frase de motivação.
 
-IMPORTANTE: Os dados diferenciam pacientes particulares e de convênio. Use essa informação para dar insights mais precisos sobre mix de receita e estratégia de precificação.
+${isPartial ? "IMPORTANTE: Este é um relatório PARCIAL. Module afirmações — evite conclusões definitivas com dados incompletos." : ""}
 
-Use um tom profissional, direto e encorajador. Responda APENAS em português brasileiro. Máximo 300 palavras.`;
+REGRAS DE TEXTO:
+- Tom direto, médico-friendly, realista. Nada professoral.
+- Sempre mostre o "porquê" em 1 linha (impacto em R$ ou agenda).
+- Se o score ou resultado for crítico, insira: "Se quiser, a DAMA te entrega isso pronto com secretária e rotina montada."
+- Os dados diferenciam pacientes particulares e de convênio. Use isso para insights de mix de receita.
+- Nunca mencione "IA", "inteligência artificial" ou "consultor". Tudo é funcionalidade nativa DAMA.
+- Máximo 350 palavras.
+- Responda APENAS em português brasileiro.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -159,7 +258,7 @@ Use um tom profissional, direto e encorajador. Responda APENAS em português bra
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Dados resumidos da semana (${week_start}): ${JSON.stringify(summary)}` },
+          { role: "user", content: `Dados resumidos da semana (${week_start}): ${JSON.stringify(summary)}${comparisonBlock}` },
         ],
         stream: false,
       }),
@@ -172,13 +271,13 @@ Use um tom profissional, direto e encorajador. Responda APENAS em português bra
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes para IA." }), {
+        return new Response(JSON.stringify({ error: "Créditos insuficientes." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
       console.error("AI error:", response.status, t);
-      throw new Error("Erro ao gerar relatório com IA");
+      throw new Error("Erro ao gerar relatório");
     }
 
     const result = await response.json();

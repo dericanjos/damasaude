@@ -52,7 +52,7 @@ export function useGenerateActions() {
         .eq('location_id', locationId);
 
       const ideaScore = calculateIDEA(checkinData);
-      // Get has_secretary and ticket from the specific location
+      // Get has_secretary and tickets from the specific location
       const { data: loc } = await supabase
         .from('locations')
         .select('has_secretary')
@@ -60,12 +60,14 @@ export function useGenerateActions() {
         .single();
       const { data: fin } = await supabase
         .from('location_financials')
-        .select('ticket_avg')
+        .select('ticket_avg, ticket_private, ticket_insurance')
         .eq('location_id', locationId)
         .maybeSingle();
       const hasSecretary = (loc as any)?.has_secretary ?? (clinic as any)?.has_secretary ?? false;
-      const ticketAvg = (fin as any)?.ticket_avg ?? (clinic as any)?.ticket_medio ?? 250;
-      const actions = generateActions(checkinData, clinic.target_noshow_rate, ideaScore, hasSecretary, ticketAvg);
+      const ticketPrivate = (fin as any)?.ticket_private ?? (clinic as any)?.ticket_private ?? 250;
+      const ticketInsurance = (fin as any)?.ticket_insurance ?? (clinic as any)?.ticket_insurance ?? 100;
+      const ticketAvg = (fin as any)?.ticket_avg ?? 250;
+      const actions = generateActions(checkinData, clinic.target_noshow_rate, ideaScore, hasSecretary, ticketPrivate, ticketInsurance, ticketAvg);
 
       const { data, error } = await supabase
         .from('daily_actions')

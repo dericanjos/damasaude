@@ -14,7 +14,7 @@ import { useActiveLocations, useAllLocationFinancials, useAllLocationSchedules }
 import { calculateIDEA, getIdeaStatus, getIdeaLabel, totalAttended, totalNoshows, type CheckinData } from '@/lib/idea';
 import { calculateRevenue, formatBRL, formatPercent, safePercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET_PRIVATE, DEFAULT_TICKET_INSURANCE } from '@/lib/revenue';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
-import { aggregateCheckins, getWorstLeaker } from '@/lib/aggregation';
+import { aggregateCheckins, getWorstLeaker, getMostEfficient } from '@/lib/aggregation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -144,6 +144,11 @@ export default function Dashboard() {
   const worstLeaker = useMemo(() => {
     if (!consolidated) return null;
     return getWorstLeaker(consolidated.lostByLocation, locationNamesMap);
+  }, [consolidated, locationNamesMap]);
+
+  const mostEfficient = useMemo(() => {
+    if (!consolidated) return null;
+    return getMostEfficient(consolidated.occupancyByLocation, locationNamesMap);
   }, [consolidated, locationNamesMap]);
 
   // Renewal warning
@@ -580,15 +585,20 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Worst leaker card - only in consolidated mode */}
+      {/* Worst leaker + most efficient - consolidated mode */}
       {worstLeaker && isConsolidated && (
         <div className="rounded-xl bg-card border border-revenue-loss/30 p-3.5 flex items-start gap-3 shadow-card">
           <AlertCircle className="h-4 w-4 shrink-0 text-revenue-loss mt-0.5" />
-          <div>
+          <div className="flex-1">
             <p className="text-[10px] font-bold text-revenue-loss uppercase tracking-wider mb-0.5">Maior vazamento hoje</p>
             <p className="text-sm font-medium text-foreground">
               {worstLeaker.name}: <span className="text-revenue-loss font-bold">{formatBRL(worstLeaker.lost)}</span> perdidos
             </p>
+            {mostEfficient && mostEfficient.locationId !== worstLeaker.locationId && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Mais eficiente: <span className="font-semibold text-foreground">{mostEfficient.name}</span> ({safePercent(mostEfficient.occupancy)} ocupação)
+              </p>
+            )}
           </div>
         </div>
       )}
