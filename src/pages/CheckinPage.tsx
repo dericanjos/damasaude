@@ -685,13 +685,10 @@ export default function CheckinPage() {
 
       {/* Validation warnings */}
       {(() => {
-        const totalOutcomes = form.attended_private + form.attended_insurance + form.noshows_private + form.noshows_insurance + form.cancellations;
-        const warnings: { msg: string; blocking: boolean }[] = [];
-        if (!quickMode && form.appointments_scheduled > 0 && totalOutcomes > form.appointments_scheduled) {
-          warnings.push({ msg: `Atendidos + Faltas + Cancelamentos (${totalOutcomes}) é maior que os agendados (${form.appointments_scheduled}). Corrija antes de salvar.`, blocking: true });
-        }
-        if (!quickMode && totalOutcomes > dailyCapacity) {
-          warnings.push({ msg: `Total de desfechos (${totalOutcomes}) excede a capacidade do dia (${dailyCapacity}). Verifique os números.`, blocking: true });
+        if (quickMode || effectiveCapacity === 0) return null;
+        const warnings: string[] = [];
+        if (totalOutcomes > effectiveCapacity) {
+          warnings.push(`Total de desfechos (${totalOutcomes}) excede a capacidade efetiva (${effectiveCapacity}). Reduza os valores ou adicione encaixes.`);
         }
         if (warnings.length === 0) return null;
         return (
@@ -699,7 +696,7 @@ export default function CheckinPage() {
             {warnings.map((w, i) => (
               <p key={i} className="text-xs text-destructive flex items-start gap-1.5">
                 <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                {w.msg}
+                {w}
               </p>
             ))}
           </div>
