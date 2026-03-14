@@ -590,7 +590,7 @@ export default function CheckinPage() {
             <ChevronRight className="h-5 w-5 text-foreground rotate-180" />
           </button>
           <div>
-            <h1 className="text-lg font-bold text-foreground">Perdas e desfechos</h1>
+            <h1 className="text-lg font-bold text-foreground">Consultas não realizadas</h1>
             <p className="text-xs text-muted-foreground">Registre no-shows e cancelamentos</p>
           </div>
         </div>
