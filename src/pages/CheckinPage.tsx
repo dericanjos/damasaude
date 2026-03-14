@@ -796,9 +796,10 @@ export default function CheckinPage() {
         <Button
           type="submit"
           className="w-full h-12 rounded-xl text-sm font-semibold shadow-premium"
-          disabled={saveCheckin.isPending || generateActions.isPending || !selectedLocationId}
+          disabled={saveCheckin.isPending || generateActions.isPending || !selectedLocationId || hasValidationError}
         >
-          {saveCheckin.isPending ? 'Salvando...' : 'Salvar check-in'}
+          {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : 'Salvar check-in'}
+        </Button>
         </Button>
       </form>
     </div>
