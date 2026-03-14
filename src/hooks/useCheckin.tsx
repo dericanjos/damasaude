@@ -203,6 +203,7 @@ export function useSaveCheckin() {
       cancellations: number;
       new_appointments: number;
       empty_slots: number;
+      extra_appointments?: number;
       followup_done: boolean;
       notes?: string;
       insight_text?: string;

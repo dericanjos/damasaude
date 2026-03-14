@@ -1,0 +1,1 @@
+ALTER TABLE public.daily_checkins ADD COLUMN IF NOT EXISTS extra_appointments integer NOT NULL DEFAULT 0;

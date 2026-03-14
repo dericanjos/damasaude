@@ -193,6 +193,7 @@ export type Database = {
           created_at: string
           date: string
           empty_slots: number
+          extra_appointments: number
           followup_done: boolean
           id: string
           insight_text: string | null
@@ -214,6 +215,7 @@ export type Database = {
           created_at?: string
           date: string
           empty_slots?: number
+          extra_appointments?: number
           followup_done?: boolean
           id?: string
           insight_text?: string | null
@@ -235,6 +237,7 @@ export type Database = {
           created_at?: string
           date?: string
           empty_slots?: number
+          extra_appointments?: number
           followup_done?: boolean
           id?: string
           insight_text?: string | null
