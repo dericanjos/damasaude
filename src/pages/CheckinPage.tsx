@@ -800,7 +800,6 @@ export default function CheckinPage() {
         >
           {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : 'Salvar check-in'}
         </Button>
-        </Button>
       </form>
     </div>
   );
