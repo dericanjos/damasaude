@@ -141,7 +141,19 @@ export default function Dashboard() {
     }
     // If no single checkin but we have consolidated data (multiple locations, no filter)
     if (consolidated) {
-      return consolidated.ideaScore;
+      // Build a synthetic CheckinData from consolidated metrics
+      const syntheticData: CheckinData = {
+        appointments_scheduled: consolidated.totalScheduled,
+        attended_private: consolidated.totalAttended,
+        attended_insurance: 0,
+        noshows_private: consolidated.totalNoshows,
+        noshows_insurance: 0,
+        cancellations: consolidated.totalCancellations,
+        new_appointments: 0,
+        empty_slots: consolidated.totalEmptySlots,
+        followup_done: true,
+      };
+      return calculateIDEA(syntheticData, consolidated.totalCapacity, ticketPrivate, ticketInsurance);
     }
     return null;
   }, [checkinData, dailyCapacity, ticketPrivate, ticketInsurance, consolidated]);
