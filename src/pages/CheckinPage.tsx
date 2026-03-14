@@ -662,7 +662,7 @@ export default function CheckinPage() {
           onClick={() => handleSaveSection('perdas')}
           disabled={saveCheckin.isPending || hasValidationError}
         >
-          {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : 'Salvar perdas'}
+          {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : 'Salvar consultas não realizadas'}
         </Button>
       </div>
     );
