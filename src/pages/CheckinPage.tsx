@@ -239,9 +239,10 @@ export default function CheckinPage() {
   const maxAttendedTotal = effectiveCapacity; // can't attend more than effective capacity
   const maxNoshowsTotal = effectiveCapacity - totalAttendedNow; // remaining after attended
   const totalNoshowsNow = form.noshows_private + form.noshows_insurance;
-  const maxCancellations = Math.max(0, effectiveCapacity - totalAttendedNow - totalNoshowsNow);
+  const totalCancellationsNow = form.cancellations_private + form.cancellations_insurance;
+  const maxCancellationsTotal = Math.max(0, effectiveCapacity - totalAttendedNow - totalNoshowsNow);
 
-  const totalOutcomes = totalAttendedNow + totalNoshowsNow + form.cancellations;
+  const totalOutcomes = totalAttendedNow + totalNoshowsNow + totalCancellationsNow;
 
   // Auto-calculate empty_slots = scheduled - outcomes (buracos are only from scheduled slots)
   const autoEmptySlots = Math.max(0, form.appointments_scheduled - totalOutcomes);
