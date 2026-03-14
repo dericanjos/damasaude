@@ -177,6 +177,7 @@ export default function CheckinPage() {
   const [showReward, setShowReward] = useState(false);
   const [reward, setReward] = useState<RewardData | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [activeSection, setActiveSection] = useState<'encaixes' | 'perdas' | null>(null);
 
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
 
