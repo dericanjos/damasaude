@@ -196,23 +196,11 @@ export default function CheckinPage() {
         followup_done: e.followup_done,
         notes: e.notes ?? '',
       });
-    } else if (lastCheckin) {
-      const l = lastCheckin as any;
-      setForm({
-        appointments_scheduled: l.appointments_scheduled,
-        attended_private: l.attended_private ?? l.appointments_done ?? 0,
-        attended_insurance: l.attended_insurance ?? 0,
-        noshows_private: l.noshows_private ?? l.no_show ?? 0,
-        noshows_insurance: l.noshows_insurance ?? 0,
-        cancellations: l.cancellations,
-        new_appointments: l.new_appointments,
-        empty_slots: l.empty_slots,
-        extra_appointments: l.extra_appointments ?? 0,
-        followup_done: false,
-        notes: '',
-      });
+    } else {
+      // New checkin: only pre-fill scheduling info, losses start at zero
+      setForm(EMPTY_FORM);
     }
-  }, [existing?.id, lastCheckin?.id]);
+  }, [existing?.id]);
 
   // Get capacity from location schedule
   const todayWeekday = new Date().getDay();
