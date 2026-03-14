@@ -654,7 +654,7 @@ export default function CheckinPage() {
               max={Math.max(0, maxNoshowsTotal)}
             />
           )}
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">🚫 Cancelamentos</p>
+          <p className="text-sm font-extrabold text-foreground uppercase tracking-wider mt-4 pt-4 border-t border-border/40">🚫 Cancelamentos</p>
           {paymentType === 'ambos' ? (
             <>
               <CheckinField
