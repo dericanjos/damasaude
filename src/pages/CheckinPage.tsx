@@ -31,6 +31,7 @@ type FormData = {
   cancellations: number;
   new_appointments: number;
   empty_slots: number;
+  extra_appointments: number;
   followup_done: boolean;
   notes: string;
 };
@@ -53,6 +54,7 @@ const EMPTY_FORM: FormData = {
   cancellations: 0,
   new_appointments: 0,
   empty_slots: 0,
+  extra_appointments: 0,
   followup_done: false,
   notes: '',
 };
