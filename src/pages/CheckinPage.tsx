@@ -729,52 +729,23 @@ export default function CheckinPage() {
           <p className="text-sm font-semibold text-white/90 mt-1">{getIdeaLabel(status)}</p>
         </div>
 
-        {/* Pending actions – each item is a clickable card */}
-        {pendingCount > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-bold text-primary uppercase tracking-wider">📋 Ainda falta preencher hoje</p>
-              <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                {pendingCount} pendente{pendingCount > 1 ? 's' : ''}
-              </span>
-            </div>
-            {pendingItems.filter(p => !p.done).map(item => (
+        {/* Quick action buttons for updating throughout the day */}
+        <div className="space-y-3">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">🔄 Atualize durante o dia</p>
+          <div className="grid grid-cols-2 gap-2">
+            {actionItems.map(item => (
               <button
-                key={item.label}
+                key={item.section}
                 onClick={() => setActiveSection(item.section)}
-                className="w-full rounded-2xl bg-primary/5 border border-primary/20 p-4 text-left transition-all hover:bg-primary/10 active:scale-[0.98]"
+                className="rounded-2xl bg-card border border-border/60 p-4 text-left transition-all hover:border-primary/40 active:scale-[0.98] shadow-card"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-4 w-4 rounded-full border-2 border-primary/40 shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{item.label}</p>
-                      <p className="text-[10px] text-muted-foreground">{item.action}</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-primary" />
-                </div>
+                <p className="text-base mb-1">{item.icon}</p>
+                <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{item.description}</p>
               </button>
             ))}
           </div>
-        )}
-
-        {/* Done items */}
-        {pendingItems.filter(p => p.done).length > 0 && (
-          <div className="space-y-1.5">
-            {pendingItems.filter(p => p.done).map(item => (
-              <button
-                key={item.label}
-                onClick={() => setActiveSection(item.section)}
-                className="w-full flex items-center gap-2.5 rounded-xl p-2.5 text-left hover:bg-card/50 transition-all"
-              >
-                <CheckCircle2 className="h-4 w-4 text-revenue-gain shrink-0" />
-                <p className="text-sm font-medium text-muted-foreground line-through">{item.label}</p>
-                <ChevronRight className="h-3 w-3 text-muted-foreground ml-auto" />
-              </button>
-            ))}
-          </div>
-        )}
+        </div>
 
         {/* Summary card */}
         <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-3">
