@@ -895,7 +895,7 @@ export default function CheckinPage() {
           className="w-full h-12 rounded-xl text-sm font-semibold shadow-premium"
           disabled={saveCheckin.isPending || generateActions.isPending || !selectedLocationId || hasValidationError}
         >
-          {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : 'Salvar check-in'}
+          {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : existing ? 'Atualizar check-in' : 'Salvar agenda do dia'}
         </Button>
       </form>
     </div>
