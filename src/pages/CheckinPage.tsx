@@ -679,11 +679,11 @@ export default function CheckinPage() {
             />
           )}
           {/* Buracos auto */}
-          <div className="flex w-full flex-col gap-2.5 border-t border-border/40 pt-4">
+          <div className="flex w-full flex-col gap-2.5 border-t border-border/40 pt-4 mt-4">
             <div className="flex items-center justify-between">
-              <Label className="whitespace-normal text-left text-sm font-semibold leading-snug text-foreground">
-                Buracos na Agenda
-              </Label>
+              <p className="text-sm font-extrabold text-foreground uppercase tracking-wider">📊 Buracos na Agenda</p>
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                auto
               <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
                 auto
               </span>
