@@ -538,6 +538,7 @@ export default function CheckinPage() {
     try {
       await saveCheckin.mutateAsync({
         ...form,
+        cancellations: form.cancellations_private + form.cancellations_insurance,
         location_id: selectedLocationId,
         appointments_done: form.attended_private + form.attended_insurance,
         no_show: form.noshows_private + form.noshows_insurance,
