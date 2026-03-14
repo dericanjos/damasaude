@@ -184,8 +184,17 @@ function LocationEditDialog({
             <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Rua..." className="rounded-xl" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket médio (R$)</Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$)</Label>
+            <Input type="number" min={1} value={ticketPrivLoc} onChange={e => setTicketPrivLoc(Number(e.target.value))} className="rounded-xl" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$)</Label>
+            <Input type="number" min={1} value={ticketInsLoc} onChange={e => setTicketInsLoc(Number(e.target.value))} className="rounded-xl" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket médio (R$) — fallback</Label>
             <Input type="number" min={1} value={ticketAvg} onChange={e => setTicketAvg(Number(e.target.value))} className="rounded-xl" />
+            <p className="text-[10px] text-muted-foreground">Usado para cancelamentos e buracos quando não há split por tipo.</p>
           </div>
 
           <div className="flex items-center justify-between rounded-xl border border-border p-3">
