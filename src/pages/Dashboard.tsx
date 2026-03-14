@@ -262,7 +262,7 @@ export default function Dashboard() {
       {/* ── SUCCESS CHECKLIST (always first action) ── */}
       <SuccessChecklistCard />
 
-      {/* ── CHECK-IN PROMPT or IDEA SCORE ── */}
+      {/* ── CHECK-IN PROMPT or UPDATE PROMPT or IDEA SCORE ── */}
       {todayScore == null ? (
         <button
           onClick={() => navigate('/checkin')}
