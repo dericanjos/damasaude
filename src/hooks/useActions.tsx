@@ -52,14 +52,20 @@ export function useGenerateActions() {
         .eq('location_id', locationId);
 
       const ideaScore = calculateIDEA(checkinData);
-      // Get has_secretary from the specific location
+      // Get has_secretary and ticket from the specific location
       const { data: loc } = await supabase
         .from('locations')
         .select('has_secretary')
         .eq('id', locationId)
         .single();
+      const { data: fin } = await supabase
+        .from('location_financials')
+        .select('ticket_avg')
+        .eq('location_id', locationId)
+        .maybeSingle();
       const hasSecretary = (loc as any)?.has_secretary ?? (clinic as any)?.has_secretary ?? false;
-      const actions = generateActions(checkinData, clinic.target_noshow_rate, ideaScore, hasSecretary);
+      const ticketAvg = (fin as any)?.ticket_avg ?? (clinic as any)?.ticket_medio ?? 250;
+      const actions = generateActions(checkinData, clinic.target_noshow_rate, ideaScore, hasSecretary, ticketAvg);
 
       const { data, error } = await supabase
         .from('daily_actions')
