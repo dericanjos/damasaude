@@ -143,6 +143,8 @@ function LocationEditDialog({
           name: name.trim(),
           address: address.trim(),
           ticket_avg: ticketAvg,
+          ticket_private: ticketPrivLoc,
+          ticket_insurance: ticketInsLoc,
           has_secretary: hasSecretaryLoc,
           schedules: scheduleList,
         });
@@ -152,6 +154,8 @@ function LocationEditDialog({
           name: name.trim(),
           address: address.trim(),
           ticket_avg: ticketAvg,
+          ticket_private: ticketPrivLoc,
+          ticket_insurance: ticketInsLoc,
           has_secretary: hasSecretaryLoc,
           schedules: scheduleList,
         });
