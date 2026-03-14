@@ -80,9 +80,21 @@ export default function Dashboard() {
   const targetFillRate = clinic?.target_fill_rate ?? 0.85;
   const targetNoShowRate = clinic?.target_noshow_rate ?? 0.05;
   const caps = parseDailyCapacities((clinic as any)?.daily_capacities);
-  const dailyCapacity = getCapacityForDate(new Date(), caps);
+  const clinicCapacity = getCapacityForDate(new Date(), caps);
   const ticketPrivate = (clinic as any)?.ticket_private ?? DEFAULT_TICKET_PRIVATE;
   const ticketInsurance = (clinic as any)?.ticket_insurance ?? DEFAULT_TICKET_INSURANCE;
+
+  // Use location-specific capacity when a single location is selected
+  const todayWeekdayDash = new Date().getDay();
+  const dailyCapacity = useMemo(() => {
+    if (selectedLocationId) {
+      const sched = allSchedules.find(
+        s => s.location_id === selectedLocationId && s.weekday === todayWeekdayDash && s.is_active
+      );
+      if (sched) return sched.daily_capacity;
+    }
+    return clinicCapacity;
+  }, [selectedLocationId, allSchedules, todayWeekdayDash, clinicCapacity]);
 
   // Consolidated aggregation for "Todas as clínicas"
   const isConsolidated = !selectedLocationId && allTodayCheckins.length > 0;
