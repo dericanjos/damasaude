@@ -1097,14 +1097,8 @@ export default function CheckinPage() {
                   Calculado automaticamente: {form.appointments_scheduled} agendados − {totalOutcomes} desfechos
                 </p>
               </div>
-            </div>
-            )}
-
-            {/* ── SEÇÃO 4: OUTROS INDICADORES (só após save) ── */}
-            {(existing || editMode) && (
-            <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">📊 Outros indicadores</p>
-              <CheckinField label="Reagendamentos" value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">🔄 Remarcações</p>
+              <CheckinField label="Consultas remarcadas" value={form.rescheduled} onChange={v => setField('rescheduled', v)} />
             </div>
             )}
 
