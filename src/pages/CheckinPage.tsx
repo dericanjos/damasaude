@@ -791,10 +791,17 @@ export default function CheckinPage() {
             </div>
             )}
 
-            {/* ── SEÇÃO 3: PERDAS (ao longo do dia / fim do dia) ── */}
-            {form.appointments_scheduled > 0 && totalAttendedNow > 0 && (
+            {/* ── SEÇÃO 3: PERDAS (só aparece depois do primeiro save) ── */}
+            {form.appointments_scheduled > 0 && (existing || editMode) && (
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
-              <div>
+              {hasValidationError && (
+                <div className="rounded-xl bg-destructive/10 border border-destructive/30 p-3">
+                  <p className="text-xs text-destructive flex items-start gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    Total de desfechos ({totalOutcomes}) excede a capacidade efetiva ({effectiveCapacity}). Reduza os valores ou adicione encaixes.
+                  </p>
+                </div>
+              )}
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">⚠️ Perdas e desfechos</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">Registre conforme ocorrerem ou ao final do dia</p>
               </div>
