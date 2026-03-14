@@ -856,11 +856,13 @@ export default function CheckinPage() {
             </div>
             )}
 
-            {/* ── SEÇÃO 4: OUTROS INDICADORES ── */}
+            {/* ── SEÇÃO 4: OUTROS INDICADORES (só após save) ── */}
+            {(existing || editMode) && (
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">📊 Outros indicadores</p>
               <CheckinField label="Reagendamentos" value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
             </div>
+            )}
 
             <div className="flex items-center justify-between rounded-2xl bg-card border border-border/60 p-4 shadow-card">
               <div>
