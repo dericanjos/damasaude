@@ -819,8 +819,10 @@ export default function CheckinPage() {
                 />
               )}
             </div>
+            )}
 
             {/* ── SEÇÃO 3: PERDAS (ao longo do dia / fim do dia) ── */}
+            {form.appointments_scheduled > 0 && (
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
               <div>
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">⚠️ Perdas e desfechos</p>
