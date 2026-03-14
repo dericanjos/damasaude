@@ -174,6 +174,8 @@ export function useCreateLocation() {
           user_id: user.id,
           location_id: loc.id,
           ticket_avg: input.ticket_avg || 250,
+          ticket_private: input.ticket_private || 250,
+          ticket_insurance: input.ticket_insurance || 100,
         } as any);
       if (finError) throw finError;
 
