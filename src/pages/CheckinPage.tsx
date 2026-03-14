@@ -1048,13 +1048,33 @@ export default function CheckinPage() {
                   max={Math.max(0, maxNoshowsTotal)}
                 />
               )}
-              <CheckinField
-                label="Cancelamentos"
-                value={form.cancellations}
-                onChange={v => setField('cancellations', v)}
-                max={Math.max(0, maxCancellations)}
-                hint={maxCancellations <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
-              />
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">🚫 Cancelamentos</p>
+              {paymentType === 'ambos' ? (
+                <>
+                  <CheckinField
+                    label="Cancelamentos Particular"
+                    value={form.cancellations_private}
+                    onChange={v => setField('cancellations_private', v)}
+                    max={Math.max(0, maxCancellationsTotal - form.cancellations_insurance)}
+                    hint={maxCancellationsTotal <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
+                  />
+                  <CheckinField
+                    label="Cancelamentos Convênio"
+                    value={form.cancellations_insurance}
+                    onChange={v => setField('cancellations_insurance', v)}
+                    max={Math.max(0, maxCancellationsTotal - form.cancellations_private)}
+                    hint={maxCancellationsTotal <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
+                  />
+                </>
+              ) : (
+                <CheckinField
+                  label="Cancelamentos"
+                  value={paymentType === 'particular' ? form.cancellations_private : form.cancellations_insurance}
+                  onChange={v => setField(paymentType === 'particular' ? 'cancellations_private' : 'cancellations_insurance', v)}
+                  max={Math.max(0, maxCancellationsTotal)}
+                  hint={maxCancellationsTotal <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
+                />
+              )}
               {/* Buracos auto */}
               <div className="flex w-full flex-col gap-2.5 border-t border-border/40 pt-4">
                 <div className="flex items-center justify-between">
