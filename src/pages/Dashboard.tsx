@@ -134,7 +134,30 @@ export default function Dashboard() {
 
   const checkinData: CheckinData | null = todayCheckin ? toCheckinData(todayCheckin) : null;
 
-  const todayScore = checkinData ? calculateIDEA(checkinData, dailyCapacity, ticketPrivate, ticketInsurance) : null;
+  // Compute todayScore: prefer single-location data, fallback to consolidated
+  const todayScore = useMemo(() => {
+    if (checkinData) {
+      return calculateIDEA(checkinData, dailyCapacity, ticketPrivate, ticketInsurance);
+    }
+    // If no single checkin but we have consolidated data (multiple locations, no filter)
+    if (consolidated) {
+      // Build a synthetic CheckinData from consolidated metrics
+      const syntheticData: CheckinData = {
+        appointments_scheduled: consolidated.totalScheduled,
+        attended_private: consolidated.totalAttended,
+        attended_insurance: 0,
+        noshows_private: consolidated.totalNoshows,
+        noshows_insurance: 0,
+        cancellations: consolidated.totalCancellations,
+        new_appointments: 0,
+        empty_slots: consolidated.totalEmptySlots,
+        followup_done: true,
+      };
+      return calculateIDEA(syntheticData, consolidated.totalCapacity, ticketPrivate, ticketInsurance);
+    }
+    return null;
+  }, [checkinData, dailyCapacity, ticketPrivate, ticketInsurance, consolidated]);
+
   const yesterdayScore = yesterdayCheckin
     ? calculateIDEA(toCheckinData(yesterdayCheckin), dailyCapacity, ticketPrivate, ticketInsurance)
     : null;
