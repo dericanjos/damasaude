@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import {
   ClipboardCheck, CheckCircle2, TrendingDown, TrendingUp, ChevronRight,
-  Minus, Plus, Zap, Flame, Info, MapPin
+  Minus, Plus, Zap, Flame, Info, MapPin, AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
