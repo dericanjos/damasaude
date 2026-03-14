@@ -287,7 +287,7 @@ export default function CheckinPage() {
         attended_insurance: submitData.attended_insurance,
         noshows_private: submitData.noshows_private,
         noshows_insurance: submitData.noshows_insurance,
-        cancellations: submitData.cancellations,
+        cancellations: submitData.cancellations_private + submitData.cancellations_insurance,
         new_appointments: submitData.new_appointments,
         empty_slots: submitData.empty_slots,
         followup_done: submitData.followup_done,
@@ -299,6 +299,7 @@ export default function CheckinPage() {
 
       await saveCheckin.mutateAsync({
         ...submitData,
+        cancellations: submitData.cancellations_private + submitData.cancellations_insurance,
         location_id: selectedLocationId,
         appointments_done: submitData.attended_private + submitData.attended_insurance,
         no_show: submitData.noshows_private + submitData.noshows_insurance,
