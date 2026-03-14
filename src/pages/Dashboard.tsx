@@ -22,7 +22,7 @@ import LocationSelector from '@/components/LocationSelector';
 import SuccessChecklistCard from '@/components/SuccessChecklistCard';
 import {
   TrendingDown, TrendingUp, AlertCircle, CheckCircle2,
-  ClipboardCheck, ArrowRight, Bell, HelpCircle, Flame, Newspaper
+  ClipboardCheck, ArrowRight, Bell, HelpCircle, Flame, Newspaper, Zap, FileX
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
