@@ -220,7 +220,7 @@ export function useUpdateLocation() {
       ticket_insurance?: number;
       schedules?: { weekday: number; start_time: string; end_time: string; daily_capacity: number }[];
     }) => {
-      const { id, ticket_avg, schedules, ...updates } = input;
+      const { id, ticket_avg, ticket_private, ticket_insurance, schedules, ...updates } = input;
 
       if (Object.keys(updates).length > 0) {
         const { error } = await supabase
@@ -230,10 +230,14 @@ export function useUpdateLocation() {
         if (error) throw error;
       }
 
-      if (ticket_avg !== undefined) {
+      if (ticket_avg !== undefined || ticket_private !== undefined || ticket_insurance !== undefined) {
+        const finUpdate: any = {};
+        if (ticket_avg !== undefined) finUpdate.ticket_avg = ticket_avg;
+        if (ticket_private !== undefined) finUpdate.ticket_private = ticket_private;
+        if (ticket_insurance !== undefined) finUpdate.ticket_insurance = ticket_insurance;
         const { error } = await supabase
           .from('location_financials')
-          .update({ ticket_avg } as any)
+          .update(finUpdate)
           .eq('location_id', id);
         if (error) throw error;
       }
