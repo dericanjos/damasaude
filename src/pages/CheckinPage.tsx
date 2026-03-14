@@ -659,7 +659,7 @@ export default function CheckinPage() {
 
         <Button
           className="w-full h-12 rounded-xl text-sm font-semibold shadow-premium"
-          onClick={handleSaveSection}
+          onClick={() => handleSaveSection('perdas')}
           disabled={saveCheckin.isPending || hasValidationError}
         >
           {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : 'Salvar perdas'}
