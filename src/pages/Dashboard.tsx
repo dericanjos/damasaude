@@ -32,6 +32,7 @@ import { useEfficiencyBadge } from '@/hooks/useEfficiencyBadge';
 import { cn } from '@/lib/utils';
 import LossRadarCard from '@/components/LossRadarCard';
 import EfficiencyBadgeModal from '@/components/EfficiencyBadgeModal';
+import { useCheckinRealtime } from '@/hooks/useCheckinRealtime';
 
 
 /** Helper to convert DB row to CheckinData */
@@ -68,6 +69,8 @@ export default function Dashboard() {
   const { data: hasBadge } = useEfficiencyBadge();
   const { data: allFinancials = [] } = useAllLocationFinancials();
   const { data: allSchedules = [] } = useAllLocationSchedules();
+
+  useCheckinRealtime();
 
   const [checkinCollapsed, setCheckinCollapsed] = useState(true);
 
