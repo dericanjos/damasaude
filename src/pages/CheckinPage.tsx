@@ -756,24 +756,28 @@ export default function CheckinPage() {
               </div>
             </div>
 
-            {/* ── SEÇÃO 2: ATENDIMENTOS (ao longo do dia) ── */}
+            {/* ── SEÇÃO 2: ATENDIMENTOS PREVISTOS (manhã) / REALIZADOS (após save) ── */}
             {form.appointments_scheduled > 0 && (
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
               <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">✅ Atendimentos realizados</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Atualize ao longo do dia</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  {existing ? '✅ Atendimentos realizados' : '📋 Atendimentos previstos para hoje'}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {existing ? 'Atualize ao longo do dia' : 'Quantos pacientes você espera atender?'}
+                </p>
               </div>
               {paymentType === 'ambos' ? (
                 <>
                   <CheckinField
-                    label="Atendidos Particular"
+                    label={existing ? 'Atendidos Particular' : 'Particular'}
                     value={form.attended_private}
                     onChange={v => setField('attended_private', v)}
                     max={Math.max(0, effectiveCapacity - form.attended_insurance)}
                     hint={totalAttendedNow >= effectiveCapacity ? `Limite de ${effectiveCapacity} atendimentos atingido.` : undefined}
                   />
                   <CheckinField
-                    label="Atendidos Convênio"
+                    label={existing ? 'Atendidos Convênio' : 'Convênio'}
                     value={form.attended_insurance}
                     onChange={v => setField('attended_insurance', v)}
                     max={Math.max(0, effectiveCapacity - form.attended_private)}
@@ -782,7 +786,7 @@ export default function CheckinPage() {
                 </>
               ) : (
                 <CheckinField
-                  label="Atendidos"
+                  label={existing ? 'Atendidos' : 'Previstos'}
                   value={paymentType === 'particular' ? form.attended_private : form.attended_insurance}
                   onChange={v => setField(paymentType === 'particular' ? 'attended_private' : 'attended_insurance', v)}
                   max={effectiveCapacity}
