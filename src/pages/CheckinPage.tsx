@@ -734,26 +734,6 @@ export default function CheckinPage() {
                 max={dailyCapacity}
                 hint={form.appointments_scheduled >= dailyCapacity ? 'Agenda lotada! Use "Encaixes" para consultas extras.' : undefined}
               />
-              {/* Encaixes inline */}
-              <div className="border-t border-border/40 pt-4">
-                <p className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5 mb-1">
-                  <Zap className="h-3.5 w-3.5" />
-                  Encaixes (consultas extras)
-                </p>
-                <p className="text-[11px] text-muted-foreground mb-3">
-                  Pacientes atendidos fora da agenda original
-                </p>
-                <CheckinField
-                  label="Quantos encaixes hoje?"
-                  value={form.extra_appointments}
-                  onChange={v => setField('extra_appointments', v)}
-                />
-                {form.extra_appointments > 0 && (
-                  <p className="text-[10px] text-primary font-medium mt-2">
-                    ✨ Capacidade efetiva do dia: {effectiveCapacity} ({dailyCapacity} agendadas + {form.extra_appointments} encaixes)
-                  </p>
-                )}
-              </div>
             </div>
 
             {/* ── SEÇÃO 2: ATENDIMENTOS PREVISTOS (manhã) / REALIZADOS (após save) ── */}
