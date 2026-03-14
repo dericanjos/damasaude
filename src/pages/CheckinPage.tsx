@@ -938,7 +938,7 @@ export default function CheckinPage() {
                 </>
               ) : (
                 <CheckinField
-                  label={existing ? 'Atendidos' : 'Previstos'}
+                  label="Atendimentos previstos"
                   value={paymentType === 'particular' ? form.attended_private : form.attended_insurance}
                   onChange={v => setField(paymentType === 'particular' ? 'attended_private' : 'attended_insurance', v)}
                   max={effectiveCapacity}
