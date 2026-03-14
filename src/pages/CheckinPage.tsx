@@ -177,6 +177,7 @@ export default function CheckinPage() {
   const [showReward, setShowReward] = useState(false);
   const [reward, setReward] = useState<RewardData | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [activeSection, setActiveSection] = useState<'encaixes' | 'perdas' | null>(null);
 
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
 
@@ -513,6 +514,160 @@ export default function CheckinPage() {
     );
   }
 
+  const handleSaveSection = async (sectionName: string) => {
+    if (!selectedLocationId) return;
+    try {
+      await saveCheckin.mutateAsync({
+        ...form,
+        location_id: selectedLocationId,
+        appointments_done: form.attended_private + form.attended_insurance,
+        no_show: form.noshows_private + form.noshows_insurance,
+      });
+      toast.success(sectionName === 'encaixes' ? 'Encaixes salvos!' : 'Perdas salvas!');
+      setActiveSection(null);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao salvar');
+    }
+  };
+
+  // ── FOCUSED ENCAIXES SECTION ──
+  if (activeSection === 'encaixes' && existing) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setActiveSection(null)} className="flex h-10 w-10 items-center justify-center rounded-2xl bg-card border border-border/60">
+            <ChevronRight className="h-5 w-5 text-foreground rotate-180" />
+          </button>
+          <div>
+            <h1 className="text-lg font-bold text-foreground">Encaixes</h1>
+            <p className="text-xs text-muted-foreground">Registre consultas extras do dia</p>
+          </div>
+        </div>
+
+        {selectedLocation && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <MapPin className="h-3 w-3" /> {selectedLocation.name}
+          </div>
+        )}
+
+        <div className="rounded-2xl bg-card border border-border/60 p-5 shadow-card space-y-4">
+          <div>
+            <p className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+              <Zap className="h-3.5 w-3.5" />
+              Consultas extras (fora da agenda)
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Pacientes atendidos além dos agendados</p>
+          </div>
+          <CheckinField
+            label="Quantos encaixes hoje?"
+            value={form.extra_appointments}
+            onChange={v => setField('extra_appointments', v)}
+          />
+          {form.extra_appointments > 0 && (
+            <p className="text-[10px] text-primary font-medium">
+              ✨ Capacidade efetiva: {effectiveCapacity} ({form.appointments_scheduled} agendadas + {form.extra_appointments} encaixes)
+            </p>
+          )}
+        </div>
+
+        <Button
+          className="w-full h-12 rounded-xl text-sm font-semibold shadow-premium"
+          onClick={() => handleSaveSection('encaixes')}
+          disabled={saveCheckin.isPending}
+        >
+          {saveCheckin.isPending ? 'Salvando...' : 'Salvar encaixes'}
+        </Button>
+      </div>
+    );
+  }
+
+  // ── FOCUSED PERDAS SECTION ──
+  if (activeSection === 'perdas' && existing) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setActiveSection(null)} className="flex h-10 w-10 items-center justify-center rounded-2xl bg-card border border-border/60">
+            <ChevronRight className="h-5 w-5 text-foreground rotate-180" />
+          </button>
+          <div>
+            <h1 className="text-lg font-bold text-foreground">Perdas e desfechos</h1>
+            <p className="text-xs text-muted-foreground">Registre no-shows e cancelamentos</p>
+          </div>
+        </div>
+
+        {selectedLocation && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <MapPin className="h-3 w-3" /> {selectedLocation.name}
+          </div>
+        )}
+
+        <div className="rounded-2xl bg-card border border-border/60 p-5 shadow-card space-y-5">
+          {hasValidationError && (
+            <div className="rounded-xl bg-destructive/10 border border-destructive/30 p-3">
+              <p className="text-xs text-destructive flex items-start gap-1.5">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                Total de desfechos ({totalOutcomes}) excede a capacidade efetiva ({effectiveCapacity}).
+              </p>
+            </div>
+          )}
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">⚠️ No-shows</p>
+          {paymentType === 'ambos' ? (
+            <>
+              <CheckinField
+                label="No-shows Particular"
+                value={form.noshows_private}
+                onChange={v => setField('noshows_private', v)}
+                max={Math.max(0, maxNoshowsTotal - form.noshows_insurance)}
+              />
+              <CheckinField
+                label="No-shows Convênio"
+                value={form.noshows_insurance}
+                onChange={v => setField('noshows_insurance', v)}
+                max={Math.max(0, maxNoshowsTotal - form.noshows_private)}
+              />
+            </>
+          ) : (
+            <CheckinField
+              label="No-show"
+              value={paymentType === 'particular' ? form.noshows_private : form.noshows_insurance}
+              onChange={v => setField(paymentType === 'particular' ? 'noshows_private' : 'noshows_insurance', v)}
+              max={Math.max(0, maxNoshowsTotal)}
+            />
+          )}
+          <CheckinField
+            label="Cancelamentos"
+            value={form.cancellations}
+            onChange={v => setField('cancellations', v)}
+            max={Math.max(0, maxCancellations)}
+          />
+          {/* Buracos auto */}
+          <div className="flex w-full flex-col gap-2.5 border-t border-border/40 pt-4">
+            <div className="flex items-center justify-between">
+              <Label className="whitespace-normal text-left text-sm font-semibold leading-snug text-foreground">
+                Buracos na Agenda
+              </Label>
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                auto
+              </span>
+            </div>
+            <p className="text-center text-2xl font-bold text-foreground">{form.empty_slots}</p>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Calculado: {form.appointments_scheduled} agendados − {totalOutcomes} desfechos
+            </p>
+          </div>
+        </div>
+
+        <Button
+          className="w-full h-12 rounded-xl text-sm font-semibold shadow-premium"
+          onClick={() => handleSaveSection('perdas')}
+          disabled={saveCheckin.isPending || hasValidationError}
+        >
+          {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : 'Salvar perdas'}
+        </Button>
+      </div>
+    );
+  }
+
   // ── SUMMARY SCREEN (checkin already done today) ──
   if (existing && !editMode && !showReward) {
     const e = existing as any;
@@ -534,12 +689,11 @@ export default function CheckinPage() {
 
     const extraAppts = e.extra_appointments ?? 0;
 
-    // Determine what's still pending
+    // Determine what's still pending (Follow-up removed – lives on Dashboard)
     const hasLosses = noshows > 0 || e.cancellations > 0;
-    const pendingItems: { label: string; action: string; done: boolean }[] = [
-      { label: 'Encaixes', action: 'Registrar consultas extras', done: extraAppts > 0 },
-      { label: 'Perdas', action: 'Registrar no-shows e cancelamentos', done: hasLosses || (attended === e.appointments_scheduled + extraAppts) },
-      { label: 'Follow-up', action: 'Confirmar follow-up do dia', done: e.followup_done },
+    const pendingItems: { label: string; action: string; done: boolean; section: 'encaixes' | 'perdas' }[] = [
+      { label: 'Encaixes', action: 'Registrar consultas extras', done: extraAppts > 0, section: 'encaixes' },
+      { label: 'Perdas', action: 'Registrar no-shows e cancelamentos', done: hasLosses || (attended === e.appointments_scheduled + extraAppts), section: 'perdas' },
     ];
     const pendingCount = pendingItems.filter(p => !p.done).length;
 
@@ -577,41 +731,50 @@ export default function CheckinPage() {
           <p className="text-sm font-semibold text-white/90 mt-1">{getIdeaLabel(status)}</p>
         </div>
 
-        {/* Pending actions card */}
+        {/* Pending actions – each item is a clickable card */}
         {pendingCount > 0 && (
-          <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4 shadow-card space-y-3">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold text-primary uppercase tracking-wider">📋 Ainda falta preencher hoje</p>
               <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                 {pendingCount} pendente{pendingCount > 1 ? 's' : ''}
               </span>
             </div>
-            <div className="space-y-2">
-              {pendingItems.map(item => (
-                <div key={item.label} className="flex items-center gap-2.5">
-                  {item.done ? (
-                    <CheckCircle2 className="h-4 w-4 text-revenue-gain shrink-0" />
-                  ) : (
+            {pendingItems.filter(p => !p.done).map(item => (
+              <button
+                key={item.label}
+                onClick={() => setActiveSection(item.section)}
+                className="w-full rounded-2xl bg-primary/5 border border-primary/20 p-4 text-left transition-all hover:bg-primary/10 active:scale-[0.98]"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
                     <div className="h-4 w-4 rounded-full border-2 border-primary/40 shrink-0" />
-                  )}
-                  <div>
-                    <p className={cn('text-sm font-medium', item.done ? 'text-muted-foreground line-through' : 'text-foreground')}>
-                      {item.label}
-                    </p>
-                    {!item.done && (
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{item.label}</p>
                       <p className="text-[10px] text-muted-foreground">{item.action}</p>
-                    )}
+                    </div>
                   </div>
+                  <ChevronRight className="h-4 w-4 text-primary" />
                 </div>
-              ))}
-            </div>
-            <Button
-              className="w-full rounded-xl mt-2"
-              onClick={() => setEditMode(true)}
-            >
-              <Zap className="h-4 w-4 mr-2" />
-              Atualizar check-in agora
-            </Button>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Done items */}
+        {pendingItems.filter(p => p.done).length > 0 && (
+          <div className="space-y-1.5">
+            {pendingItems.filter(p => p.done).map(item => (
+              <button
+                key={item.label}
+                onClick={() => setActiveSection(item.section)}
+                className="w-full flex items-center gap-2.5 rounded-xl p-2.5 text-left hover:bg-card/50 transition-all"
+              >
+                <CheckCircle2 className="h-4 w-4 text-revenue-gain shrink-0" />
+                <p className="text-sm font-medium text-muted-foreground line-through">{item.label}</p>
+                <ChevronRight className="h-3 w-3 text-muted-foreground ml-auto" />
+              </button>
+            ))}
           </div>
         )}
 
@@ -632,12 +795,6 @@ export default function CheckinPage() {
               <span className="text-sm font-bold text-foreground">{item.value}</span>
             </div>
           ))}
-          {e.followup_done && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Follow-up</span>
-              <span className="text-sm font-bold text-revenue-gain">✓ Feito</span>
-            </div>
-          )}
           {e.notes && (
             <div className="pt-2 border-t border-border/40">
               <p className="text-xs text-muted-foreground">Observações</p>
@@ -646,16 +803,14 @@ export default function CheckinPage() {
           )}
         </div>
 
-        {/* Edit button (only if all pending done) */}
-        {pendingCount === 0 && (
-          <Button
-            variant="outline"
-            className="w-full rounded-xl"
-            onClick={() => setEditMode(true)}
-          >
-            Editar check-in de hoje
-          </Button>
-        )}
+        {/* Edit full check-in */}
+        <Button
+          variant="outline"
+          className="w-full rounded-xl"
+          onClick={() => setEditMode(true)}
+        >
+          Editar check-in completo
+        </Button>
 
         {/* Check other locations */}
         {todayLocations.filter(l => l.id !== selectedLocationId && !checkedInLocationIds.includes(l.id)).length > 0 && (
@@ -919,16 +1074,6 @@ export default function CheckinPage() {
             </div>
             )}
 
-            <div className="flex items-center justify-between rounded-2xl bg-card border border-border/60 p-4 shadow-card">
-              <div>
-                <p className="text-sm font-semibold text-foreground">Follow-up executado</p>
-                <p className="text-xs text-muted-foreground">Confirmações e reativações feitas hoje?</p>
-              </div>
-              <Switch
-                checked={form.followup_done}
-                onCheckedChange={(c) => setField('followup_done', c)}
-              />
-            </div>
 
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-2">
               <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
