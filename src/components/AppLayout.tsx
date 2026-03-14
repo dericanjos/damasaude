@@ -16,6 +16,7 @@ const tabs = [
 export default function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
+  useNotificationReminders();
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
