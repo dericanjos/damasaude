@@ -146,6 +146,11 @@ export default function Dashboard() {
     return getWorstLeaker(consolidated.lostByLocation, locationNamesMap);
   }, [consolidated, locationNamesMap]);
 
+  const mostEfficient = useMemo(() => {
+    if (!consolidated) return null;
+    return getMostEfficient(consolidated.occupancyByLocation, locationNamesMap);
+  }, [consolidated, locationNamesMap]);
+
   // Renewal warning
   const showRenewalBanner = (() => {
     if (!subscriptionEnd) return false;
