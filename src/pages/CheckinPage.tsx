@@ -1074,16 +1074,6 @@ export default function CheckinPage() {
             </div>
             )}
 
-            <div className="flex items-center justify-between rounded-2xl bg-card border border-border/60 p-4 shadow-card">
-              <div>
-                <p className="text-sm font-semibold text-foreground">Follow-up executado</p>
-                <p className="text-xs text-muted-foreground">Confirmações e reativações feitas hoje?</p>
-              </div>
-              <Switch
-                checked={form.followup_done}
-                onCheckedChange={(c) => setField('followup_done', c)}
-              />
-            </div>
 
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-2">
               <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
