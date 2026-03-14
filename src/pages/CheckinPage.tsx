@@ -982,7 +982,7 @@ export default function CheckinPage() {
                 </div>
               )}
               <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">⚠️ Perdas e desfechos</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">⚠️ Consultas não realizadas</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">Registre conforme ocorrerem ou ao final do dia</p>
               </div>
               {paymentType === 'ambos' ? (
