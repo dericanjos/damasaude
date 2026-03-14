@@ -590,7 +590,7 @@ export default function CheckinPage() {
             <ChevronRight className="h-5 w-5 text-foreground rotate-180" />
           </button>
           <div>
-            <h1 className="text-lg font-bold text-foreground">Perdas e desfechos</h1>
+            <h1 className="text-lg font-bold text-foreground">Consultas não realizadas</h1>
             <p className="text-xs text-muted-foreground">Registre no-shows e cancelamentos</p>
           </div>
         </div>
@@ -662,7 +662,7 @@ export default function CheckinPage() {
           onClick={() => handleSaveSection('perdas')}
           disabled={saveCheckin.isPending || hasValidationError}
         >
-          {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : 'Salvar perdas'}
+          {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : 'Salvar consultas não realizadas'}
         </Button>
       </div>
     );
@@ -689,13 +689,11 @@ export default function CheckinPage() {
 
     const extraAppts = e.extra_appointments ?? 0;
 
-    // Determine what's still pending (Follow-up removed – lives on Dashboard)
-    const hasLosses = noshows > 0 || e.cancellations > 0;
-    const pendingItems: { label: string; action: string; done: boolean; section: 'encaixes' | 'perdas' }[] = [
-      { label: 'Encaixes', action: 'Registrar consultas extras', done: extraAppts > 0, section: 'encaixes' },
-      { label: 'Perdas', action: 'Registrar no-shows e cancelamentos', done: hasLosses || (attended === e.appointments_scheduled + extraAppts), section: 'perdas' },
+    // Action items for the day (always shown as quick-access buttons)
+    const actionItems: { label: string; description: string; section: 'encaixes' | 'perdas'; icon: string }[] = [
+      { label: 'Encaixes', description: 'Consultas extras do dia', section: 'encaixes', icon: '⚡' },
+      { label: 'Consultas não realizadas', description: 'No-shows e cancelamentos', section: 'perdas', icon: '📋' },
     ];
-    const pendingCount = pendingItems.filter(p => !p.done).length;
 
     return (
       <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
@@ -731,52 +729,23 @@ export default function CheckinPage() {
           <p className="text-sm font-semibold text-white/90 mt-1">{getIdeaLabel(status)}</p>
         </div>
 
-        {/* Pending actions – each item is a clickable card */}
-        {pendingCount > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-bold text-primary uppercase tracking-wider">📋 Ainda falta preencher hoje</p>
-              <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                {pendingCount} pendente{pendingCount > 1 ? 's' : ''}
-              </span>
-            </div>
-            {pendingItems.filter(p => !p.done).map(item => (
+        {/* Quick action buttons for updating throughout the day */}
+        <div className="space-y-3">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">🔄 Atualize durante o dia</p>
+          <div className="grid grid-cols-2 gap-2">
+            {actionItems.map(item => (
               <button
-                key={item.label}
+                key={item.section}
                 onClick={() => setActiveSection(item.section)}
-                className="w-full rounded-2xl bg-primary/5 border border-primary/20 p-4 text-left transition-all hover:bg-primary/10 active:scale-[0.98]"
+                className="rounded-2xl bg-card border border-border/60 p-4 text-left transition-all hover:border-primary/40 active:scale-[0.98] shadow-card"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-4 w-4 rounded-full border-2 border-primary/40 shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{item.label}</p>
-                      <p className="text-[10px] text-muted-foreground">{item.action}</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-primary" />
-                </div>
+                <p className="text-base mb-1">{item.icon}</p>
+                <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{item.description}</p>
               </button>
             ))}
           </div>
-        )}
-
-        {/* Done items */}
-        {pendingItems.filter(p => p.done).length > 0 && (
-          <div className="space-y-1.5">
-            {pendingItems.filter(p => p.done).map(item => (
-              <button
-                key={item.label}
-                onClick={() => setActiveSection(item.section)}
-                className="w-full flex items-center gap-2.5 rounded-xl p-2.5 text-left hover:bg-card/50 transition-all"
-              >
-                <CheckCircle2 className="h-4 w-4 text-revenue-gain shrink-0" />
-                <p className="text-sm font-medium text-muted-foreground line-through">{item.label}</p>
-                <ChevronRight className="h-3 w-3 text-muted-foreground ml-auto" />
-              </button>
-            ))}
-          </div>
-        )}
+        </div>
 
         {/* Summary card */}
         <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-3">
@@ -939,28 +908,28 @@ export default function CheckinPage() {
               />
             </div>
 
-            {/* ── SEÇÃO 2: ATENDIMENTOS PREVISTOS (manhã) / REALIZADOS (após save) ── */}
+            {/* ── SEÇÃO 2: ATENDIMENTOS (sempre visível no planejamento) ── */}
             {form.appointments_scheduled > 0 && (
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
               <div>
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  {existing ? '✅ Atendimentos realizados' : '📋 Atendimentos previstos para hoje'}
+                  📋 Atendimentos previstos para hoje
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  {existing ? 'Atualize ao longo do dia' : 'Quantos pacientes você espera atender?'}
+                  Quantos pacientes você espera atender?
                 </p>
               </div>
               {paymentType === 'ambos' ? (
                 <>
                   <CheckinField
-                    label={existing ? 'Atendidos Particular' : 'Particular'}
+                    label="Atendimentos Particular"
                     value={form.attended_private}
                     onChange={v => setField('attended_private', v)}
                     max={Math.max(0, effectiveCapacity - form.attended_insurance)}
                     hint={totalAttendedNow >= effectiveCapacity ? `Limite de ${effectiveCapacity} atendimentos atingido.` : undefined}
                   />
                   <CheckinField
-                    label={existing ? 'Atendidos Convênio' : 'Convênio'}
+                    label="Atendimentos Convênio"
                     value={form.attended_insurance}
                     onChange={v => setField('attended_insurance', v)}
                     max={Math.max(0, effectiveCapacity - form.attended_private)}
@@ -969,7 +938,7 @@ export default function CheckinPage() {
                 </>
               ) : (
                 <CheckinField
-                  label={existing ? 'Atendidos' : 'Previstos'}
+                  label="Atendimentos previstos"
                   value={paymentType === 'particular' ? form.attended_private : form.attended_insurance}
                   onChange={v => setField(paymentType === 'particular' ? 'attended_private' : 'attended_insurance', v)}
                   max={effectiveCapacity}
@@ -1013,7 +982,7 @@ export default function CheckinPage() {
                 </div>
               )}
               <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">⚠️ Perdas e desfechos</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">⚠️ Consultas não realizadas</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">Registre conforme ocorrerem ou ao final do dia</p>
               </div>
               {paymentType === 'ambos' ? (
