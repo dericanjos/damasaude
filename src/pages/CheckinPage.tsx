@@ -29,9 +29,12 @@ type FormData = {
   noshows_private: number;
   noshows_insurance: number;
   cancellations: number;
+  cancellations_private: number;
+  cancellations_insurance: number;
   new_appointments: number;
   empty_slots: number;
   extra_appointments: number;
+  rescheduled: number;
   followup_done: boolean;
   notes: string;
 };
