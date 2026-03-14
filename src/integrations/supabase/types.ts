@@ -189,6 +189,8 @@ export type Database = {
           attended_insurance: number
           attended_private: number
           cancellations: number
+          cancellations_insurance: number
+          cancellations_private: number
           clinic_id: string
           created_at: string
           date: string
@@ -203,6 +205,7 @@ export type Database = {
           noshows_insurance: number
           noshows_private: number
           notes: string | null
+          rescheduled: number
           user_id: string
         }
         Insert: {
@@ -211,6 +214,8 @@ export type Database = {
           attended_insurance?: number
           attended_private?: number
           cancellations?: number
+          cancellations_insurance?: number
+          cancellations_private?: number
           clinic_id: string
           created_at?: string
           date: string
@@ -225,6 +230,7 @@ export type Database = {
           noshows_insurance?: number
           noshows_private?: number
           notes?: string | null
+          rescheduled?: number
           user_id: string
         }
         Update: {
@@ -233,6 +239,8 @@ export type Database = {
           attended_insurance?: number
           attended_private?: number
           cancellations?: number
+          cancellations_insurance?: number
+          cancellations_private?: number
           clinic_id?: string
           created_at?: string
           date?: string
@@ -247,6 +255,7 @@ export type Database = {
           noshows_insurance?: number
           noshows_private?: number
           notes?: string | null
+          rescheduled?: number
           user_id?: string
         }
         Relationships: [
