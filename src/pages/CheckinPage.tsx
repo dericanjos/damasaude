@@ -1008,8 +1008,8 @@ export default function CheckinPage() {
                     label="Atendimentos Convênio"
                     value={form.attended_insurance}
                     onChange={v => setField('attended_insurance', v)}
-                    max={Math.max(0, effectiveCapacity - form.attended_private)}
-                    hint={totalAttendedNow >= effectiveCapacity ? `Limite de ${effectiveCapacity} atendimentos atingido.` : undefined}
+                    max={Math.max(0, maxAttendedTotal - form.attended_private)}
+                    hint={totalAttendedNow >= maxAttendedTotal && maxAttendedTotal < effectiveCapacity ? `Restam ${maxAttendedTotal} vagas (descontando perdas já registradas).` : undefined}
                   />
                 </>
               ) : (
