@@ -134,7 +134,18 @@ export default function Dashboard() {
 
   const checkinData: CheckinData | null = todayCheckin ? toCheckinData(todayCheckin) : null;
 
-  const todayScore = checkinData ? calculateIDEA(checkinData, dailyCapacity, ticketPrivate, ticketInsurance) : null;
+  // Compute todayScore: prefer single-location data, fallback to consolidated
+  const todayScore = useMemo(() => {
+    if (checkinData) {
+      return calculateIDEA(checkinData, dailyCapacity, ticketPrivate, ticketInsurance);
+    }
+    // If no single checkin but we have consolidated data (multiple locations, no filter)
+    if (consolidated) {
+      return consolidated.ideaScore;
+    }
+    return null;
+  }, [checkinData, dailyCapacity, ticketPrivate, ticketInsurance, consolidated]);
+
   const yesterdayScore = yesterdayCheckin
     ? calculateIDEA(toCheckinData(yesterdayCheckin), dailyCapacity, ticketPrivate, ticketInsurance)
     : null;
