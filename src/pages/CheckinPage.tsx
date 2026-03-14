@@ -640,6 +640,30 @@ export default function CheckinPage() {
         <Switch checked={quickMode} onCheckedChange={setQuickMode} />
       </div>
 
+      {/* Validation warnings */}
+      {(() => {
+        const totalAtendidosNoshows = form.attended_private + form.attended_insurance + form.noshows_private + form.noshows_insurance + form.cancellations;
+        const warnings: string[] = [];
+        if (!quickMode && form.appointments_scheduled > 0 && totalAtendidosNoshows > form.appointments_scheduled) {
+          warnings.push(`Atendidos + Faltas + Cancelamentos (${totalAtendidosNoshows}) é maior que os agendados (${form.appointments_scheduled}).`);
+        }
+        if (!quickMode && form.appointments_scheduled > dailyCapacity) {
+          warnings.push(`Agendados (${form.appointments_scheduled}) excede a capacidade do dia (${dailyCapacity}).`);
+        }
+        if (warnings.length === 0) return null;
+        return (
+          <div className="rounded-2xl bg-idea-attention/10 border border-idea-attention/30 p-3.5 space-y-1">
+            {warnings.map((w, i) => (
+              <p key={i} className="text-xs text-idea-attention flex items-start gap-1.5">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                {w}
+              </p>
+            ))}
+            <p className="text-[10px] text-muted-foreground mt-1">Revise os valores antes de salvar.</p>
+          </div>
+        );
+      })()}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         {quickMode ? (
           <div className="rounded-2xl bg-card border border-border/60 p-5 shadow-card space-y-5">
