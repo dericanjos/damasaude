@@ -800,8 +800,8 @@ export default function CheckinPage() {
             ...(extraAppts > 0 ? [{ label: 'Encaixes', value: extraAppts }] : []),
             { label: 'Atendidos', value: attended },
             { label: 'No-shows', value: noshows },
-            { label: 'Cancelamentos', value: e.cancellations },
-            { label: 'Reagendamentos', value: e.new_appointments },
+            { label: 'Cancelamentos', value: (e.cancellations_private ?? 0) + (e.cancellations_insurance ?? 0) || e.cancellations },
+            { label: 'Remarcações', value: e.rescheduled ?? 0 },
             { label: 'Buracos', value: e.empty_slots },
           ].map(item => (
             <div key={item.label} className="flex items-center justify-between">
