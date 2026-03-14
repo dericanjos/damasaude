@@ -145,6 +145,8 @@ export function useCreateLocation() {
       address: string;
       timezone?: string;
       ticket_avg?: number;
+      ticket_private?: number;
+      ticket_insurance?: number;
       has_secretary?: boolean;
       schedules?: { weekday: number; start_time: string; end_time: string; daily_capacity: number }[];
     }) => {
