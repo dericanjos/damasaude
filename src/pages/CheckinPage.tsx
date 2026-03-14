@@ -513,8 +513,329 @@ export default function CheckinPage() {
     );
   }
 
+  // Active section for focused editing
+  const [activeSection, setActiveSection] = useState<'encaixes' | 'perdas' | null>(null);
+
+  const handleSaveSection = async () => {
+    if (!selectedLocationId) return;
+    try {
+      await saveCheckin.mutateAsync({
+        ...form,
+        location_id: selectedLocationId,
+        appointments_done: form.attended_private + form.attended_insurance,
+        no_show: form.noshows_private + form.noshows_insurance,
+      });
+      toast.success(activeSection === 'encaixes' ? 'Encaixes salvos!' : 'Perdas salvas!');
+      setActiveSection(null);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao salvar');
+    }
+  };
+
+  // ── FOCUSED ENCAIXES SECTION ──
+  if (activeSection === 'encaixes' && existing) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setActiveSection(null)} className="flex h-10 w-10 items-center justify-center rounded-2xl bg-card border border-border/60">
+            <ChevronRight className="h-5 w-5 text-foreground rotate-180" />
+          </button>
+          <div>
+            <h1 className="text-lg font-bold text-foreground">Encaixes</h1>
+            <p className="text-xs text-muted-foreground">Registre consultas extras do dia</p>
+          </div>
+        </div>
+
+        {selectedLocation && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <MapPin className="h-3 w-3" /> {selectedLocation.name}
+          </div>
+        )}
+
+        <div className="rounded-2xl bg-card border border-border/60 p-5 shadow-card space-y-4">
+          <div>
+            <p className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+              <Zap className="h-3.5 w-3.5" />
+              Consultas extras (fora da agenda)
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Pacientes atendidos além dos agendados</p>
+          </div>
+          <CheckinField
+            label="Quantos encaixes hoje?"
+            value={form.extra_appointments}
+            onChange={v => setField('extra_appointments', v)}
+          />
+          {form.extra_appointments > 0 && (
+            <p className="text-[10px] text-primary font-medium">
+              ✨ Capacidade efetiva: {effectiveCapacity} ({form.appointments_scheduled} agendadas + {form.extra_appointments} encaixes)
+            </p>
+          )}
+        </div>
+
+        <Button
+          className="w-full h-12 rounded-xl text-sm font-semibold shadow-premium"
+          onClick={handleSaveSection}
+          disabled={saveCheckin.isPending}
+        >
+          {saveCheckin.isPending ? 'Salvando...' : 'Salvar encaixes'}
+        </Button>
+      </div>
+    );
+  }
+
+  // ── FOCUSED PERDAS SECTION ──
+  if (activeSection === 'perdas' && existing) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setActiveSection(null)} className="flex h-10 w-10 items-center justify-center rounded-2xl bg-card border border-border/60">
+            <ChevronRight className="h-5 w-5 text-foreground rotate-180" />
+          </button>
+          <div>
+            <h1 className="text-lg font-bold text-foreground">Perdas e desfechos</h1>
+            <p className="text-xs text-muted-foreground">Registre no-shows e cancelamentos</p>
+          </div>
+        </div>
+
+        {selectedLocation && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <MapPin className="h-3 w-3" /> {selectedLocation.name}
+          </div>
+        )}
+
+        <div className="rounded-2xl bg-card border border-border/60 p-5 shadow-card space-y-5">
+          {hasValidationError && (
+            <div className="rounded-xl bg-destructive/10 border border-destructive/30 p-3">
+              <p className="text-xs text-destructive flex items-start gap-1.5">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                Total de desfechos ({totalOutcomes}) excede a capacidade efetiva ({effectiveCapacity}).
+              </p>
+            </div>
+          )}
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">⚠️ No-shows</p>
+          {paymentType === 'ambos' ? (
+            <>
+              <CheckinField
+                label="No-shows Particular"
+                value={form.noshows_private}
+                onChange={v => setField('noshows_private', v)}
+                max={Math.max(0, maxNoshowsTotal - form.noshows_insurance)}
+              />
+              <CheckinField
+                label="No-shows Convênio"
+                value={form.noshows_insurance}
+                onChange={v => setField('noshows_insurance', v)}
+                max={Math.max(0, maxNoshowsTotal - form.noshows_private)}
+              />
+            </>
+          ) : (
+            <CheckinField
+              label="No-show"
+              value={paymentType === 'particular' ? form.noshows_private : form.noshows_insurance}
+              onChange={v => setField(paymentType === 'particular' ? 'noshows_private' : 'noshows_insurance', v)}
+              max={Math.max(0, maxNoshowsTotal)}
+            />
+          )}
+          <CheckinField
+            label="Cancelamentos"
+            value={form.cancellations}
+            onChange={v => setField('cancellations', v)}
+            max={Math.max(0, maxCancellations)}
+          />
+          {/* Buracos auto */}
+          <div className="flex w-full flex-col gap-2.5 border-t border-border/40 pt-4">
+            <div className="flex items-center justify-between">
+              <Label className="whitespace-normal text-left text-sm font-semibold leading-snug text-foreground">
+                Buracos na Agenda
+              </Label>
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                auto
+              </span>
+            </div>
+            <p className="text-center text-2xl font-bold text-foreground">{form.empty_slots}</p>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Calculado: {form.appointments_scheduled} agendados − {totalOutcomes} desfechos
+            </p>
+          </div>
+        </div>
+
+        <Button
+          className="w-full h-12 rounded-xl text-sm font-semibold shadow-premium"
+          onClick={handleSaveSection}
+          disabled={saveCheckin.isPending || hasValidationError}
+        >
+          {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : 'Salvar perdas'}
+        </Button>
+      </div>
+    );
+  }
+
   // ── SUMMARY SCREEN (checkin already done today) ──
   if (existing && !editMode && !showReward) {
+    const e = existing as any;
+    const attended = (e.attended_private ?? 0) + (e.attended_insurance ?? 0);
+    const noshows = (e.noshows_private ?? 0) + (e.noshows_insurance ?? 0);
+    const checkinData = {
+      appointments_scheduled: e.appointments_scheduled,
+      attended_private: e.attended_private ?? 0,
+      attended_insurance: e.attended_insurance ?? 0,
+      noshows_private: e.noshows_private ?? 0,
+      noshows_insurance: e.noshows_insurance ?? 0,
+      cancellations: e.cancellations,
+      new_appointments: e.new_appointments,
+      empty_slots: e.empty_slots,
+      followup_done: e.followup_done,
+    };
+    const ideaScore = calculateIDEA(checkinData, dailyCapacity, ticketPrivate, ticketInsurance);
+    const status = getIdeaStatus(ideaScore);
+
+    const extraAppts = e.extra_appointments ?? 0;
+
+    // Determine what's still pending (Follow-up removed – lives on Dashboard)
+    const hasLosses = noshows > 0 || e.cancellations > 0;
+    const pendingItems: { label: string; action: string; done: boolean; section: 'encaixes' | 'perdas' }[] = [
+      { label: 'Encaixes', action: 'Registrar consultas extras', done: extraAppts > 0, section: 'encaixes' },
+      { label: 'Perdas', action: 'Registrar no-shows e cancelamentos', done: hasLosses || (attended === e.appointments_scheduled + extraAppts), section: 'perdas' },
+    ];
+    const pendingCount = pendingItems.filter(p => !p.done).length;
+
+    return (
+      <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl gradient-primary shadow-premium">
+            <CheckCircle2 className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-foreground">Check-in Concluído</h1>
+            <p className="text-xs text-muted-foreground">
+              {selectedLocation ? selectedLocation.name : 'Seu check-in de hoje já foi registrado.'}
+            </p>
+          </div>
+        </div>
+
+        {/* Location badge */}
+        {selectedLocation?.address && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <MapPin className="h-3 w-3" /> {selectedLocation.address}
+          </div>
+        )}
+
+        {/* IDEA Score mini */}
+        <div className={cn(
+          'rounded-2xl p-5 text-center',
+          status === 'critical' && 'idea-critical',
+          status === 'attention' && 'idea-attention',
+          status === 'stable' && 'idea-stable',
+        )}>
+          <p className="text-xs font-bold text-white/70 uppercase tracking-widest">Índice DAMA</p>
+          <p className="text-5xl font-extrabold text-white mt-1">{ideaScore}</p>
+          <p className="text-sm font-semibold text-white/90 mt-1">{getIdeaLabel(status)}</p>
+        </div>
+
+        {/* Pending actions – each item is a clickable card */}
+        {pendingCount > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold text-primary uppercase tracking-wider">📋 Ainda falta preencher hoje</p>
+              <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                {pendingCount} pendente{pendingCount > 1 ? 's' : ''}
+              </span>
+            </div>
+            {pendingItems.filter(p => !p.done).map(item => (
+              <button
+                key={item.label}
+                onClick={() => setActiveSection(item.section)}
+                className="w-full rounded-2xl bg-primary/5 border border-primary/20 p-4 text-left transition-all hover:bg-primary/10 active:scale-[0.98]"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-4 w-4 rounded-full border-2 border-primary/40 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{item.action}</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-primary" />
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Done items */}
+        {pendingItems.filter(p => p.done).length > 0 && (
+          <div className="space-y-1.5">
+            {pendingItems.filter(p => p.done).map(item => (
+              <button
+                key={item.label}
+                onClick={() => setActiveSection(item.section)}
+                className="w-full flex items-center gap-2.5 rounded-xl p-2.5 text-left hover:bg-card/50 transition-all"
+              >
+                <CheckCircle2 className="h-4 w-4 text-revenue-gain shrink-0" />
+                <p className="text-sm font-medium text-muted-foreground line-through">{item.label}</p>
+                <ChevronRight className="h-3 w-3 text-muted-foreground ml-auto" />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Summary card */}
+        <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-3">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Resumo do dia</p>
+          {[
+            { label: 'Agendados', value: e.appointments_scheduled },
+            ...(extraAppts > 0 ? [{ label: 'Encaixes', value: extraAppts }] : []),
+            { label: 'Atendidos', value: attended },
+            { label: 'No-shows', value: noshows },
+            { label: 'Cancelamentos', value: e.cancellations },
+            { label: 'Reagendamentos', value: e.new_appointments },
+            { label: 'Buracos', value: e.empty_slots },
+          ].map(item => (
+            <div key={item.label} className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">{item.label}</span>
+              <span className="text-sm font-bold text-foreground">{item.value}</span>
+            </div>
+          ))}
+          {e.notes && (
+            <div className="pt-2 border-t border-border/40">
+              <p className="text-xs text-muted-foreground">Observações</p>
+              <p className="text-sm text-foreground mt-1">{e.notes}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Edit full check-in */}
+        <Button
+          variant="outline"
+          className="w-full rounded-xl"
+          onClick={() => setEditMode(true)}
+        >
+          Editar check-in completo
+        </Button>
+
+        {/* Check other locations */}
+        {todayLocations.filter(l => l.id !== selectedLocationId && !checkedInLocationIds.includes(l.id)).length > 0 && (
+          <Button
+            variant="outline"
+            className="w-full rounded-xl"
+            onClick={() => {
+              handleClearLocation();
+              setEditMode(false);
+            }}
+          >
+            <MapPin className="h-4 w-4 mr-2" />
+            Check-in em outro local
+          </Button>
+        )}
+
+        <Button className="w-full h-12 rounded-xl text-sm font-semibold" onClick={() => navigate('/')}>
+          Ver painel
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+    );
+  }
     const e = existing as any;
     const attended = (e.attended_private ?? 0) + (e.attended_insurance ?? 0);
     const noshows = (e.noshows_private ?? 0) + (e.noshows_insurance ?? 0);
