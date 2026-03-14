@@ -40,14 +40,7 @@ export function calculateRevenueEstimated(
 }
 
 /**
- * IDEA Score – improved formula:
- * IDEA = 100 - penalty + bonus_followup + bonus_occupation + bonus_capture
- *
- * - Weighted average ticket based on actual attendance proportions
- * - Conditional follow-up bonus (+5 only if base score ≥ 50)
- * - Occupation bonus (+3 if occupancy ≥ 90%)
- * - Capture bonus (+2 if new_appointments > 0)
- * - Clamped 0–100
+ * IDEA Score – improved formula
  */
 export function calculateIDEA(
   data: CheckinData,
@@ -55,7 +48,7 @@ export function calculateIDEA(
   ticketPrivate?: number,
   ticketInsurance?: number,
 ): number {
-  const capacity = dailyCapacity ?? DEFAULT_DAILY_CAPACITY;
+  const capacity = Math.max(dailyCapacity ?? DEFAULT_DAILY_CAPACITY, 1);
   const tp = ticketPrivate ?? DEFAULT_TICKET_PRIVATE;
   const ti = ticketInsurance ?? DEFAULT_TICKET_INSURANCE;
 
@@ -165,6 +158,8 @@ export function calculateLossMap(
   return { noshow, cancel, buracos, total, biggest };
 }
 
+const PROTECTION = 'O mais importante é consistência; ajuste ao seu fluxo.';
+
 export function generateActions(
   data: CheckinData,
   targetNoshowRate: number,
@@ -184,8 +179,8 @@ export function generateActions(
       action_type: 'map_noshow',
       title: 'Mapear concentração de no-show',
       description: sec
-        ? `${noshows} paciente${noshows > 1 ? 's' : ''} não compareceu hoje. Peça à secretária para identificar em quais horários e tipos de consulta o no-show se concentrou para ajustar a confirmação.`
-        : `${noshows} paciente${noshows > 1 ? 's' : ''} não compareceu hoje. Identifique em quais horários e tipos de consulta o no-show se concentrou para ajustar seu protocolo de confirmação.`,
+        ? `${noshows} falta${noshows > 1 ? 's' : ''} hoje. Uma prática comum é pedir à secretária para verificar em quais horários o no-show se concentrou (manhã vs tarde, tipo de consulta). ${PROTECTION}`
+        : `${noshows} falta${noshows > 1 ? 's' : ''} hoje. Uma prática comum é verificar em quais horários o no-show se concentrou e reforçar confirmação nesses blocos (D-1 e D-0). ${PROTECTION}`,
       lossValue: lossMap.noshow,
       priority: 1,
     });
@@ -196,8 +191,8 @@ export function generateActions(
       action_type: 'review_cancellations',
       title: 'Revisar padrão de reagendamento do dia',
       description: sec
-        ? `${data.cancellations} cancelamento${data.cancellations > 1 ? 's' : ''} hoje. Oriente a secretária a verificar se houve remarcação e identificar o motivo para reduzir recorrência.`
-        : `${data.cancellations} cancelamento${data.cancellations > 1 ? 's' : ''} hoje. Verifique se houve remarcação e identifique o motivo para reduzir recorrência nos próximos dias.`,
+        ? `${data.cancellations} cancelamento${data.cancellations > 1 ? 's' : ''} hoje. Uma prática comum é a secretária verificar se houve remarcação e registrar o motivo. ${PROTECTION}`
+        : `${data.cancellations} cancelamento${data.cancellations > 1 ? 's' : ''} hoje. Uma prática comum é verificar se houve remarcação e registrar o motivo principal. ${PROTECTION}`,
       lossValue: lossMap.cancel,
       priority: 1,
     });
@@ -208,8 +203,8 @@ export function generateActions(
       action_type: 'fill_slots_2x',
       title: 'Rodar rotina de preenchimento 2x hoje',
       description: sec
-        ? `${data.empty_slots} buracos na agenda. Oriente a secretária a acionar a lista de espera agora e novamente no meio da tarde para maximizar o preenchimento.`
-        : `${data.empty_slots} buracos na agenda. Acione sua lista de espera agora e novamente no meio da tarde para maximizar o preenchimento.`,
+        ? `${data.empty_slots} buracos na agenda. Uma prática comum é acionar a lista de espera pela manhã e novamente à tarde. ${PROTECTION}`
+        : `${data.empty_slots} buracos na agenda. Uma prática comum é acionar a lista de espera agora e uma segunda vez à tarde. ${PROTECTION}`,
       lossValue: lossMap.buracos,
       priority: 1,
     });
@@ -218,8 +213,8 @@ export function generateActions(
       action_type: 'fill_slots',
       title: 'Preencher vaga aberta',
       description: sec
-        ? `1 buraco na agenda. Oriente a secretária a acionar a lista de espera ou antecipar uma consulta futura.`
-        : `1 buraco na agenda. Acione sua lista de espera ou antecipe uma consulta futura para preencher.`,
+        ? `1 buraco na agenda. Uma prática comum é acionar a lista de espera ou antecipar uma consulta futura. ${PROTECTION}`
+        : `1 buraco na agenda. Uma prática comum é acionar a lista de espera ou antecipar uma consulta futura. ${PROTECTION}`,
       lossValue: lossMap.buracos,
       priority: 2,
     });
@@ -230,8 +225,8 @@ export function generateActions(
       action_type: 'followup_2x',
       title: 'Executar follow-up em 2 janelas',
       description: sec
-        ? 'Follow-up pendente. Peça à secretária para fazer contato pela manhã e uma segunda rodada à tarde com pacientes que precisam de retorno.'
-        : 'Follow-up pendente. Faça contato pela manhã e uma segunda rodada à tarde com pacientes que precisam de retorno ou acompanhamento.',
+        ? `Follow-up pendente. Uma prática comum é fazer contato pela manhã e uma segunda rodada à tarde (WhatsApp ou ligação). ${PROTECTION}`
+        : `Follow-up pendente. Uma prática comum é fazer contato pela manhã e uma segunda rodada à tarde. ${PROTECTION}`,
       lossValue: 0,
       priority: 2,
     });
@@ -241,7 +236,7 @@ export function generateActions(
     candidates.push({
       action_type: 'plan_tomorrow',
       title: 'Escolher 1 decisão para amanhã',
-      description: `Score em ${ideaScore}. Escolha uma única ação preventiva para aplicar amanhã: melhorar confirmação, ajustar encaixes ou revisar horários de maior perda.`,
+      description: `Score em ${ideaScore}. Uma prática comum é escolher uma única ação preventiva para amanhã: melhorar confirmação D-1, ajustar encaixes ou revisar horários de maior perda. ${PROTECTION}`,
       lossValue: 0,
       priority: 3,
     });
@@ -251,7 +246,7 @@ export function generateActions(
     candidates.push({
       action_type: 'maintain',
       title: 'Manter consistência amanhã',
-      description: 'Dia eficiente sem vazamentos. Mantenha o mesmo protocolo amanhã para consolidar o resultado.',
+      description: `Dia eficiente sem vazamentos. Uma prática comum é manter o mesmo protocolo amanhã para consolidar o resultado. ${PROTECTION}`,
       lossValue: 0,
       priority: 3,
     });
@@ -262,8 +257,8 @@ export function generateActions(
     action_type: 'schedule_admin_block',
     title: 'Bloquear 30 min para gestão',
     description: sec
-      ? 'Reserve 30 minutos no final do dia com sua secretária para analisar os números da semana e revisar a agenda dos próximos dias.'
-      : 'Reserve 30 minutos no final do dia para analisar seus números da semana e revisar a agenda dos próximos dias.',
+      ? `Uma prática comum é reservar 30 min no fim do dia com a secretária para revisar números da semana. ${PROTECTION}`
+      : `Uma prática comum é reservar 30 min no fim do dia para revisar seus números e planejar o próximo dia. ${PROTECTION}`,
     lossValue: 0,
     priority: 4,
   });
@@ -290,7 +285,7 @@ export function generateActions(
     picked.push({
       action_type: 'schedule_admin_block',
       title: 'Bloquear 30 min para gestão',
-      description: 'Reserve 30 minutos para revisar seus números e planejar o próximo dia.',
+      description: `Uma prática comum é reservar 30 min para revisar seus números e planejar o próximo dia. ${PROTECTION}`,
     });
   }
 

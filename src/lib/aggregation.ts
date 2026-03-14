@@ -58,7 +58,7 @@ export function aggregateCheckins(
     const noshows = noshowPriv + noshowIns;
     const cancellations = c.cancellations ?? 0;
     const emptySlots = c.empty_slots ?? 0;
-    const cap = getCapacity(c);
+    const cap = Math.max(getCapacity(c), 0); // never negative
 
     const estimated = attended * ticket;
     const lost = (noshows + cancellations + emptySlots) * ticket;
@@ -87,6 +87,7 @@ export function aggregateCheckins(
     totalEmptySlots,
     totalScheduled,
     totalCapacity,
+    // CRITICAL: guard against totalCapacity=0 → show 0 instead of Infinity
     occupancyRate: totalCapacity > 0 ? totalAttended / totalCapacity : 0,
     noShowRate: totalNoshows / scheduled,
     lostByLocation,
