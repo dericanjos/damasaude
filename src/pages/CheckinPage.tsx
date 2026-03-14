@@ -696,7 +696,12 @@ export default function CheckinPage() {
         ) : (
           <>
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Agenda de hoje</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Agenda de hoje</p>
+                <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  Capacidade: {dailyCapacity} vagas
+                </span>
+              </div>
               <div className="grid grid-cols-1 gap-y-5">
                 <CheckinField
                   label="Agendados"
