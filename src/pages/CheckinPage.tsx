@@ -784,15 +784,15 @@ export default function CheckinPage() {
                       label="No-shows Particular"
                       value={form.noshows_private}
                       onChange={v => setField('noshows_private', v)}
-                      max={Math.max(0, maxNoshowsTotal - form.noshows_insurance)}
-                      hint={maxNoshowsTotal <= 0 ? 'Todos os horários já foram preenchidos por atendimentos.' : undefined}
+                      max={form.attended_private > 0 ? Math.max(0, maxNoshowsTotal - form.noshows_insurance) : 0}
+                      hint={form.attended_private === 0 ? 'Só é possível registrar no-show particular se houver atendidos particular.' : (maxNoshowsTotal <= 0 ? 'Todos os horários já foram preenchidos.' : undefined)}
                     />
                     <CheckinField
                       label="No-shows Convênio"
                       value={form.noshows_insurance}
                       onChange={v => setField('noshows_insurance', v)}
-                      max={Math.max(0, maxNoshowsTotal - form.noshows_private)}
-                      hint={maxNoshowsTotal <= 0 ? 'Todos os horários já foram preenchidos por atendimentos.' : undefined}
+                      max={form.attended_insurance > 0 ? Math.max(0, maxNoshowsTotal - form.noshows_private) : 0}
+                      hint={form.attended_insurance === 0 ? 'Só é possível registrar no-show convênio se houver atendidos convênio.' : (maxNoshowsTotal <= 0 ? 'Todos os horários já foram preenchidos.' : undefined)}
                     />
                   </>
                 ) : (
