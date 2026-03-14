@@ -533,15 +533,15 @@ export default function CheckinPage() {
     const status = getIdeaStatus(ideaScore);
 
     const extraAppts = e.extra_appointments ?? 0;
-    const summaryItems = [
-      { label: 'Agendados', value: e.appointments_scheduled },
-      ...(extraAppts > 0 ? [{ label: 'Encaixes', value: extraAppts }] : []),
-      { label: 'Atendidos', value: attended },
-      { label: 'No-shows', value: noshows },
-      { label: 'Cancelamentos', value: e.cancellations },
-      { label: 'Reagendamentos', value: e.new_appointments },
-      { label: 'Buracos', value: e.empty_slots },
+
+    // Determine what's still pending
+    const hasLosses = noshows > 0 || e.cancellations > 0;
+    const pendingItems: { label: string; action: string; done: boolean }[] = [
+      { label: 'Encaixes', action: 'Registrar consultas extras', done: extraAppts > 0 },
+      { label: 'Perdas', action: 'Registrar no-shows e cancelamentos', done: hasLosses || (attended === e.appointments_scheduled + extraAppts) },
+      { label: 'Follow-up', action: 'Confirmar follow-up do dia', done: e.followup_done },
     ];
+    const pendingCount = pendingItems.filter(p => !p.done).length;
 
     return (
       <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
@@ -577,10 +577,56 @@ export default function CheckinPage() {
           <p className="text-sm font-semibold text-white/90 mt-1">{getIdeaLabel(status)}</p>
         </div>
 
+        {/* Pending actions card */}
+        {pendingCount > 0 && (
+          <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4 shadow-card space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold text-primary uppercase tracking-wider">📋 Ainda falta preencher hoje</p>
+              <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                {pendingCount} pendente{pendingCount > 1 ? 's' : ''}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {pendingItems.map(item => (
+                <div key={item.label} className="flex items-center gap-2.5">
+                  {item.done ? (
+                    <CheckCircle2 className="h-4 w-4 text-revenue-gain shrink-0" />
+                  ) : (
+                    <div className="h-4 w-4 rounded-full border-2 border-primary/40 shrink-0" />
+                  )}
+                  <div>
+                    <p className={cn('text-sm font-medium', item.done ? 'text-muted-foreground line-through' : 'text-foreground')}>
+                      {item.label}
+                    </p>
+                    {!item.done && (
+                      <p className="text-[10px] text-muted-foreground">{item.action}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button
+              className="w-full rounded-xl mt-2"
+              onClick={() => setEditMode(true)}
+            >
+              <Zap className="h-4 w-4 mr-2" />
+              Atualizar check-in agora
+            </Button>
+          </div>
+        )}
+
         {/* Summary card */}
         <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-3">
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Resumo do dia</p>
-          {summaryItems.map(item => (
+          {[
+            { label: 'Agendados', value: e.appointments_scheduled },
+            ...(extraAppts > 0 ? [{ label: 'Encaixes', value: extraAppts }] : []),
+            { label: 'Atendidos', value: attended },
+            { label: 'No-shows', value: noshows },
+            { label: 'Cancelamentos', value: e.cancellations },
+            { label: 'Reagendamentos', value: e.new_appointments },
+            { label: 'Buracos', value: e.empty_slots },
+          ].map(item => (
             <div key={item.label} className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">{item.label}</span>
               <span className="text-sm font-bold text-foreground">{item.value}</span>
@@ -600,14 +646,16 @@ export default function CheckinPage() {
           )}
         </div>
 
-        {/* Actions */}
-        <Button
-          variant="outline"
-          className="w-full rounded-xl"
-          onClick={() => setEditMode(true)}
-        >
-          Editar check-in de hoje
-        </Button>
+        {/* Edit button (only if all pending done) */}
+        {pendingCount === 0 && (
+          <Button
+            variant="outline"
+            className="w-full rounded-xl"
+            onClick={() => setEditMode(true)}
+          >
+            Editar check-in de hoje
+          </Button>
+        )}
 
         {/* Check other locations */}
         {todayLocations.filter(l => l.id !== selectedLocationId && !checkedInLocationIds.includes(l.id)).length > 0 && (
