@@ -1097,7 +1097,7 @@ export default function CheckinPage() {
                   Calculado automaticamente: {form.appointments_scheduled} agendados − {totalOutcomes} desfechos
                 </p>
               </div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-2">🔄 Remarcações</p>
+              <p className="text-sm font-extrabold text-foreground uppercase tracking-wider mt-4 pt-4 border-t border-border/40">🔄 Remarcações</p>
               <CheckinField label="Consultas remarcadas" value={form.rescheduled} onChange={v => setField('rescheduled', v)} />
             </div>
             )}
