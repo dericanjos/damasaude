@@ -204,6 +204,13 @@ export default function CheckinPage() {
     }
   }, [existing?.id]);
 
+  // Auto-open section from URL param (e.g. /checkin?section=encaixes)
+  useEffect(() => {
+    if (paramSection && existing && !activeSection) {
+      setActiveSection(paramSection);
+    }
+  }, [paramSection, existing?.id]);
+
   // Get capacity from location schedule
   const todayWeekday = new Date().getDay();
   const todaySchedule = schedules.find(s => s.weekday === todayWeekday);
