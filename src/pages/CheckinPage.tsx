@@ -689,13 +689,11 @@ export default function CheckinPage() {
 
     const extraAppts = e.extra_appointments ?? 0;
 
-    // Determine what's still pending (Follow-up removed – lives on Dashboard)
-    const hasLosses = noshows > 0 || e.cancellations > 0;
-    const pendingItems: { label: string; action: string; done: boolean; section: 'encaixes' | 'perdas' }[] = [
-      { label: 'Encaixes', action: 'Registrar consultas extras', done: extraAppts > 0, section: 'encaixes' },
-      { label: 'Perdas', action: 'Registrar no-shows e cancelamentos', done: hasLosses || (attended === e.appointments_scheduled + extraAppts), section: 'perdas' },
+    // Action items for the day (always shown as quick-access buttons)
+    const actionItems: { label: string; description: string; section: 'encaixes' | 'perdas'; icon: string }[] = [
+      { label: 'Encaixes', description: 'Consultas extras do dia', section: 'encaixes', icon: '⚡' },
+      { label: 'Consultas não realizadas', description: 'No-shows e cancelamentos', section: 'perdas', icon: '📋' },
     ];
-    const pendingCount = pendingItems.filter(p => !p.done).length;
 
     return (
       <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
