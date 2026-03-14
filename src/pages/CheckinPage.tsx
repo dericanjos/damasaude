@@ -734,7 +734,7 @@ export default function CheckinPage() {
           </div>
         ) : (
           <>
-            <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
+             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Agenda de hoje</p>
                 <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
@@ -746,6 +746,8 @@ export default function CheckinPage() {
                   label="Agendados"
                   value={form.appointments_scheduled}
                   onChange={v => setField('appointments_scheduled', v)}
+                  max={dailyCapacity}
+                  hint={form.appointments_scheduled >= dailyCapacity ? 'Agenda lotada! Use "Encaixes" para consultas extras.' : undefined}
                 />
 
                 {paymentType === 'ambos' ? (
@@ -754,11 +756,15 @@ export default function CheckinPage() {
                       label="Atendidos Particular"
                       value={form.attended_private}
                       onChange={v => setField('attended_private', v)}
+                      max={Math.max(0, effectiveCapacity - form.attended_insurance)}
+                      hint={totalAttendedNow >= effectiveCapacity ? `Limite de ${effectiveCapacity} atendimentos atingido.` : undefined}
                     />
                     <CheckinField
                       label="Atendidos Convênio"
                       value={form.attended_insurance}
                       onChange={v => setField('attended_insurance', v)}
+                      max={Math.max(0, effectiveCapacity - form.attended_private)}
+                      hint={totalAttendedNow >= effectiveCapacity ? `Limite de ${effectiveCapacity} atendimentos atingido.` : undefined}
                     />
                   </>
                 ) : (
@@ -766,6 +772,7 @@ export default function CheckinPage() {
                     label="Atendidos"
                     value={paymentType === 'particular' ? form.attended_private : form.attended_insurance}
                     onChange={v => setField(paymentType === 'particular' ? 'attended_private' : 'attended_insurance', v)}
+                    max={effectiveCapacity}
                   />
                 )}
 
@@ -775,11 +782,15 @@ export default function CheckinPage() {
                       label="No-shows Particular"
                       value={form.noshows_private}
                       onChange={v => setField('noshows_private', v)}
+                      max={Math.max(0, maxNoshowsTotal - form.noshows_insurance)}
+                      hint={maxNoshowsTotal <= 0 ? 'Todos os horários já foram preenchidos por atendimentos.' : undefined}
                     />
                     <CheckinField
                       label="No-shows Convênio"
                       value={form.noshows_insurance}
                       onChange={v => setField('noshows_insurance', v)}
+                      max={Math.max(0, maxNoshowsTotal - form.noshows_private)}
+                      hint={maxNoshowsTotal <= 0 ? 'Todos os horários já foram preenchidos por atendimentos.' : undefined}
                     />
                   </>
                 ) : (
@@ -787,13 +798,48 @@ export default function CheckinPage() {
                     label="No-show"
                     value={paymentType === 'particular' ? form.noshows_private : form.noshows_insurance}
                     onChange={v => setField(paymentType === 'particular' ? 'noshows_private' : 'noshows_insurance', v)}
+                    max={Math.max(0, maxNoshowsTotal)}
                   />
                 )}
 
-                <CheckinField label="Cancelamentos" value={form.cancellations} onChange={v => setField('cancellations', v)} />
-                <CheckinField label="Novos Agendamentos" value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
-                <CheckinField label="Buracos na Agenda" value={form.empty_slots} onChange={v => setField('empty_slots', v)} />
+                <CheckinField
+                  label="Cancelamentos"
+                  value={form.cancellations}
+                  onChange={v => setField('cancellations', v)}
+                  max={Math.max(0, maxCancellations)}
+                  hint={maxCancellations <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
+                />
               </div>
+            </div>
+
+            {/* Encaixes */}
+            <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4 shadow-card space-y-3">
+              <div>
+                <p className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5" />
+                  Encaixes (consultas extras)
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Pacientes atendidos fora da agenda original (oportunidades, encaixes de última hora)
+                </p>
+              </div>
+              <CheckinField
+                label="Quantos encaixes hoje?"
+                value={form.extra_appointments}
+                onChange={v => setField('extra_appointments', v)}
+              />
+              {form.extra_appointments > 0 && (
+                <p className="text-[10px] text-primary font-medium">
+                  ✨ Capacidade efetiva do dia: {effectiveCapacity} ({dailyCapacity} agendadas + {form.extra_appointments} encaixes)
+                </p>
+              )}
+            </div>
+
+            {/* Other fields */}
+            <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Outros indicadores</p>
+              <CheckinField label="Novos Agendamentos" value={form.new_appointments} onChange={v => setField('new_appointments', v)} />
+              <CheckinField label="Buracos na Agenda" value={form.empty_slots} onChange={v => setField('empty_slots', v)} />
             </div>
 
             <div className="flex items-center justify-between rounded-2xl bg-card border border-border/60 p-4 shadow-card">
