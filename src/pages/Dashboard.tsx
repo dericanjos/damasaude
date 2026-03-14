@@ -22,7 +22,7 @@ import LocationSelector from '@/components/LocationSelector';
 import SuccessChecklistCard from '@/components/SuccessChecklistCard';
 import {
   TrendingDown, TrendingUp, AlertCircle, CheckCircle2,
-  ClipboardCheck, ArrowRight, Bell, HelpCircle, Flame, Newspaper
+  ClipboardCheck, ArrowRight, Bell, HelpCircle, Flame, Newspaper, Zap, FileX
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -262,7 +262,7 @@ export default function Dashboard() {
       {/* ── SUCCESS CHECKLIST (always first action) ── */}
       <SuccessChecklistCard />
 
-      {/* ── CHECK-IN PROMPT or IDEA SCORE ── */}
+      {/* ── CHECK-IN PROMPT or UPDATE PROMPT or IDEA SCORE ── */}
       {todayScore == null ? (
         <button
           onClick={() => navigate('/checkin')}
@@ -359,6 +359,31 @@ export default function Dashboard() {
           <p className="mt-3 text-xs text-white/80 border-t border-white/20 pt-2">
             {ideaDescription}
           </p>
+        </div>
+      )}
+
+      {/* ── QUICK UPDATE BUTTONS (only after check-in) ── */}
+      {todayScore != null && (
+        <div className="space-y-2">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">🔄 Atualize durante o dia</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => navigate('/checkin?section=encaixes')}
+              className="rounded-2xl bg-card border border-border/60 p-3.5 text-left transition-all hover:border-primary/40 active:scale-[0.98] shadow-card"
+            >
+              <Zap className="h-4 w-4 text-primary mb-1.5" />
+              <p className="text-sm font-semibold text-foreground">Encaixes</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Consultas extras</p>
+            </button>
+            <button
+              onClick={() => navigate('/checkin?section=perdas')}
+              className="rounded-2xl bg-card border border-border/60 p-3.5 text-left transition-all hover:border-primary/40 active:scale-[0.98] shadow-card"
+            >
+              <FileX className="h-4 w-4 text-idea-attention mb-1.5" />
+              <p className="text-sm font-semibold text-foreground">Não realizadas</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">No-shows e cancelamentos</p>
+            </button>
+          </div>
         </div>
       )}
 

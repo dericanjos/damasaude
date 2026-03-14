@@ -140,6 +140,7 @@ export default function CheckinPage() {
 
   // Location selection
   const paramLocationId = searchParams.get('location');
+  const paramSection = searchParams.get('section') as 'encaixes' | 'perdas' | null;
   const [selectedLocationId, setSelectedLocationId] = useState<string>('');
   const [manuallyCleared, setManuallyCleared] = useState(false);
 
@@ -202,6 +203,13 @@ export default function CheckinPage() {
       setForm(EMPTY_FORM);
     }
   }, [existing?.id]);
+
+  // Auto-open section from URL param (e.g. /checkin?section=encaixes)
+  useEffect(() => {
+    if (paramSection && existing && !activeSection) {
+      setActiveSection(paramSection);
+    }
+  }, [paramSection, existing?.id]);
 
   // Get capacity from location schedule
   const todayWeekday = new Date().getDay();
