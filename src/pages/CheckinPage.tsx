@@ -513,10 +513,7 @@ export default function CheckinPage() {
     );
   }
 
-  // Active section for focused editing
-  const [activeSection, setActiveSection] = useState<'encaixes' | 'perdas' | null>(null);
-
-  const handleSaveSection = async () => {
+  const handleSaveSection = async (sectionName: string) => {
     if (!selectedLocationId) return;
     try {
       await saveCheckin.mutateAsync({
@@ -525,7 +522,7 @@ export default function CheckinPage() {
         appointments_done: form.attended_private + form.attended_insurance,
         no_show: form.noshows_private + form.noshows_insurance,
       });
-      toast.success(activeSection === 'encaixes' ? 'Encaixes salvos!' : 'Perdas salvas!');
+      toast.success(sectionName === 'encaixes' ? 'Encaixes salvos!' : 'Perdas salvas!');
       setActiveSection(null);
     } catch (err: any) {
       toast.error(err.message || 'Erro ao salvar');
