@@ -346,6 +346,8 @@ export type Database = {
           location_id: string
           notes: string | null
           ticket_avg: number
+          ticket_insurance: number
+          ticket_private: number
           user_id: string
         }
         Insert: {
@@ -353,6 +355,8 @@ export type Database = {
           location_id: string
           notes?: string | null
           ticket_avg?: number
+          ticket_insurance?: number
+          ticket_private?: number
           user_id: string
         }
         Update: {
@@ -360,6 +364,8 @@ export type Database = {
           location_id?: string
           notes?: string | null
           ticket_avg?: number
+          ticket_insurance?: number
+          ticket_private?: number
           user_id?: string
         }
         Relationships: [
