@@ -20,11 +20,13 @@ export interface RevenueParams {
 export interface RevenueData {
   estimated: number;       // Revenue realized today
   lost: number;            // Revenue lost (no-show + cancellations + empty_slots)
-  occupancyRate: number;   // 0–1 (total_attended / daily_capacity)
+  occupancyRate: number;   // 0–1 (total_attended / daily_capacity), 0 if capacity=0
   noShowRate: number;      // 0–1 (total_noshows / scheduled)
   totalAttended: number;
   totalNoshows: number;
   averageTicket: number;   // Weighted average for generic losses
+  /** true when the capacity used was a fallback (no schedule found) */
+  capacityIsFallback?: boolean;
 }
 
 export function calculateRevenue(p: RevenueParams): RevenueData {
@@ -47,13 +49,16 @@ export function calculateRevenue(p: RevenueParams): RevenueData {
     (p.noshows_insurance * p.ticket_insurance) +
     ((p.cancellations + p.empty_slots) * averageTicket);
 
-  const occupancyRate = totalAttended / p.daily_capacity;
+  // CRITICAL: guard against capacity <= 0
+  const safeCapacity = Math.max(p.daily_capacity, 1);
+  const occupancyRate = p.daily_capacity > 0 ? totalAttended / safeCapacity : 0;
   const noShowRate = totalNoshows / scheduled;
 
   return { estimated, lost, occupancyRate, noShowRate, totalAttended, totalNoshows, averageTicket };
 }
 
 export function formatBRL(value: number): string {
+  if (!isFinite(value)) return 'R$ 0';
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
@@ -63,5 +68,12 @@ export function formatBRL(value: number): string {
 }
 
 export function formatPercent(value: number): string {
+  if (!isFinite(value)) return '—';
   return `${Math.round(value * 100)}%`;
+}
+
+/** Safe formatting that returns "—" for invalid values */
+export function safePercent(value: number | null | undefined): string {
+  if (value == null || !isFinite(value)) return '—';
+  return formatPercent(value);
 }
