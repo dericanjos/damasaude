@@ -241,6 +241,37 @@ function LocationEditDialog({
   );
 }
 
+      {/* Notificações */}
+      <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Bell className="h-4 w-4 text-primary" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">Lembretes de check-in</p>
+              <p className="text-xs text-muted-foreground">Notificações no início e fim do expediente</p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs"
+            onClick={async () => {
+              if (!('Notification' in window)) {
+                toast.error('Seu navegador não suporta notificações.');
+                return;
+              }
+              const result = await Notification.requestPermission();
+              if (result === 'granted') {
+                toast.success('Notificações ativadas! Você receberá lembretes no início e fim do expediente.');
+              } else {
+                toast.error('Permissão de notificação negada. Ative nas configurações do navegador.');
+              }
+            }}
+          >
+            {typeof Notification !== 'undefined' && Notification.permission === 'granted' ? '✓ Ativado' : 'Ativar'}
+          </Button>
+        </div>
+      </div>
 
 export default function SettingsPage() {
   const { signOut } = useAuth();
