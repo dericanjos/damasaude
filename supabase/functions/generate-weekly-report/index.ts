@@ -223,12 +223,7 @@ serve(async (req) => {
       ? "O médico TEM secretária. No plano de ação, sugira delegação de tarefas operacionais à secretária."
       : "O médico NÃO tem secretária. No plano de ação, sugira automação, uso de WhatsApp Business e ações diretas.";
 
-    const multiLocInstructions = isMultiLocation
-      ? `\nEste relatório é CONSOLIDADO de ${uniqueLocations.length} locais. Inclua:
-1. Parágrafo de visão geral da rede (receita total, perdida, ocupação, no-show).
-2. Bloco comparativo direto entre locais (maior vazamento, maior no-show, melhor ocupação).
-3. Plano de ação com 3 tarefas focadas no local com maior vazamento.`
-      : "";
+    // (multiLocInstructions moved inline into systemPrompt below)
 
     // Determine week number for rotation seed
     const weekDate = new Date(week_start);
