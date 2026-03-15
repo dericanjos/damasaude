@@ -605,6 +605,9 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* QA Simulation Mode */}
+      <QASimulationSection />
+
       <Button
         variant="outline"
         className="w-full rounded-xl border-destructive/30 text-destructive hover:bg-destructive/5"
@@ -613,6 +616,62 @@ export default function SettingsPage() {
         <LogOut className="h-4 w-4 mr-2" />
         Sair da conta
       </Button>
+    </div>
+  );
+}
+
+function QASimulationSection() {
+  const { seed, cleanup } = useQASeed();
+
+  const handleSeed = async () => {
+    try {
+      await seed.mutateAsync();
+      toast.success('Cenário de teste criado! 2 locais + 6 dias de check-ins.');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao gerar cenário');
+    }
+  };
+
+  const handleCleanup = async () => {
+    try {
+      await cleanup.mutateAsync();
+      toast.success('Cenário de teste removido.');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao remover cenário');
+    }
+  };
+
+  return (
+    <div className="rounded-2xl bg-card border border-dashed border-primary/40 shadow-card overflow-hidden">
+      <div className="px-4 pt-4 pb-2">
+        <div className="flex items-center gap-2">
+          <FlaskConical className="h-4 w-4 text-primary" />
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Modo Simulação (QA)</p>
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-1">
+          Gera 2 locais (Anjos Clinic + Hospital São Lucas) com check-ins de 6 dias para testar Dashboard, Ações e Relatórios.
+        </p>
+      </div>
+      <div className="px-4 py-3 space-y-2">
+        <Button
+          onClick={handleSeed}
+          disabled={seed.isPending}
+          className="w-full rounded-xl"
+          variant="default"
+        >
+          <FlaskConical className="h-4 w-4 mr-2" />
+          {seed.isPending ? 'Gerando...' : 'Gerar cenário de teste (hoje)'}
+        </Button>
+        <Button
+          onClick={handleCleanup}
+          disabled={cleanup.isPending}
+          className="w-full rounded-xl border-destructive/30 text-destructive hover:bg-destructive/5"
+          variant="outline"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          {cleanup.isPending ? 'Removendo...' : 'Remover cenário de teste'}
+        </Button>
+      </div>
     </div>
   );
 }
