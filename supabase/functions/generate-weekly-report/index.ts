@@ -230,22 +230,85 @@ serve(async (req) => {
 3. Plano de ação com 3 tarefas focadas no local com maior vazamento.`
       : "";
 
-    const systemPrompt = `Você é um consultor de negócios especialista em clínicas médicas. ${secretaryContext}${multiLocInstructions}
+    // Determine week number for rotation seed
+    const weekDate = new Date(week_start);
+    const weekNum = Math.floor(weekDate.getTime() / (7 * 24 * 60 * 60 * 1000));
+
+    const rotationHints: Record<string, string[]> = {
+      noshow: [
+        "confirmação em etapas (D-2 + D-1)",
+        "lista de espera preventiva com pacientes flexíveis",
+        "revisão de perfil de agendamento (horários/tipo de consulta)",
+        "canal alternativo de confirmação (ex: ligação vs mensagem)",
+        "política de reserva com pré-triagem",
+      ],
+      buracos: [
+        "lista de espera ativa com acionamento rápido",
+        "antecipação de retornos de outros dias",
+        "redistribuição de horários ociosos",
+        "encaixes programados em blocos fixos",
+        "ajuste de grade nos horários com mais ociosidade",
+      ],
+      cancel: [
+        "reagendamento rápido com 2 opções de data",
+        "janela de reposição no fim do expediente",
+        "mapeamento de motivos de cancelamento",
+        "política de aviso com antecedência",
+      ],
+      followup: [
+        "contato pós-consulta até 18h",
+        "reativação de pacientes que não retornaram",
+        "mensagem de prevenção de evasão",
+        "follow-up segmentado por tipo de consulta",
+      ],
+    };
+
+    // Pick rotation hints based on week number
+    const pickHint = (type: string) => {
+      const pool = rotationHints[type] || [];
+      return pool[weekNum % pool.length] || pool[0];
+    };
+
+    const rotationContext = `
+ROTAÇÃO DE ABORDAGENS (use a abordagem indicada para cada tipo de problema nesta semana — NÃO repita fórmulas anteriores):
+- No-show: foque em "${pickHint('noshow')}"
+- Buracos: foque em "${pickHint('buracos')}"
+- Cancelamentos: foque em "${pickHint('cancel')}"
+- Follow-up: foque em "${pickHint('followup')}"
+`;
+
+    const multiLocReportRules = isMultiLocation
+      ? `\nEste relatório é CONSOLIDADO de ${uniqueLocations.length} locais. OBRIGATÓRIO:
+1. Parágrafo de VISÃO GERAL DA REDE: receita total, receita perdida, ocupação média, no-show médio.
+2. COMPARATIVO ENTRE LOCAIS em bullets:
+   • Maior vazamento (R$): [local] — R$[valor]
+   • Maior no-show (%): [local] — [valor]%
+   • Melhor ocupação (%): [local] — [valor]%
+3. PLANO DE AÇÃO com 3 tarefas focadas no local com maior vazamento (prioridade).
+O relatório deve ter tom de GESTÃO DE REDE, não de clínica individual.`
+      : `\nEste relatório é de um LOCAL ESPECÍFICO. Foque no que mais puxou o resultado DESTE local. Use os números da tela (receita, perdida, ocupação, no-show) e conclua com plano coerente com o principal problema deste local.`;
+
+    const systemPrompt = `Você é o sistema de diagnóstico da DAMA, especializado em gestão de clínicas médicas. ${secretaryContext}${multiLocReportRules}
 
 Analise os dados da última semana e gere um relatório estratégico conciso em 3 seções:
-1. **👍 O que foi bem:** Destaque 1 ou 2 pontos positivos.
+1. **👍 O que foi bem:** Destaque 1 ou 2 pontos positivos com números.
 2. **⚠️ Pontos de atenção:** Identifique o maior problema da semana com impacto em R$.
-3. **🎯 Plano de Ação (3 tarefas):** Ações práticas e diretas. Para cada ação: o que fazer, tempo estimado e impacto esperado em R$. Tom direto e operacional ("Faça assim:", "Roteiro rápido:"). Máximo 3 tarefas + 1 frase de motivação.
+3. **🎯 Plano de Ação (3 tarefas):** Ações práticas, adaptáveis e variadas. Para cada ação: o que fazer, tempo estimado e impacto esperado em R$.
 
-${isPartial ? "IMPORTANTE: Este é um relatório PARCIAL. Module afirmações — evite conclusões definitivas com dados incompletos." : ""}
+${rotationContext}
+
+${isPartial ? "IMPORTANTE: Este é um relatório PARCIAL (" + checkins.length + " de " + workingDaysCount + " dias). Module afirmações — evite conclusões absolutas com dados incompletos. Sinalize a parcialidade no topo." : ""}
 
 REGRAS DE TEXTO:
-- Tom direto, médico-friendly, realista. Nada professoral.
-- Sempre mostre o "porquê" em 1 linha (impacto em R$ ou agenda).
-- Se o score ou resultado for crítico, insira: "Se quiser, a DAMA te entrega isso pronto com secretária e rotina montada."
+- Tom direto, médico-friendly, realista. Nada professoral ou de "curso".
+- Use expressões como "Uma prática comum é…", "Se fizer sentido no seu fluxo…", "Exemplo (adapte):…", "Opção 1 / Opção 2".
+- PROIBIDO: repetir fórmulas fixas como "WhatsApp 48h/24h, peça OK" toda semana. Varie as abordagens.
+- Sempre justifique com impacto (R$ ou agenda).
+- Se o resultado for crítico (muita perda), insira no final: "Se quiser, a DAMA te entrega isso pronto com secretária e rotina montada."
 - Os dados diferenciam pacientes particulares e de convênio. Use isso para insights de mix de receita.
 - Nunca mencione "IA", "inteligência artificial" ou "consultor". Tudo é funcionalidade nativa DAMA.
-- Máximo 350 palavras.
+- O mais importante é consistência; ajuste ao seu fluxo.
+- Máximo 400 palavras.
 - Responda APENAS em português brasileiro.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
