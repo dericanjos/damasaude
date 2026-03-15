@@ -54,7 +54,7 @@ export default function InstitucionalPage() {
               <p className="text-sm font-bold text-white">Secretária sobrecarregada?</p>
             </div>
             <p className="text-[13px] text-white/55 leading-relaxed">
-              Sua equipe de frente precisa de roteiros, processos de confirmação e protocolos de reagendamento para se tornar um centro de lucro.
+              Sua equipe de frente precisa de rotinas de comunicação, processos de confirmação e protocolos de reagendamento para se tornar um centro de lucro.
             </p>
           </div>
 
