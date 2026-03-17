@@ -80,6 +80,7 @@ function makeDefaultSchedule(): LocationScheduleConfig {
     startTimes: { dom: '08:00', seg: '08:00', ter: '08:00', qua: '08:00', qui: '08:00', sex: '08:00', sab: '08:00' },
     endTimes: { dom: '18:00', seg: '18:00', ter: '18:00', qua: '18:00', qui: '18:00', sex: '18:00', sab: '18:00' },
   };
+  }
 }
 
 
