@@ -317,7 +317,7 @@ export default function SettingsPage() {
       setTicketInsurance(vals.ticketInsurance);
       setFillRate(vals.fillRate);
       setNoshowRate(vals.noshowRate);
-      setInitial(vals);
+      setInitial({ ...vals, sameTickets: true });
     }
   }, [clinic?.id]);
 
