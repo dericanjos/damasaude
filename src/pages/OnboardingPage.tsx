@@ -132,23 +132,32 @@ export default function OnboardingPage() {
         .eq('user_id', user.id)
         .maybeSingle();
 
+      // Safe casts — canAdvance() guarantees these are valid numbers
+      const tp = (ticketPrivate || 0) as number;
+      const ti = (ticketInsurance || 0) as number;
+      const fr = (fillRate || 0) as number;
+      const nr = (noshowRate || 0) as number;
+      const nd = (numDoctors || 1) as number;
+      const safeCaps: Record<string, number> = {};
+      for (const [k, v] of Object.entries(dailyCapacities)) safeCaps[k] = (v || 0) as number;
+
       const clinicData = {
         name: locationNames[0] || 'Principal',
         doctor_name: doctorName,
         doctor_gender: doctorGender,
         specialty,
         has_secretary: hasSecretary,
-        num_doctors: numDoctors,
+        num_doctors: nd,
         payment_type: paymentType,
         working_days: workingDays,
-        daily_capacities: dailyCapacities,
-        daily_capacity: Math.max(...workingDays.map(d => dailyCapacities[d] ?? 0), 1),
-        ticket_private: paymentType === 'convenio' ? 0 : ticketPrivate,
-        ticket_insurance: paymentType === 'particular' ? 0 : ticketInsurance,
-        ticket_medio: paymentType === 'ambos' ? Math.round((ticketPrivate + ticketInsurance) / 2) : (paymentType === 'particular' ? ticketPrivate : ticketInsurance),
+        daily_capacities: safeCaps,
+        daily_capacity: Math.max(...workingDays.map(d => safeCaps[d] ?? 0), 1),
+        ticket_private: paymentType === 'convenio' ? 0 : tp,
+        ticket_insurance: paymentType === 'particular' ? 0 : ti,
+        ticket_medio: paymentType === 'ambos' ? Math.round((tp + ti) / 2) : (paymentType === 'particular' ? tp : ti),
         timezone,
-        target_fill_rate: fillRate / 100,
-        target_noshow_rate: noshowRate / 100,
+        target_fill_rate: fr / 100,
+        target_noshow_rate: nr / 100,
         monthly_revenue_target: monthlyTarget || null,
       };
 
