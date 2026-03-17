@@ -105,12 +105,18 @@ export default function OnboardingPage() {
     switch (step) {
       case 1: return doctorName.trim() && specialty;
       case 2: return typeof numLocations === 'number' && numLocations >= 1 && locationNames.length === numLocations && locationNames.every(n => n.trim()) && typeof numDoctors === 'number' && numDoctors >= 1;
-      case 3: return workingDays.length >= 1 && workingDays.some(d => (dailyCapacities[d] ?? 0) >= 1) && (
-        paymentType === 'particular' ? ticketPrivate >= 1 :
-        paymentType === 'convenio' ? ticketInsurance >= 1 :
-        ticketPrivate >= 1 && ticketInsurance >= 1
-      );
-      case 4: return fillRate >= 0 && noshowRate >= 0;
+      case 3: {
+        const capsValid = workingDays.length >= 1 && workingDays.some(d => {
+          const c = dailyCapacities[d];
+          return typeof c === 'number' && c >= 1;
+        });
+        const ticketValid =
+          paymentType === 'particular' ? (typeof ticketPrivate === 'number' && ticketPrivate >= 1) :
+          paymentType === 'convenio' ? (typeof ticketInsurance === 'number' && ticketInsurance >= 1) :
+          (typeof ticketPrivate === 'number' && ticketPrivate >= 1 && typeof ticketInsurance === 'number' && ticketInsurance >= 1);
+        return capsValid && ticketValid;
+      }
+      case 4: return typeof fillRate === 'number' && fillRate >= 0 && typeof noshowRate === 'number' && noshowRate >= 0;
       default: return true;
     }
   };
