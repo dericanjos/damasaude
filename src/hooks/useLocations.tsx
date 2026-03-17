@@ -12,6 +12,7 @@ export interface Location {
   timezone: string;
   is_active: boolean;
   has_secretary: boolean;
+  num_doctors: number;
   created_at: string;
 }
 

@@ -88,7 +88,7 @@ export default function OnboardingPage() {
   // Step 2
   const [numLocations, setNumLocations] = useState<number | ''>(1);
   const [locationNames, setLocationNames] = useState<string[]>(['']);
-  const [numDoctors, setNumDoctors] = useState<number | ''>(1);
+  const [numDoctorsPerLoc, setNumDoctorsPerLoc] = useState<(number | '')[]>([1]);
   const [paymentType, setPaymentType] = useState('ambos');
 
   // Step 3 — per-location schedules
@@ -108,11 +108,16 @@ export default function OnboardingPage() {
     setLocationSchedules(prev => prev.map((s, i) => i === idx ? updater(s) : s));
   };
 
-  // Sync locationSchedules array when numLocations changes (called from Step 2)
-  const syncSchedules = (n: number) => {
+  // Sync locationSchedules and numDoctorsPerLoc arrays when numLocations changes
+  const syncArrays = (n: number) => {
     setLocationSchedules(prev => {
       const updated = [...prev];
       while (updated.length < n) updated.push(makeDefaultSchedule());
+      return updated.slice(0, n);
+    });
+    setNumDoctorsPerLoc(prev => {
+      const updated = [...prev];
+      while (updated.length < n) updated.push(1);
       return updated.slice(0, n);
     });
   };
@@ -123,7 +128,8 @@ export default function OnboardingPage() {
       case 2: return typeof numLocations === 'number' && numLocations >= 1
         && locationNames.length === numLocations
         && locationNames.every(n => n.trim())
-        && typeof numDoctors === 'number' && numDoctors >= 1;
+        && numDoctorsPerLoc.length === numLocations
+        && numDoctorsPerLoc.every(n => typeof n === 'number' && n >= 1);
       case 3: {
         // Every location must have at least 1 working day with capacity >= 1
         const schedulesValid = locationSchedules.every(sched =>
@@ -154,7 +160,7 @@ export default function OnboardingPage() {
       const ti = (ticketInsurance || 0) as number;
       const fr = (fillRate || 0) as number;
       const nr = (noshowRate || 0) as number;
-      const nd = (numDoctors || 1) as number;
+      const nd = (numDoctorsPerLoc[0] || 1) as number;
 
       // Use first location's schedule for the global clinic record
       const firstSched = locationSchedules[0];
@@ -202,8 +208,10 @@ export default function OnboardingPage() {
           const locName = locationNames[i];
           const sched = locationSchedules[i] || makeDefaultSchedule();
 
+          const locNumDoctors = (numDoctorsPerLoc[i] || 1) as number;
           const { data: newLoc, error: locError } = await supabase.from('locations').insert({
             user_id: user.id, clinic_id: clinicRow.id, name: locName.trim(), address: '', timezone,
+            num_doctors: locNumDoctors,
           } as any).select().single();
           if (locError) throw locError;
 
@@ -353,7 +361,7 @@ export default function OnboardingPage() {
                     while (updated.length < n) updated.push('');
                     return updated.slice(0, n);
                   });
-                  syncSchedules(n);
+                  syncArrays(n);
                 }}
                 className="rounded-xl"
               />
@@ -361,31 +369,43 @@ export default function OnboardingPage() {
             </div>
             <div className="space-y-3">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                {numLocations === 1 ? 'Nome da clínica *' : 'Nomes das clínicas *'}
+                {numLocations === 1 ? 'Dados da clínica *' : 'Dados das clínicas *'}
               </Label>
               {locationNames.map((name, idx) => (
-                <div key={idx} className="space-y-1">
+                <div key={idx} className="rounded-xl border border-border p-3 space-y-2">
                   {typeof numLocations === 'number' && numLocations > 1 && (
-                    <p className="text-[11px] text-muted-foreground font-medium">Local {idx + 1}</p>
+                    <p className="text-xs text-muted-foreground font-semibold">Local {idx + 1}</p>
                   )}
-                  <Input
-                    value={name}
-                    onChange={e => {
-                      const updated = [...locationNames];
-                      updated[idx] = e.target.value;
-                      setLocationNames(updated);
-                    }}
-                    placeholder={numLocations === 1 ? 'Clínica Saúde & Vida' : `Ex: Consultório ${idx + 1}`}
-                    className="rounded-xl"
-                  />
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground">Nome *</p>
+                    <Input
+                      value={name}
+                      onChange={e => {
+                        const updated = [...locationNames];
+                        updated[idx] = e.target.value;
+                        setLocationNames(updated);
+                      }}
+                      placeholder={numLocations === 1 ? 'Clínica Saúde & Vida' : `Ex: Consultório ${idx + 1}`}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground">Quantidade de médicos *</p>
+                    <Input
+                      type="number" min={1}
+                      value={numDoctorsPerLoc[idx] ?? 1}
+                      onChange={e => {
+                        const updated = [...numDoctorsPerLoc];
+                        updated[idx] = e.target.value === '' ? '' : Math.max(1, Number(e.target.value));
+                        setNumDoctorsPerLoc(updated);
+                      }}
+                      className="rounded-xl"
+                      placeholder="1"
+                    />
+                    <p className="text-[10px] text-muted-foreground">Quantos médicos atendem neste local, incluindo você.</p>
+                  </div>
                 </div>
               ))}
-              <p className="text-[11px] text-muted-foreground">Nome de cada local onde você atende pacientes.</p>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quantidade de médicos *</Label>
-              <Input type="number" min={1} value={numDoctors} onChange={e => setNumDoctors(e.target.value === '' ? '' : Math.max(1, Number(e.target.value)))} className="rounded-xl" />
-              <p className="text-[11px] text-muted-foreground">Quantos médicos atendem na sua clínica, incluindo você.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Atende por *</Label>
