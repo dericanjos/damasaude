@@ -279,6 +279,7 @@ export default function SettingsPage() {
   const [hasSecretary, setHasSecretary] = useState(false);
 
   // Operation fields
+  const [sameTickets, setSameTickets] = useState(true);
   const [ticketPrivate, setTicketPrivate] = useState<number | ''>(250);
   const [ticketInsurance, setTicketInsurance] = useState<number | ''>(100);
 
