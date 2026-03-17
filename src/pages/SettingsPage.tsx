@@ -537,46 +537,6 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Card 2: Tickets */}
-      <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
-        <div className="px-4 pt-4 pb-2">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tickets</p>
-        </div>
-        <div className="px-4 pb-4 space-y-4">
-          <div className="flex items-center justify-between rounded-xl border border-border p-3">
-            <div>
-              <p className="text-sm font-medium text-foreground">Tickets iguais em todos os locais</p>
-              <p className="text-[10px] text-muted-foreground">Desative para definir valores diferentes por local</p>
-            </div>
-            <Switch checked={sameTickets} onCheckedChange={setSameTickets} />
-          </div>
-          {sameTickets ? (
-            <>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$)</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
-                  <Input type="number" min={1} value={ticketPrivate} onChange={e => setTicketPrivate(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl pl-10" />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$)</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
-                  <Input type="number" min={1} value={ticketInsurance} onChange={e => setTicketInsurance(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl pl-10" />
-                </div>
-              </div>
-              <p className="text-[11px] text-muted-foreground">Esses valores serão aplicados a todos os locais ao salvar.</p>
-            </>
-          ) : (
-            <div className="rounded-xl bg-muted/50 border border-border/40 p-3">
-              <p className="text-xs text-muted-foreground">
-                Os tickets são gerenciados individualmente. Clique em <Pencil className="inline h-3 w-3 mx-0.5" /> em cada local abaixo para editar os valores.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Card 3: Metas de Performance */}
       <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
