@@ -190,7 +190,7 @@ function LocationEditDialog({
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$)</Label>
-            <Input type="number" min={1} value={ticketInsLoc} onChange={e => setTicketInsLoc(Number(e.target.value))} className="rounded-xl" />
+            <Input type="number" min={1} value={ticketInsLoc} onChange={e => setTicketInsLoc(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket médio (R$) — fallback</Label>
