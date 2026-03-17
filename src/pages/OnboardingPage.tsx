@@ -290,12 +290,50 @@ export default function OnboardingPage() {
           <div className="space-y-5 mt-4">
             <div>
               <h2 className="text-xl font-bold text-foreground">Entendendo sua operação</h2>
-              <p className="text-sm text-muted-foreground mt-1">Informações da clínica.</p>
+              <p className="text-sm text-muted-foreground mt-1">Informações dos locais onde você atende.</p>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome da clínica *</Label>
-              <Input value={clinicName} onChange={e => setClinicName(e.target.value)} placeholder="Clínica Saúde & Vida" className="rounded-xl" />
-              <p className="text-[11px] text-muted-foreground">Nome do consultório ou clínica onde você atende.</p>
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Em quantas clínicas/locais você atende? *</Label>
+              <Input
+                type="number"
+                min={1}
+                max={10}
+                value={numLocations}
+                onChange={e => {
+                  const n = Math.max(1, Math.min(10, Number(e.target.value)));
+                  setNumLocations(n);
+                  setLocationNames(prev => {
+                    const updated = [...prev];
+                    while (updated.length < n) updated.push('');
+                    return updated.slice(0, n);
+                  });
+                }}
+                className="rounded-xl"
+              />
+              <p className="text-[11px] text-muted-foreground">Inclua todos os consultórios, clínicas e hospitais onde atende.</p>
+            </div>
+            <div className="space-y-3">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {numLocations === 1 ? 'Nome da clínica *' : 'Nomes das clínicas *'}
+              </Label>
+              {locationNames.map((name, idx) => (
+                <div key={idx} className="space-y-1">
+                  {numLocations > 1 && (
+                    <p className="text-[11px] text-muted-foreground font-medium">Local {idx + 1}</p>
+                  )}
+                  <Input
+                    value={name}
+                    onChange={e => {
+                      const updated = [...locationNames];
+                      updated[idx] = e.target.value;
+                      setLocationNames(updated);
+                    }}
+                    placeholder={numLocations === 1 ? 'Clínica Saúde & Vida' : `Ex: Consultório ${idx + 1}`}
+                    className="rounded-xl"
+                  />
+                </div>
+              ))}
+              <p className="text-[11px] text-muted-foreground">Nome de cada local onde você atende pacientes.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quantidade de médicos *</Label>
