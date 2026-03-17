@@ -105,11 +105,8 @@ export default function OnboardingPage() {
   const [numDoctors, setNumDoctors] = useState<number | ''>(1);
   const [paymentType, setPaymentType] = useState('ambos');
 
-  // Step 3
-  const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
-  const [dailyCapacities, setDailyCapacities] = useState<Record<string, number | ''>>({
-    dom: 0, seg: 16, ter: 16, qua: 16, qui: 16, sex: 16, sab: 0,
-  });
+  // Step 3 — per-location schedules
+  const [locationSchedules, setLocationSchedules] = useState<LocationScheduleConfig[]>([makeDefaultSchedule()]);
   const [ticketPrivate, setTicketPrivate] = useState<number | ''>(250);
   const [ticketInsurance, setTicketInsurance] = useState<number | ''>(100);
   const [timezone, setTimezone] = useState(detectTimezone());
