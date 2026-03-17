@@ -278,11 +278,6 @@ export default function SettingsPage() {
   const [specialty, setSpecialty] = useState('');
   const [hasSecretary, setHasSecretary] = useState(false);
 
-  // Operation fields
-  const [sameTickets, setSameTickets] = useState(true);
-  const [ticketPrivate, setTicketPrivate] = useState<number | ''>(250);
-  const [ticketInsurance, setTicketInsurance] = useState<number | ''>(100);
-
   // Performance goals
   const [fillRate, setFillRate] = useState<number | ''>(85);
   const [noshowRate, setNoshowRate] = useState<number | ''>(5);
