@@ -343,10 +343,10 @@ export default function SettingsPage() {
         doctor_gender: doctorGender,
         specialty,
         has_secretary: hasSecretary,
-        ticket_private: ticketPrivate,
-        ticket_insurance: ticketInsurance,
-        target_fill_rate: fillRate / 100,
-        target_noshow_rate: noshowRate / 100,
+        ticket_private: (ticketPrivate || 0) as number,
+        ticket_insurance: (ticketInsurance || 0) as number,
+        target_fill_rate: ((fillRate || 0) as number) / 100,
+        target_noshow_rate: ((noshowRate || 0) as number) / 100,
       } as any);
       setInitial({
         name, doctorName, doctorGender, specialty, hasSecretary,
