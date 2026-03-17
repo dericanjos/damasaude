@@ -186,7 +186,7 @@ function LocationEditDialog({
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$)</Label>
-            <Input type="number" min={1} value={ticketPrivLoc} onChange={e => setTicketPrivLoc(Number(e.target.value))} className="rounded-xl" />
+            <Input type="number" min={1} value={ticketPrivLoc} onChange={e => setTicketPrivLoc(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$)</Label>
