@@ -499,10 +499,6 @@ export default function SettingsPage() {
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome da clínica</Label>
             <Input value={name} onChange={e => setName(e.target.value)} className="rounded-xl" />
           </div>
-          <div className="flex items-center justify-between rounded-xl border border-border p-3">
-            <p className="text-sm font-medium text-foreground">Tem secretária?</p>
-            <Switch checked={hasSecretary} onCheckedChange={setHasSecretary} />
-          </div>
         </div>
       </div>
 
