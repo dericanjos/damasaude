@@ -367,31 +367,43 @@ export default function OnboardingPage() {
             </div>
             <div className="space-y-3">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                {numLocations === 1 ? 'Nome da clínica *' : 'Nomes das clínicas *'}
+                {numLocations === 1 ? 'Dados da clínica *' : 'Dados das clínicas *'}
               </Label>
               {locationNames.map((name, idx) => (
-                <div key={idx} className="space-y-1">
+                <div key={idx} className="rounded-xl border border-border p-3 space-y-2">
                   {typeof numLocations === 'number' && numLocations > 1 && (
-                    <p className="text-[11px] text-muted-foreground font-medium">Local {idx + 1}</p>
+                    <p className="text-xs text-muted-foreground font-semibold">Local {idx + 1}</p>
                   )}
-                  <Input
-                    value={name}
-                    onChange={e => {
-                      const updated = [...locationNames];
-                      updated[idx] = e.target.value;
-                      setLocationNames(updated);
-                    }}
-                    placeholder={numLocations === 1 ? 'Clínica Saúde & Vida' : `Ex: Consultório ${idx + 1}`}
-                    className="rounded-xl"
-                  />
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground">Nome *</p>
+                    <Input
+                      value={name}
+                      onChange={e => {
+                        const updated = [...locationNames];
+                        updated[idx] = e.target.value;
+                        setLocationNames(updated);
+                      }}
+                      placeholder={numLocations === 1 ? 'Clínica Saúde & Vida' : `Ex: Consultório ${idx + 1}`}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground">Quantidade de médicos *</p>
+                    <Input
+                      type="number" min={1}
+                      value={numDoctorsPerLoc[idx] ?? 1}
+                      onChange={e => {
+                        const updated = [...numDoctorsPerLoc];
+                        updated[idx] = e.target.value === '' ? '' : Math.max(1, Number(e.target.value));
+                        setNumDoctorsPerLoc(updated);
+                      }}
+                      className="rounded-xl"
+                      placeholder="1"
+                    />
+                    <p className="text-[10px] text-muted-foreground">Quantos médicos atendem neste local, incluindo você.</p>
+                  </div>
                 </div>
               ))}
-              <p className="text-[11px] text-muted-foreground">Nome de cada local onde você atende pacientes.</p>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quantidade de médicos *</Label>
-              <Input type="number" min={1} value={numDoctors} onChange={e => setNumDoctors(e.target.value === '' ? '' : Math.max(1, Number(e.target.value)))} className="rounded-xl" />
-              <p className="text-[11px] text-muted-foreground">Quantos médicos atendem na sua clínica, incluindo você.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Atende por *</Label>
