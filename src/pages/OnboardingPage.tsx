@@ -402,8 +402,8 @@ export default function OnboardingPage() {
                       type="number"
                       min={1}
                       max={100}
-                      value={dailyCapacities[day.value] ?? 16}
-                      onChange={e => setDailyCapacities(prev => ({ ...prev, [day.value]: Math.max(1, Number(e.target.value)) }))}
+                      value={dailyCapacities[day.value] ?? ''}
+                      onChange={e => setDailyCapacities(prev => ({ ...prev, [day.value]: e.target.value === '' ? '' : Math.max(0, Number(e.target.value)) }))}
                       className="rounded-xl"
                     />
                   </div>
