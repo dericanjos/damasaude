@@ -82,7 +82,8 @@ export default function OnboardingPage() {
   const [hasSecretary, setHasSecretary] = useState(false);
 
   // Step 2
-  const [clinicName, setClinicName] = useState('');
+  const [numLocations, setNumLocations] = useState(1);
+  const [locationNames, setLocationNames] = useState<string[]>(['']);
   const [numDoctors, setNumDoctors] = useState(1);
   const [paymentType, setPaymentType] = useState('ambos');
 
@@ -103,7 +104,7 @@ export default function OnboardingPage() {
   const canAdvance = () => {
     switch (step) {
       case 1: return doctorName.trim() && specialty;
-      case 2: return clinicName.trim() && numDoctors >= 1;
+      case 2: return locationNames.every(n => n.trim()) && numLocations >= 1 && numDoctors >= 1;
       case 3: return workingDays.length >= 1 && workingDays.some(d => (dailyCapacities[d] ?? 0) >= 1) && (
         paymentType === 'particular' ? ticketPrivate >= 1 :
         paymentType === 'convenio' ? ticketInsurance >= 1 :
@@ -126,7 +127,7 @@ export default function OnboardingPage() {
         .maybeSingle();
 
       const clinicData = {
-        name: clinicName,
+        name: locationNames[0] || 'Principal',
         doctor_name: doctorName,
         doctor_gender: doctorGender,
         specialty,
@@ -153,20 +154,29 @@ export default function OnboardingPage() {
         if (clinicError) throw clinicError;
       }
 
-      // Create default location from clinic data
+      // Create locations from collected names
       const { data: clinicRow2 } = await supabase.from('clinics').select('id').eq('user_id', user.id).maybeSingle();
       if (clinicRow2) {
-        const { data: existingLoc } = await supabase.from('locations').select('id').eq('user_id', user.id).maybeSingle();
-        if (!existingLoc) {
+        // Delete any existing locations first (re-onboarding scenario)
+        await supabase.from('location_schedules').delete().eq('user_id', user.id);
+        await supabase.from('location_financials').delete().eq('user_id', user.id);
+        await supabase.from('locations').delete().eq('user_id', user.id);
+
+        const dayMap: Record<string, number> = { dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
+        const ticketAvg = paymentType === 'ambos' ? Math.round((ticketPrivate + ticketInsurance) / 2) : (paymentType === 'particular' ? ticketPrivate : ticketInsurance);
+
+        for (const locName of locationNames) {
           const { data: newLoc, error: locError } = await supabase.from('locations').insert({
-            user_id: user.id, clinic_id: clinicRow2.id, name: clinicName || 'Principal', address: '', timezone,
+            user_id: user.id, clinic_id: clinicRow2.id, name: locName.trim(), address: '', timezone,
           } as any).select().single();
           if (locError) throw locError;
+
           await supabase.from('location_financials').insert({
-            user_id: user.id, location_id: newLoc.id,
-            ticket_avg: paymentType === 'ambos' ? Math.round((ticketPrivate + ticketInsurance) / 2) : (paymentType === 'particular' ? ticketPrivate : ticketInsurance),
+            user_id: user.id, location_id: newLoc.id, ticket_avg: ticketAvg,
+            ticket_private: paymentType === 'convenio' ? 0 : ticketPrivate,
+            ticket_insurance: paymentType === 'particular' ? 0 : ticketInsurance,
           } as any);
-          const dayMap: Record<string, number> = { dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
+
           const scheduleRows = workingDays.filter(d => (dailyCapacities[d] ?? 0) > 0).map(d => ({
             user_id: user.id, location_id: newLoc.id, weekday: dayMap[d],
             daily_capacity: dailyCapacities[d] ?? 16, start_time: '08:00', end_time: '18:00',
@@ -174,7 +184,6 @@ export default function OnboardingPage() {
           if (scheduleRows.length > 0) await supabase.from('location_schedules').insert(scheduleRows as any);
         }
       }
-
       // Update user metadata
       const { error: authUpdateError } = await supabase.auth.updateUser({
         data: { doctor_name: doctorName },
@@ -281,12 +290,50 @@ export default function OnboardingPage() {
           <div className="space-y-5 mt-4">
             <div>
               <h2 className="text-xl font-bold text-foreground">Entendendo sua operação</h2>
-              <p className="text-sm text-muted-foreground mt-1">Informações da clínica.</p>
+              <p className="text-sm text-muted-foreground mt-1">Informações dos locais onde você atende.</p>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome da clínica *</Label>
-              <Input value={clinicName} onChange={e => setClinicName(e.target.value)} placeholder="Clínica Saúde & Vida" className="rounded-xl" />
-              <p className="text-[11px] text-muted-foreground">Nome do consultório ou clínica onde você atende.</p>
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Em quantas clínicas/locais você atende? *</Label>
+              <Input
+                type="number"
+                min={1}
+                max={10}
+                value={numLocations}
+                onChange={e => {
+                  const n = Math.max(1, Math.min(10, Number(e.target.value)));
+                  setNumLocations(n);
+                  setLocationNames(prev => {
+                    const updated = [...prev];
+                    while (updated.length < n) updated.push('');
+                    return updated.slice(0, n);
+                  });
+                }}
+                className="rounded-xl"
+              />
+              <p className="text-[11px] text-muted-foreground">Inclua todos os consultórios, clínicas e hospitais onde atende.</p>
+            </div>
+            <div className="space-y-3">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {numLocations === 1 ? 'Nome da clínica *' : 'Nomes das clínicas *'}
+              </Label>
+              {locationNames.map((name, idx) => (
+                <div key={idx} className="space-y-1">
+                  {numLocations > 1 && (
+                    <p className="text-[11px] text-muted-foreground font-medium">Local {idx + 1}</p>
+                  )}
+                  <Input
+                    value={name}
+                    onChange={e => {
+                      const updated = [...locationNames];
+                      updated[idx] = e.target.value;
+                      setLocationNames(updated);
+                    }}
+                    placeholder={numLocations === 1 ? 'Clínica Saúde & Vida' : `Ex: Consultório ${idx + 1}`}
+                    className="rounded-xl"
+                  />
+                </div>
+              ))}
+              <p className="text-[11px] text-muted-foreground">Nome de cada local onde você atende pacientes.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quantidade de médicos *</Label>
