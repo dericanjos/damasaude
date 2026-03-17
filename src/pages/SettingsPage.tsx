@@ -70,9 +70,9 @@ function LocationEditDialog({
 
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
-  const [ticketAvg, setTicketAvg] = useState(250);
-  const [ticketPrivLoc, setTicketPrivLoc] = useState(250);
-  const [ticketInsLoc, setTicketInsLoc] = useState(100);
+  const [ticketAvg, setTicketAvg] = useState<number | ''>(250);
+  const [ticketPrivLoc, setTicketPrivLoc] = useState<number | ''>(250);
+  const [ticketInsLoc, setTicketInsLoc] = useState<number | ''>(100);
   const [hasSecretaryLoc, setHasSecretaryLoc] = useState(false);
   const [activeDays, setActiveDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [schedules, setSchedules] = useState<Record<number, ScheduleEntry>>({});
