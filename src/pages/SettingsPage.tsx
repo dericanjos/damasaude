@@ -194,7 +194,7 @@ function LocationEditDialog({
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket médio (R$) — fallback</Label>
-            <Input type="number" min={1} value={ticketAvg} onChange={e => setTicketAvg(Number(e.target.value))} className="rounded-xl" />
+            <Input type="number" min={1} value={ticketAvg} onChange={e => setTicketAvg(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl" />
             <p className="text-[10px] text-muted-foreground">Usado para cancelamentos e buracos quando não há split por tipo.</p>
           </div>
 
