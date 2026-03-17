@@ -10,32 +10,18 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Rocket, CheckCircle2 } from 'lucide-react';
+import { Rocket } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import logoDama from '@/assets/logo-dama.png';
 
 const SPECIALTIES = [
-  'Cardiologia',
-  'Cirurgia Geral',
-  'Cirurgia Plástica',
-  'Clínica Geral / Medicina de Família',
-  'Dermatologia',
-  'Endocrinologia',
-  'Gastroenterologia',
-  'Ginecologia e Obstetrícia',
-  'Medicina da Família e Comunidade',
-  'Neurologia',
-  'Nutrição / Nutrologia',
-  'Oftalmologia',
-  'Oncologia',
-  'Ortopedia',
-  'Otorrinolaringologia',
-  'Pediatria',
-  'Pneumologia',
-  'Psiquiatria',
-  'Reumatologia',
-  'Urologia',
-  'Outra',
+  'Cardiologia', 'Cirurgia Geral', 'Cirurgia Plástica',
+  'Clínica Geral / Medicina de Família', 'Dermatologia', 'Endocrinologia',
+  'Gastroenterologia', 'Ginecologia e Obstetrícia', 'Medicina da Família e Comunidade',
+  'Neurologia', 'Nutrição / Nutrologia', 'Oftalmologia', 'Oncologia',
+  'Ortopedia', 'Otorrinolaringologia', 'Pediatria', 'Pneumologia',
+  'Psiquiatria', 'Reumatologia', 'Urologia', 'Outra',
 ];
 
 const TIMEZONES = [
@@ -56,6 +42,8 @@ const DAYS = [
   { value: 'sab', label: 'Sáb' },
 ];
 
+const DAY_MAP: Record<string, number> = { dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
+
 function detectTimezone(): string {
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -64,6 +52,22 @@ function detectTimezone(): string {
   } catch {
     return 'America/Sao_Paulo';
   }
+}
+
+interface LocationScheduleConfig {
+  workingDays: string[];
+  dailyCapacities: Record<string, number | ''>;
+  startTimes: Record<string, string>;
+  endTimes: Record<string, string>;
+}
+
+function makeDefaultSchedule(): LocationScheduleConfig {
+  return {
+    workingDays: ['seg', 'ter', 'qua', 'qui', 'sex'],
+    dailyCapacities: { dom: 0, seg: 16, ter: 16, qua: 16, qui: 16, sex: 16, sab: 0 },
+    startTimes: { dom: '08:00', seg: '08:00', ter: '08:00', qua: '08:00', qui: '08:00', sex: '08:00', sab: '08:00' },
+    endTimes: { dom: '18:00', seg: '18:00', ter: '18:00', qua: '18:00', qui: '18:00', sex: '18:00', sab: '18:00' },
+  };
 }
 
 export default function OnboardingPage() {
@@ -87,11 +91,9 @@ export default function OnboardingPage() {
   const [numDoctors, setNumDoctors] = useState<number | ''>(1);
   const [paymentType, setPaymentType] = useState('ambos');
 
-  // Step 3
-  const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
-  const [dailyCapacities, setDailyCapacities] = useState<Record<string, number | ''>>({
-    dom: 0, seg: 16, ter: 16, qua: 16, qui: 16, sex: 16, sab: 0,
-  });
+  // Step 3 — per-location schedules
+  const [locationSchedules, setLocationSchedules] = useState<LocationScheduleConfig[]>([makeDefaultSchedule()]);
+  const [activeLocTab, setActiveLocTab] = useState('0');
   const [ticketPrivate, setTicketPrivate] = useState<number | ''>(250);
   const [ticketInsurance, setTicketInsurance] = useState<number | ''>(100);
   const [timezone, setTimezone] = useState(detectTimezone());
@@ -101,20 +103,40 @@ export default function OnboardingPage() {
   const [noshowRate, setNoshowRate] = useState<number | ''>(5);
   const [monthlyTarget, setMonthlyTarget] = useState<number | ''>('');
 
+  // Helper: update schedule for a specific location index
+  const updateLocSchedule = (idx: number, updater: (prev: LocationScheduleConfig) => LocationScheduleConfig) => {
+    setLocationSchedules(prev => prev.map((s, i) => i === idx ? updater(s) : s));
+  };
+
+  // Sync locationSchedules array when numLocations changes (called from Step 2)
+  const syncSchedules = (n: number) => {
+    setLocationSchedules(prev => {
+      const updated = [...prev];
+      while (updated.length < n) updated.push(makeDefaultSchedule());
+      return updated.slice(0, n);
+    });
+  };
+
   const canAdvance = () => {
     switch (step) {
       case 1: return doctorName.trim() && specialty;
-      case 2: return typeof numLocations === 'number' && numLocations >= 1 && locationNames.length === numLocations && locationNames.every(n => n.trim()) && typeof numDoctors === 'number' && numDoctors >= 1;
+      case 2: return typeof numLocations === 'number' && numLocations >= 1
+        && locationNames.length === numLocations
+        && locationNames.every(n => n.trim())
+        && typeof numDoctors === 'number' && numDoctors >= 1;
       case 3: {
-        const capsValid = workingDays.length >= 1 && workingDays.some(d => {
-          const c = dailyCapacities[d];
-          return typeof c === 'number' && c >= 1;
-        });
+        // Every location must have at least 1 working day with capacity >= 1
+        const schedulesValid = locationSchedules.every(sched =>
+          sched.workingDays.length >= 1 && sched.workingDays.some(d => {
+            const c = sched.dailyCapacities[d];
+            return typeof c === 'number' && c >= 1;
+          })
+        );
         const ticketValid =
           paymentType === 'particular' ? (typeof ticketPrivate === 'number' && ticketPrivate >= 1) :
           paymentType === 'convenio' ? (typeof ticketInsurance === 'number' && ticketInsurance >= 1) :
           (typeof ticketPrivate === 'number' && ticketPrivate >= 1 && typeof ticketInsurance === 'number' && ticketInsurance >= 1);
-        return capsValid && ticketValid;
+        return schedulesValid && ticketValid;
       }
       case 4: return typeof fillRate === 'number' && fillRate >= 0 && typeof noshowRate === 'number' && noshowRate >= 0;
       default: return true;
@@ -125,21 +147,19 @@ export default function OnboardingPage() {
     if (!user) return;
     setSaving(true);
     try {
-      // Update or create clinic
       const { data: existingClinic } = await supabase
-        .from('clinics')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .from('clinics').select('id').eq('user_id', user.id).maybeSingle();
 
-      // Safe casts — canAdvance() guarantees these are valid numbers
       const tp = (ticketPrivate || 0) as number;
       const ti = (ticketInsurance || 0) as number;
       const fr = (fillRate || 0) as number;
       const nr = (noshowRate || 0) as number;
       const nd = (numDoctors || 1) as number;
+
+      // Use first location's schedule for the global clinic record
+      const firstSched = locationSchedules[0];
       const safeCaps: Record<string, number> = {};
-      for (const [k, v] of Object.entries(dailyCapacities)) safeCaps[k] = (v || 0) as number;
+      for (const [k, v] of Object.entries(firstSched.dailyCapacities)) safeCaps[k] = (v || 0) as number;
 
       const clinicData = {
         name: locationNames[0] || 'Principal',
@@ -149,9 +169,9 @@ export default function OnboardingPage() {
         has_secretary: hasSecretary,
         num_doctors: nd,
         payment_type: paymentType,
-        working_days: workingDays,
+        working_days: firstSched.workingDays,
         daily_capacities: safeCaps,
-        daily_capacity: Math.max(...workingDays.map(d => safeCaps[d] ?? 0), 1),
+        daily_capacity: Math.max(...firstSched.workingDays.map(d => safeCaps[d] ?? 0), 1),
         ticket_private: paymentType === 'convenio' ? 0 : tp,
         ticket_insurance: paymentType === 'particular' ? 0 : ti,
         ticket_medio: paymentType === 'ambos' ? Math.round((tp + ti) / 2) : (paymentType === 'particular' ? tp : ti),
@@ -169,20 +189,21 @@ export default function OnboardingPage() {
         if (clinicError) throw clinicError;
       }
 
-      // Create locations from collected names
-      const { data: clinicRow2 } = await supabase.from('clinics').select('id').eq('user_id', user.id).maybeSingle();
-      if (clinicRow2) {
-        // Delete any existing locations first (re-onboarding scenario)
+      // Create locations with per-location schedules
+      const { data: clinicRow } = await supabase.from('clinics').select('id').eq('user_id', user.id).maybeSingle();
+      if (clinicRow) {
         await supabase.from('location_schedules').delete().eq('user_id', user.id);
         await supabase.from('location_financials').delete().eq('user_id', user.id);
         await supabase.from('locations').delete().eq('user_id', user.id);
 
-        const dayMap: Record<string, number> = { dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
         const ticketAvg = paymentType === 'ambos' ? Math.round((tp + ti) / 2) : (paymentType === 'particular' ? tp : ti);
 
-        for (const locName of locationNames) {
+        for (let i = 0; i < locationNames.length; i++) {
+          const locName = locationNames[i];
+          const sched = locationSchedules[i] || makeDefaultSchedule();
+
           const { data: newLoc, error: locError } = await supabase.from('locations').insert({
-            user_id: user.id, clinic_id: clinicRow2.id, name: locName.trim(), address: '', timezone,
+            user_id: user.id, clinic_id: clinicRow.id, name: locName.trim(), address: '', timezone,
           } as any).select().single();
           if (locError) throw locError;
 
@@ -192,20 +213,28 @@ export default function OnboardingPage() {
             ticket_insurance: paymentType === 'particular' ? 0 : ti,
           } as any);
 
-          const scheduleRows = workingDays.filter(d => (safeCaps[d] ?? 0) > 0).map(d => ({
-            user_id: user.id, location_id: newLoc.id, weekday: dayMap[d],
-            daily_capacity: safeCaps[d] ?? 16, start_time: '08:00', end_time: '18:00',
-          }));
+          const scheduleRows = sched.workingDays
+            .filter(d => {
+              const c = sched.dailyCapacities[d];
+              return typeof c === 'number' && c > 0;
+            })
+            .map(d => ({
+              user_id: user.id,
+              location_id: newLoc.id,
+              weekday: DAY_MAP[d],
+              daily_capacity: (sched.dailyCapacities[d] || 16) as number,
+              start_time: sched.startTimes[d] || '08:00',
+              end_time: sched.endTimes[d] || '18:00',
+            }));
           if (scheduleRows.length > 0) await supabase.from('location_schedules').insert(scheduleRows as any);
         }
       }
-      // Update user metadata
+
       const { error: authUpdateError } = await supabase.auth.updateUser({
         data: { doctor_name: doctorName },
       });
       if (authUpdateError) throw authUpdateError;
 
-      // Mark onboarding as completed (create profile if missing)
       const { error: profileError } = await supabase.from('profiles').upsert(
         {
           user_id: user.id,
@@ -254,6 +283,7 @@ export default function OnboardingPage() {
       </div>
 
       <div className="flex-1 px-6 pb-6 overflow-y-auto">
+        {/* ── Step 1: Perfil ── */}
         {step === 1 && (
           <div className="space-y-5 mt-4">
             <div>
@@ -301,6 +331,7 @@ export default function OnboardingPage() {
           </div>
         )}
 
+        {/* ── Step 2: Clínicas ── */}
         {step === 2 && (
           <div className="space-y-5 mt-4">
             <div>
@@ -310,16 +341,11 @@ export default function OnboardingPage() {
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Em quantas clínicas/locais você atende? *</Label>
               <Input
-                type="number"
-                min={1}
-                max={10}
+                type="number" min={1} max={10}
                 value={numLocations}
                 onChange={e => {
                   const raw = e.target.value;
-                  if (raw === '') {
-                    setNumLocations('');
-                    return;
-                  }
+                  if (raw === '') { setNumLocations(''); return; }
                   const n = Math.max(1, Math.min(10, Number(raw)));
                   setNumLocations(n);
                   setLocationNames(prev => {
@@ -327,6 +353,7 @@ export default function OnboardingPage() {
                     while (updated.length < n) updated.push('');
                     return updated.slice(0, n);
                   });
+                  syncSchedules(n);
                 }}
                 className="rounded-xl"
               />
@@ -375,50 +402,44 @@ export default function OnboardingPage() {
           </div>
         )}
 
+        {/* ── Step 3: Agenda por local ── */}
         {step === 3 && (
           <div className="space-y-5 mt-4">
             <div>
-              <h2 className="text-xl font-bold text-foreground">Configurando seu copiloto</h2>
-              <p className="text-sm text-muted-foreground mt-1">Personalize a experiência.</p>
+              <h2 className="text-xl font-bold text-foreground">Configurando sua agenda</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {locationSchedules.length > 1
+                  ? 'Configure os dias e horários de cada local.'
+                  : 'Configure os dias e horários de atendimento.'}
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dias de atendimento *</Label>
-              <div className="flex flex-wrap gap-3">
-                {DAYS.map(day => (
-                  <label key={day.value} className="flex items-center gap-1.5 cursor-pointer">
-                    <Checkbox
-                      checked={workingDays.includes(day.value)}
-                      onCheckedChange={(checked) => {
-                        setWorkingDays(prev =>
-                          checked ? [...prev, day.value] : prev.filter(d => d !== day.value)
-                        );
-                      }}
+
+            {locationSchedules.length > 1 ? (
+              <Tabs value={activeLocTab} onValueChange={setActiveLocTab}>
+                <TabsList className="w-full flex-wrap h-auto gap-1 bg-muted/50 p-1 rounded-xl">
+                  {locationSchedules.map((_, idx) => (
+                    <TabsTrigger key={idx} value={String(idx)} className="text-xs rounded-lg flex-1 min-w-0">
+                      {locationNames[idx]?.trim() || `Local ${idx + 1}`}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                {locationSchedules.map((sched, idx) => (
+                  <TabsContent key={idx} value={String(idx)} className="mt-4">
+                    <LocationScheduleForm
+                      sched={sched}
+                      onChange={updated => updateLocSchedule(idx, () => updated)}
                     />
-                    <span className="text-sm text-foreground">{day.label}</span>
-                  </label>
+                  </TabsContent>
                 ))}
-              </div>
-              <p className="text-[11px] text-muted-foreground">Selecione os dias da semana em que você atende pacientes.</p>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Horários de atendimento por dia *</Label>
-              <p className="text-[11px] text-muted-foreground">Quantos pacientes você consegue atender em cada dia selecionado.</p>
-              <div className="space-y-2">
-                {DAYS.filter(d => workingDays.includes(d.value)).map(day => (
-                  <div key={day.value} className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-foreground w-12">{day.label}</span>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={dailyCapacities[day.value] ?? ''}
-                      onChange={e => setDailyCapacities(prev => ({ ...prev, [day.value]: e.target.value === '' ? '' : Math.max(0, Number(e.target.value)) }))}
-                      className="rounded-xl"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+              </Tabs>
+            ) : (
+              <LocationScheduleForm
+                sched={locationSchedules[0]}
+                onChange={updated => updateLocSchedule(0, () => updated)}
+              />
+            )}
+
+            {/* Tickets (global) */}
             {(paymentType === 'particular' || paymentType === 'ambos') && (
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$) *</Label>
@@ -446,6 +467,7 @@ export default function OnboardingPage() {
           </div>
         )}
 
+        {/* ── Step 4: Metas ── */}
         {step === 4 && (
           <div className="space-y-5 mt-4">
             <div>
@@ -465,8 +487,7 @@ export default function OnboardingPage() {
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta de faturamento mensal (R$)</Label>
               <Input
-                type="number"
-                min={0}
+                type="number" min={0}
                 value={monthlyTarget}
                 onChange={e => setMonthlyTarget(e.target.value ? Number(e.target.value) : '')}
                 placeholder="Opcional"
@@ -481,19 +502,11 @@ export default function OnboardingPage() {
       {/* Footer */}
       <div className="px-6 pb-6 pt-2">
         {step < 4 ? (
-          <Button
-            onClick={() => setStep(s => s + 1)}
-            className="w-full rounded-xl"
-            disabled={!canAdvance()}
-          >
+          <Button onClick={() => setStep(s => s + 1)} className="w-full rounded-xl" disabled={!canAdvance()}>
             Avançar →
           </Button>
         ) : (
-          <Button
-            onClick={handleFinish}
-            className="w-full rounded-xl"
-            disabled={saving || !canAdvance()}
-          >
+          <Button onClick={handleFinish} className="w-full rounded-xl" disabled={saving || !canAdvance()}>
             {saving ? 'Salvando...' : 'Concluir e começar →'}
           </Button>
         )}
@@ -503,6 +516,103 @@ export default function OnboardingPage() {
           </Button>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Sub-component: schedule config for one location */
+function LocationScheduleForm({
+  sched,
+  onChange,
+}: {
+  sched: LocationScheduleConfig;
+  onChange: (updated: LocationScheduleConfig) => void;
+}) {
+  const toggleDay = (day: string) => {
+    const newDays = sched.workingDays.includes(day)
+      ? sched.workingDays.filter(d => d !== day)
+      : [...sched.workingDays, day];
+    onChange({ ...sched, workingDays: newDays });
+  };
+
+  const setCapacity = (day: string, val: string) => {
+    onChange({
+      ...sched,
+      dailyCapacities: { ...sched.dailyCapacities, [day]: val === '' ? '' : Math.max(0, Number(val)) },
+    });
+  };
+
+  const setStart = (day: string, val: string) => {
+    onChange({ ...sched, startTimes: { ...sched.startTimes, [day]: val } });
+  };
+
+  const setEnd = (day: string, val: string) => {
+    onChange({ ...sched, endTimes: { ...sched.endTimes, [day]: val } });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dias de atendimento *</Label>
+        <div className="flex flex-wrap gap-3">
+          {DAYS.map(day => (
+            <label key={day.value} className="flex items-center gap-1.5 cursor-pointer">
+              <Checkbox
+                checked={sched.workingDays.includes(day.value)}
+                onCheckedChange={() => toggleDay(day.value)}
+              />
+              <span className="text-sm text-foreground">{day.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {sched.workingDays.length > 0 && (
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Capacidade e horários por dia *
+          </Label>
+          <p className="text-[11px] text-muted-foreground">
+            Pacientes/dia, horário do primeiro e último atendimento.
+          </p>
+          <div className="space-y-2">
+            {DAYS.filter(d => sched.workingDays.includes(d.value)).map(day => (
+              <div key={day.value} className="rounded-xl border border-border p-3 space-y-2">
+                <span className="text-sm font-semibold text-foreground">{day.label}</span>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground">Pacientes</p>
+                    <Input
+                      type="number" min={1} max={100}
+                      value={sched.dailyCapacities[day.value] ?? ''}
+                      onChange={e => setCapacity(day.value, e.target.value)}
+                      className="rounded-lg h-9 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground">Início</p>
+                    <Input
+                      type="time"
+                      value={sched.startTimes[day.value] || '08:00'}
+                      onChange={e => setStart(day.value, e.target.value)}
+                      className="rounded-lg h-9 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground">Fim</p>
+                    <Input
+                      type="time"
+                      value={sched.endTimes[day.value] || '18:00'}
+                      onChange={e => setEnd(day.value, e.target.value)}
+                      className="rounded-lg h-9 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
