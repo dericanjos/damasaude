@@ -82,9 +82,9 @@ export default function OnboardingPage() {
   const [hasSecretary, setHasSecretary] = useState(false);
 
   // Step 2
-  const [numLocations, setNumLocations] = useState(1);
+  const [numLocations, setNumLocations] = useState<number | ''>(1);
   const [locationNames, setLocationNames] = useState<string[]>(['']);
-  const [numDoctors, setNumDoctors] = useState(1);
+  const [numDoctors, setNumDoctors] = useState<number | ''>(1);
   const [paymentType, setPaymentType] = useState('ambos');
 
   // Step 3
@@ -104,7 +104,7 @@ export default function OnboardingPage() {
   const canAdvance = () => {
     switch (step) {
       case 1: return doctorName.trim() && specialty;
-      case 2: return locationNames.every(n => n.trim()) && numLocations >= 1 && numDoctors >= 1;
+      case 2: return typeof numLocations === 'number' && numLocations >= 1 && locationNames.length === numLocations && locationNames.every(n => n.trim()) && typeof numDoctors === 'number' && numDoctors >= 1;
       case 3: return workingDays.length >= 1 && workingDays.some(d => (dailyCapacities[d] ?? 0) >= 1) && (
         paymentType === 'particular' ? ticketPrivate >= 1 :
         paymentType === 'convenio' ? ticketInsurance >= 1 :
@@ -300,7 +300,12 @@ export default function OnboardingPage() {
                 max={10}
                 value={numLocations}
                 onChange={e => {
-                  const n = Math.max(1, Math.min(10, Number(e.target.value)));
+                  const raw = e.target.value;
+                  if (raw === '') {
+                    setNumLocations('');
+                    return;
+                  }
+                  const n = Math.max(1, Math.min(10, Number(raw)));
                   setNumLocations(n);
                   setLocationNames(prev => {
                     const updated = [...prev];
@@ -318,7 +323,7 @@ export default function OnboardingPage() {
               </Label>
               {locationNames.map((name, idx) => (
                 <div key={idx} className="space-y-1">
-                  {numLocations > 1 && (
+                  {typeof numLocations === 'number' && numLocations > 1 && (
                     <p className="text-[11px] text-muted-foreground font-medium">Local {idx + 1}</p>
                   )}
                   <Input
@@ -337,7 +342,7 @@ export default function OnboardingPage() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quantidade de médicos *</Label>
-              <Input type="number" min={1} value={numDoctors} onChange={e => setNumDoctors(Number(e.target.value))} className="rounded-xl" />
+              <Input type="number" min={1} value={numDoctors} onChange={e => setNumDoctors(e.target.value === '' ? '' : Math.max(1, Number(e.target.value)))} className="rounded-xl" />
               <p className="text-[11px] text-muted-foreground">Quantos médicos atendem na sua clínica, incluindo você.</p>
             </div>
             <div className="space-y-1.5">
