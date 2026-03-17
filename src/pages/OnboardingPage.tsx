@@ -108,11 +108,16 @@ export default function OnboardingPage() {
     setLocationSchedules(prev => prev.map((s, i) => i === idx ? updater(s) : s));
   };
 
-  // Sync locationSchedules array when numLocations changes (called from Step 2)
-  const syncSchedules = (n: number) => {
+  // Sync locationSchedules and numDoctorsPerLoc arrays when numLocations changes
+  const syncArrays = (n: number) => {
     setLocationSchedules(prev => {
       const updated = [...prev];
       while (updated.length < n) updated.push(makeDefaultSchedule());
+      return updated.slice(0, n);
+    });
+    setNumDoctorsPerLoc(prev => {
+      const updated = [...prev];
+      while (updated.length < n) updated.push(1);
       return updated.slice(0, n);
     });
   };
