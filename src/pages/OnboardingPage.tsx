@@ -89,16 +89,16 @@ export default function OnboardingPage() {
 
   // Step 3
   const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
-  const [dailyCapacities, setDailyCapacities] = useState<Record<string, number>>({
+  const [dailyCapacities, setDailyCapacities] = useState<Record<string, number | ''>>({
     dom: 0, seg: 16, ter: 16, qua: 16, qui: 16, sex: 16, sab: 0,
   });
-  const [ticketPrivate, setTicketPrivate] = useState(250);
-  const [ticketInsurance, setTicketInsurance] = useState(100);
+  const [ticketPrivate, setTicketPrivate] = useState<number | ''>(250);
+  const [ticketInsurance, setTicketInsurance] = useState<number | ''>(100);
   const [timezone, setTimezone] = useState(detectTimezone());
 
   // Step 4
-  const [fillRate, setFillRate] = useState(85);
-  const [noshowRate, setNoshowRate] = useState(5);
+  const [fillRate, setFillRate] = useState<number | ''>(85);
+  const [noshowRate, setNoshowRate] = useState<number | ''>(5);
   const [monthlyTarget, setMonthlyTarget] = useState<number | ''>('');
 
   const canAdvance = () => {
