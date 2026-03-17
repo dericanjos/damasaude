@@ -82,9 +82,9 @@ export default function OnboardingPage() {
   const [hasSecretary, setHasSecretary] = useState(false);
 
   // Step 2
-  const [numLocations, setNumLocations] = useState(1);
+  const [numLocations, setNumLocations] = useState<number | ''>(1);
   const [locationNames, setLocationNames] = useState<string[]>(['']);
-  const [numDoctors, setNumDoctors] = useState(1);
+  const [numDoctors, setNumDoctors] = useState<number | ''>(1);
   const [paymentType, setPaymentType] = useState('ambos');
 
   // Step 3
