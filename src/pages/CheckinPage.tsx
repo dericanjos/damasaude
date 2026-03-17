@@ -117,14 +117,6 @@ function CheckinField({
         <Label className="whitespace-normal text-left text-xs font-medium leading-snug text-muted-foreground">
           {label}
         </Label>
-        {max !== undefined && (
-          <span className={cn(
-            "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
-            atMax ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"
-          )}>
-            máx: {max}
-          </span>
-        )}
       </div>
       <Stepper value={value} onChange={v => onChange(max !== undefined ? Math.min(v, max) : v)} />
       {hint && (
