@@ -128,7 +128,8 @@ export default function OnboardingPage() {
       case 2: return typeof numLocations === 'number' && numLocations >= 1
         && locationNames.length === numLocations
         && locationNames.every(n => n.trim())
-        && typeof numDoctors === 'number' && numDoctors >= 1;
+        && numDoctorsPerLoc.length === numLocations
+        && numDoctorsPerLoc.every(n => typeof n === 'number' && n >= 1);
       case 3: {
         // Every location must have at least 1 working day with capacity >= 1
         const schedulesValid = locationSchedules.every(sched =>
