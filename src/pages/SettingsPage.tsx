@@ -306,11 +306,9 @@ export default function SettingsPage() {
       setDoctorGender(vals.doctorGender);
       setSpecialty(vals.specialty);
       setHasSecretary(vals.hasSecretary);
-      setTicketPrivate(vals.ticketPrivate);
-      setTicketInsurance(vals.ticketInsurance);
       setFillRate(vals.fillRate);
       setNoshowRate(vals.noshowRate);
-      setInitial({ ...vals, sameTickets: true });
+      setInitial(vals);
     }
   }, [clinic?.id]);
 
@@ -322,46 +320,24 @@ export default function SettingsPage() {
       doctorGender !== initial.doctorGender ||
       specialty !== initial.specialty ||
       hasSecretary !== initial.hasSecretary ||
-      sameTickets !== initial.sameTickets ||
-      ticketPrivate !== initial.ticketPrivate ||
-      ticketInsurance !== initial.ticketInsurance ||
       fillRate !== initial.fillRate ||
       noshowRate !== initial.noshowRate
     );
-  }, [initial, name, doctorName, specialty, hasSecretary, sameTickets, ticketPrivate, ticketInsurance, fillRate, noshowRate]);
+  }, [initial, name, doctorName, specialty, hasSecretary, fillRate, noshowRate]);
 
   const handleSave = async () => {
     try {
-      const tp = (ticketPrivate || 0) as number;
-      const ti = (ticketInsurance || 0) as number;
       await updateClinic.mutateAsync({
         name,
         doctor_name: doctorName,
         doctor_gender: doctorGender,
         specialty,
         has_secretary: hasSecretary,
-        ticket_private: tp,
-        ticket_insurance: ti,
         target_fill_rate: ((fillRate || 0) as number) / 100,
         target_noshow_rate: ((noshowRate || 0) as number) / 100,
       } as any);
-
-      // Sync tickets to all locations when "same tickets" is on
-      if (sameTickets && locations.length > 0) {
-        const ticketAvg = Math.round((tp + ti) / 2);
-        for (const loc of locations) {
-          await updateLocation.mutateAsync({
-            id: loc.id,
-            ticket_private: tp,
-            ticket_insurance: ti,
-            ticket_avg: ticketAvg,
-          });
-        }
-      }
-
       setInitial({
-        name, doctorName, doctorGender, specialty, hasSecretary,
-        sameTickets, ticketPrivate, ticketInsurance, fillRate, noshowRate,
+        name, doctorName, doctorGender, specialty, hasSecretary, fillRate, noshowRate,
       });
       toast.success('Configurações salvas com sucesso!');
     } catch (err: any) {
