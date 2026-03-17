@@ -450,7 +450,7 @@ export default function OnboardingPage() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta de no-show (%) *</Label>
-              <Input type="number" min={0} max={100} value={noshowRate} onChange={e => setNoshowRate(Number(e.target.value))} className="rounded-xl" />
+              <Input type="number" min={0} max={100} value={noshowRate} onChange={e => setNoshowRate(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl" />
               <p className="text-[11px] text-muted-foreground">Taxa máxima de faltas que você considera aceitável.</p>
             </div>
             <div className="space-y-1.5">
