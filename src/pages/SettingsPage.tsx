@@ -536,7 +536,7 @@ export default function SettingsPage() {
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$)</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
-              <Input type="number" min={1} value={ticketInsurance} onChange={e => setTicketInsurance(Number(e.target.value))} className="rounded-xl pl-10" />
+              <Input type="number" min={1} value={ticketInsurance} onChange={e => setTicketInsurance(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl pl-10" />
             </div>
           </div>
           <p className="text-[11px] text-muted-foreground">A capacidade por dia agora é gerenciada em cada local de atendimento.</p>
