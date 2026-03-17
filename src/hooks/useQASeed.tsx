@@ -4,144 +4,10 @@ import { useAuth } from './useAuth';
 import { useClinic } from './useClinic';
 import { format, subDays } from 'date-fns';
 
-const ANJOS_NAME = 'Anjos Clinic';
-const HSL_NAME = 'Hospital São Lucas';
-
-const ANJOS_FINANCIALS = { ticket_avg: 250, ticket_private: 500, ticket_insurance: 120 };
-const HSL_FINANCIALS = { ticket_avg: 300, ticket_private: 700, ticket_insurance: 150 };
-
-const TODAY_ANJOS = {
-  appointments_scheduled: 14,
-  attended_private: 6,
-  attended_insurance: 4,
-  noshows_private: 2,
-  noshows_insurance: 1,
-  cancellations_private: 1,
-  cancellations_insurance: 0,
-  cancellations: 1,
-  empty_slots: 2,
-  followup_done: false,
-  new_appointments: 2,
-  appointments_done: 10,
-  no_show: 3,
-  extra_appointments: 0,
-  rescheduled: 0,
-};
-
-const TODAY_HSL = {
-  appointments_scheduled: 12,
-  attended_private: 3,
-  attended_insurance: 6,
-  noshows_private: 0,
-  noshows_insurance: 2,
-  cancellations_private: 1,
-  cancellations_insurance: 0,
-  cancellations: 1,
-  empty_slots: 0,
-  followup_done: true,
-  new_appointments: 1,
-  appointments_done: 9,
-  no_show: 2,
-  extra_appointments: 0,
-  rescheduled: 0,
-};
-
-// Week data: 5 past days per location (different patterns)
-function buildWeekData(today: Date) {
-  const days: { offset: number; anjos: typeof TODAY_ANJOS; hsl: typeof TODAY_HSL }[] = [];
-
-  // Day -6 (Anjos: high no-show, HSL: high cancel)
-  days.push({
-    offset: 6,
-    anjos: {
-      appointments_scheduled: 15, attended_private: 5, attended_insurance: 3,
-      noshows_private: 3, noshows_insurance: 2, cancellations_private: 1, cancellations_insurance: 0,
-      cancellations: 1, empty_slots: 1, followup_done: false, new_appointments: 1,
-      appointments_done: 8, no_show: 5, extra_appointments: 0, rescheduled: 0,
-    },
-    hsl: {
-      appointments_scheduled: 12, attended_private: 4, attended_insurance: 4,
-      noshows_private: 0, noshows_insurance: 1, cancellations_private: 2, cancellations_insurance: 1,
-      cancellations: 3, empty_slots: 0, followup_done: true, new_appointments: 1,
-      appointments_done: 8, no_show: 1, extra_appointments: 0, rescheduled: 0,
-    },
-  });
-
-  // Day -5 (Anjos: high no-show, HSL: moderate)
-  days.push({
-    offset: 5,
-    anjos: {
-      appointments_scheduled: 16, attended_private: 6, attended_insurance: 3,
-      noshows_private: 3, noshows_insurance: 1, cancellations_private: 1, cancellations_insurance: 0,
-      cancellations: 1, empty_slots: 2, followup_done: true, new_appointments: 3,
-      appointments_done: 9, no_show: 4, extra_appointments: 0, rescheduled: 0,
-    },
-    hsl: {
-      appointments_scheduled: 11, attended_private: 3, attended_insurance: 5,
-      noshows_private: 1, noshows_insurance: 0, cancellations_private: 1, cancellations_insurance: 1,
-      cancellations: 2, empty_slots: 0, followup_done: false, new_appointments: 2,
-      appointments_done: 8, no_show: 1, extra_appointments: 0, rescheduled: 0,
-    },
-  });
-
-  // Day -4 (Anjos: buracos high, HSL: high cancel)
-  days.push({
-    offset: 4,
-    anjos: {
-      appointments_scheduled: 14, attended_private: 5, attended_insurance: 4,
-      noshows_private: 1, noshows_insurance: 0, cancellations_private: 0, cancellations_insurance: 0,
-      cancellations: 0, empty_slots: 4, followup_done: false, new_appointments: 1,
-      appointments_done: 9, no_show: 1, extra_appointments: 0, rescheduled: 0,
-    },
-    hsl: {
-      appointments_scheduled: 12, attended_private: 2, attended_insurance: 5,
-      noshows_private: 0, noshows_insurance: 1, cancellations_private: 2, cancellations_insurance: 1,
-      cancellations: 3, empty_slots: 1, followup_done: true, new_appointments: 0,
-      appointments_done: 7, no_show: 1, extra_appointments: 0, rescheduled: 0,
-    },
-  });
-
-  // Day -3 (Anjos: high no-show, HSL: ok)
-  days.push({
-    offset: 3,
-    anjos: {
-      appointments_scheduled: 16, attended_private: 5, attended_insurance: 4,
-      noshows_private: 2, noshows_insurance: 2, cancellations_private: 1, cancellations_insurance: 0,
-      cancellations: 1, empty_slots: 2, followup_done: true, new_appointments: 2,
-      appointments_done: 9, no_show: 4, extra_appointments: 0, rescheduled: 0,
-    },
-    hsl: {
-      appointments_scheduled: 10, attended_private: 4, attended_insurance: 4,
-      noshows_private: 0, noshows_insurance: 0, cancellations_private: 1, cancellations_insurance: 0,
-      cancellations: 1, empty_slots: 1, followup_done: true, new_appointments: 1,
-      appointments_done: 8, no_show: 0, extra_appointments: 0, rescheduled: 0,
-    },
-  });
-
-  // Day -2 (Anjos: buracos, HSL: cancel)
-  days.push({
-    offset: 2,
-    anjos: {
-      appointments_scheduled: 15, attended_private: 6, attended_insurance: 3,
-      noshows_private: 1, noshows_insurance: 0, cancellations_private: 1, cancellations_insurance: 0,
-      cancellations: 1, empty_slots: 4, followup_done: false, new_appointments: 2,
-      appointments_done: 9, no_show: 1, extra_appointments: 0, rescheduled: 0,
-    },
-    hsl: {
-      appointments_scheduled: 12, attended_private: 3, attended_insurance: 5,
-      noshows_private: 1, noshows_insurance: 0, cancellations_private: 2, cancellations_insurance: 0,
-      cancellations: 2, empty_slots: 1, followup_done: false, new_appointments: 1,
-      appointments_done: 8, no_show: 1, extra_appointments: 0, rescheduled: 0,
-    },
-  });
-
-  return days.map(d => ({
-    date: format(subDays(today, d.offset), 'yyyy-MM-dd'),
-    anjos: d.anjos,
-    hsl: d.hsl,
-  }));
-}
-
+/**
+ * Generates realistic check-in data based on the user's actual
+ * locations, schedules, and financial configuration from onboarding.
+ */
 export function useQASeed() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -153,118 +19,78 @@ export function useQASeed() {
       const clinicId = clinic.id;
       const userId = user.id;
       const today = new Date();
-      const todayStr = format(today, 'yyyy-MM-dd');
-      const todayWeekday = today.getDay();
 
-      // 1. Upsert targets on clinic
-      await supabase
-        .from('clinics')
-        .update({ target_fill_rate: 0.90, target_noshow_rate: 0.05 } as any)
-        .eq('id', clinicId);
-
-      // 2. Ensure 2 locations exist
-      const { data: existingLocs } = await supabase
+      // 1. Get user's real locations
+      const { data: locations, error: locErr } = await supabase
         .from('locations')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true);
+      if (locErr) throw locErr;
+      if (!locations || locations.length === 0) throw new Error('Nenhum local cadastrado');
+
+      // 2. Get schedules for all locations
+      const { data: allSchedules } = await supabase
+        .from('location_schedules')
         .select('*')
         .eq('user_id', userId);
 
-      let anjosLoc = existingLocs?.find((l: any) => l.name === ANJOS_NAME);
-      let hslLoc = existingLocs?.find((l: any) => l.name === HSL_NAME);
+      // 3. Get financials for all locations
+      const { data: allFinancials } = await supabase
+        .from('location_financials')
+        .select('*')
+        .eq('user_id', userId);
 
-      if (!anjosLoc) {
-        const { data } = await supabase
-          .from('locations')
-          .insert({ user_id: userId, clinic_id: clinicId, name: ANJOS_NAME, address: 'Rua dos Anjos, 100', is_active: true } as any)
-          .select()
-          .single();
-        anjosLoc = data;
-      } else if (!anjosLoc.is_active) {
-        await supabase.from('locations').update({ is_active: true } as any).eq('id', anjosLoc.id);
-      }
+      // 4. Generate 7 past days of check-ins (skipping days without schedule)
+      const checkinRows: any[] = [];
 
-      if (!hslLoc) {
-        const { data } = await supabase
-          .from('locations')
-          .insert({ user_id: userId, clinic_id: clinicId, name: HSL_NAME, address: 'Av. São Lucas, 500', is_active: true } as any)
-          .select()
-          .single();
-        hslLoc = data;
-      } else if (!hslLoc.is_active) {
-        await supabase.from('locations').update({ is_active: true } as any).eq('id', hslLoc.id);
-      }
+      for (let offset = 1; offset <= 7; offset++) {
+        const date = subDays(today, offset);
+        const dateStr = format(date, 'yyyy-MM-dd');
+        const weekday = date.getDay(); // 0=Sun
 
-      if (!anjosLoc || !hslLoc) throw new Error('Falha ao criar locais');
+        for (const loc of locations) {
+          // Find schedule for this location on this weekday
+          const sched = allSchedules?.find(
+            s => s.location_id === loc.id && s.weekday === weekday && s.is_active
+          );
+          if (!sched) continue; // No schedule for this day — skip
 
-      // 3. Upsert financials
-      for (const [loc, fin] of [[anjosLoc, ANJOS_FINANCIALS], [hslLoc, HSL_FINANCIALS]] as const) {
-        const { data: existingFin } = await supabase
-          .from('location_financials')
-          .select('id')
-          .eq('location_id', loc.id)
-          .maybeSingle();
+          const capacity = sched.daily_capacity || 16;
+          const fin = allFinancials?.find(f => f.location_id === loc.id);
 
-        if (existingFin) {
-          await supabase
-            .from('location_financials')
-            .update({ ...fin } as any)
-            .eq('id', existingFin.id);
-        } else {
-          await supabase
-            .from('location_financials')
-            .insert({ user_id: userId, location_id: loc.id, ...fin } as any);
-        }
-      }
+          // Generate realistic random data based on capacity
+          const checkin = generateCheckinData(capacity, fin);
 
-      // 4. Upsert schedules for today (and all weekdays for completeness)
-      for (const [loc, cap] of [[anjosLoc, 16], [hslLoc, 12]] as const) {
-        // Delete existing schedules for this location
-        await supabase.from('location_schedules').delete().eq('location_id', loc.id);
-
-        // Create schedules for Mon-Sat (1-6) and today's weekday
-        const weekdays = new Set([1, 2, 3, 4, 5, todayWeekday]);
-        const schedRows = Array.from(weekdays).map(wd => ({
-          user_id: userId,
-          location_id: loc.id,
-          weekday: wd,
-          start_time: '08:00',
-          end_time: '18:00',
-          daily_capacity: cap,
-          is_active: true,
-        }));
-
-        await supabase.from('location_schedules').insert(schedRows as any);
-      }
-
-      // 5. Upsert today's checkins
-      for (const [loc, checkinData] of [[anjosLoc, TODAY_ANJOS], [hslLoc, TODAY_HSL]] as const) {
-        await supabase
-          .from('daily_checkins')
-          .upsert({
+          checkinRows.push({
             clinic_id: clinicId,
             user_id: userId,
-            date: todayStr,
+            date: dateStr,
             location_id: loc.id,
-            ...checkinData,
-          } as any, { onConflict: 'clinic_id,date,location_id' });
-      }
-
-      // 6. Upsert week data (past 5 days)
-      const weekData = buildWeekData(today);
-      for (const day of weekData) {
-        for (const [loc, data] of [[anjosLoc, day.anjos], [hslLoc, day.hsl]] as const) {
-          await supabase
-            .from('daily_checkins')
-            .upsert({
-              clinic_id: clinicId,
-              user_id: userId,
-              date: day.date,
-              location_id: loc.id,
-              ...data,
-            } as any, { onConflict: 'clinic_id,date,location_id' });
+            ...checkin,
+          });
         }
       }
 
-      return { anjosId: anjosLoc.id, hslId: hslLoc.id };
+      // 5. Delete existing checkins for these dates and locations
+      if (checkinRows.length > 0) {
+        const dates = [...new Set(checkinRows.map(r => r.date))];
+        const locIds = locations.map(l => l.id);
+
+        for (const dateStr of dates) {
+          await supabase
+            .from('daily_checkins')
+            .delete()
+            .eq('clinic_id', clinicId)
+            .eq('date', dateStr)
+            .in('location_id', locIds);
+        }
+
+        // 6. Insert new checkins
+        await supabase.from('daily_checkins').insert(checkinRows);
+      }
+
+      return { count: checkinRows.length, locations: locations.length };
     },
     onSuccess: () => {
       queryClient.invalidateQueries();
@@ -274,44 +100,16 @@ export function useQASeed() {
   const cleanup = useMutation({
     mutationFn: async () => {
       if (!user || !clinic) throw new Error('Não autenticado');
-      const clinicId = clinic.id;
       const today = new Date();
+      const startDate = format(subDays(today, 7), 'yyyy-MM-dd');
       const todayStr = format(today, 'yyyy-MM-dd');
 
-      // Find test locations
-      const { data: locs } = await supabase
-        .from('locations')
-        .select('id, name')
-        .eq('user_id', user.id)
-        .in('name', [ANJOS_NAME, HSL_NAME]);
-
-      if (!locs || locs.length === 0) return;
-
-      const locIds = locs.map(l => l.id);
-
-      // Delete checkins for these locations (last 7 days)
-      const startDate = format(subDays(today, 7), 'yyyy-MM-dd');
       await supabase
         .from('daily_checkins')
         .delete()
-        .eq('clinic_id', clinicId)
-        .in('location_id', locIds)
+        .eq('user_id', user.id)
         .gte('date', startDate)
         .lte('date', todayStr);
-
-      // Delete actions for these locations
-      await supabase
-        .from('daily_actions')
-        .delete()
-        .eq('clinic_id', clinicId)
-        .in('location_id', locIds);
-
-      // Delete schedules, financials, then locations
-      for (const id of locIds) {
-        await supabase.from('location_schedules').delete().eq('location_id', id);
-        await supabase.from('location_financials').delete().eq('location_id', id);
-      }
-      await supabase.from('locations').delete().in('id', locIds);
     },
     onSuccess: () => {
       queryClient.invalidateQueries();
@@ -319,4 +117,56 @@ export function useQASeed() {
   });
 
   return { seed, cleanup };
+}
+
+/** Generate realistic check-in numbers based on daily capacity */
+function generateCheckinData(capacity: number, fin: any) {
+  // Occupancy between 65-95%
+  const occupancyRate = 0.65 + Math.random() * 0.30;
+  const scheduled = Math.round(capacity * (0.85 + Math.random() * 0.15));
+
+  // Split attended into private/insurance (roughly 40-60% split)
+  const privatePct = 0.3 + Math.random() * 0.4;
+  const totalAttended = Math.round(scheduled * occupancyRate);
+  const attendedPrivate = Math.round(totalAttended * privatePct);
+  const attendedInsurance = totalAttended - attendedPrivate;
+
+  // No-shows: 0-15% of scheduled
+  const noshowRate = Math.random() * 0.15;
+  const totalNoshows = Math.round(scheduled * noshowRate);
+  const noshowsPrivate = Math.round(totalNoshows * (0.3 + Math.random() * 0.4));
+  const noshowsInsurance = totalNoshows - noshowsPrivate;
+
+  // Cancellations: 0-10% of scheduled
+  const cancelRate = Math.random() * 0.10;
+  const totalCancellations = Math.round(scheduled * cancelRate);
+  const cancellationsPrivate = Math.round(totalCancellations * (0.3 + Math.random() * 0.4));
+  const cancellationsInsurance = totalCancellations - cancellationsPrivate;
+
+  // Empty slots: remaining
+  const emptySlots = Math.max(0, capacity - totalAttended - totalNoshows - totalCancellations);
+
+  // Extra appointments & rescheduled: occasional
+  const extraAppointments = Math.random() > 0.7 ? Math.floor(Math.random() * 3) : 0;
+  const rescheduled = Math.random() > 0.6 ? Math.floor(Math.random() * 3) : 0;
+  const newAppointments = Math.floor(Math.random() * 4);
+  const followupDone = Math.random() > 0.4;
+
+  return {
+    appointments_scheduled: scheduled,
+    appointments_done: totalAttended,
+    attended_private: attendedPrivate,
+    attended_insurance: attendedInsurance,
+    no_show: totalNoshows,
+    noshows_private: noshowsPrivate,
+    noshows_insurance: noshowsInsurance,
+    cancellations: totalCancellations,
+    cancellations_private: cancellationsPrivate,
+    cancellations_insurance: cancellationsInsurance,
+    empty_slots: emptySlots,
+    extra_appointments: extraAppointments,
+    rescheduled,
+    new_appointments: newAppointments,
+    followup_done: followupDone,
+  };
 }
