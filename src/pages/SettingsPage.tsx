@@ -329,12 +329,13 @@ export default function SettingsPage() {
       doctorGender !== initial.doctorGender ||
       specialty !== initial.specialty ||
       hasSecretary !== initial.hasSecretary ||
+      sameTickets !== initial.sameTickets ||
       ticketPrivate !== initial.ticketPrivate ||
       ticketInsurance !== initial.ticketInsurance ||
       fillRate !== initial.fillRate ||
       noshowRate !== initial.noshowRate
     );
-  }, [initial, name, doctorName, specialty, hasSecretary, ticketPrivate, ticketInsurance, fillRate, noshowRate]);
+  }, [initial, name, doctorName, specialty, hasSecretary, sameTickets, ticketPrivate, ticketInsurance, fillRate, noshowRate]);
 
   const handleSave = async () => {
     try {
