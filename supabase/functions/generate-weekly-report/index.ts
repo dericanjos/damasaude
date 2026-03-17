@@ -272,6 +272,16 @@ ROTAÇÃO DE ABORDAGENS (use a abordagem indicada para cada tipo de problema nes
 - Follow-up: foque em "${pickHint('followup')}"
 `;
 
+    // CTA rotation — never repeat the same phrase across sections
+    const ctaVariations = [
+      "Se quiser, a DAMA pode implementar essa rotina para você com uma equipe dedicada.",
+      "Essa é uma área onde a DAMA pode atuar com secretária remota e rotina montada.",
+      "Que tal delegar isso para a DAMA? Agende uma conversa e veja como funciona.",
+      "A DAMA entrega isso pronto — secretária, rotina e acompanhamento. Saiba mais.",
+      "Quer ajuda prática? A DAMA monta essa operação para você.",
+    ];
+    const ctaForThisWeek = ctaVariations[weekNum % ctaVariations.length];
+
     const multiLocReportRules = isMultiLocation
       ? `\nEste relatório é CONSOLIDADO de ${uniqueLocations.length} locais. OBRIGATÓRIO:
 1. Parágrafo de VISÃO GERAL DA REDE: receita total, receita perdida, ocupação média, no-show médio.
@@ -299,9 +309,9 @@ REGRAS DE TEXTO:
 - Use expressões como "Uma prática comum é…", "Se fizer sentido no seu fluxo…", "Exemplo (adapte):…", "Opção 1 / Opção 2".
 - PROIBIDO: repetir fórmulas fixas como "WhatsApp 48h/24h, peça OK" toda semana. Varie as abordagens.
 - Sempre justifique com impacto (R$ ou agenda).
-- Se o resultado for crítico (muita perda), insira no final: "Se quiser, a DAMA te entrega isso pronto com secretária e rotina montada."
+- Se o resultado for crítico (muita perda), use EXATAMENTE esta frase como CTA no final: "${ctaForThisWeek}" — use apenas UMA VEZ no relatório todo, nunca repita CTAs.
 - Os dados diferenciam pacientes particulares e de convênio. Use isso para insights de mix de receita.
-- Nunca mencione "IA", "inteligência artificial" ou "consultor". Tudo é funcionalidade nativa DAMA.
+- PROIBIDO: mencionar "IA", "inteligência artificial", "consultor" ou referências a ajuda externa. Tudo é funcionalidade nativa DAMA.
 - O mais importante é consistência; ajuste ao seu fluxo.
 - Máximo 400 palavras.
 - Responda APENAS em português brasileiro.`;

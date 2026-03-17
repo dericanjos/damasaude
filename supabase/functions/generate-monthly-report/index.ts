@@ -84,23 +84,81 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const ticketPrivate = clinic?.ticket_private ?? 250;
-    const ticketInsurance = clinic?.ticket_insurance ?? 100;
-    const avgTicket = (ticketPrivate + ticketInsurance) / 2;
+    // Fetch per-location financials and locations for multi-loc support
+    const { data: locationFinancials } = await supabase
+      .from("location_financials")
+      .select("location_id, ticket_private, ticket_insurance, ticket_avg")
+      .eq("user_id", userId);
+
+    const { data: locationsData } = await supabase
+      .from("locations")
+      .select("id, name")
+      .eq("user_id", userId)
+      .eq("is_active", true);
+
+    const clinicTicketPriv = clinic?.ticket_private ?? 250;
+    const clinicTicketIns = clinic?.ticket_insurance ?? 100;
     const capacity = clinic?.daily_capacity ?? 16;
 
-    const totalAttPrivate = checkins.reduce((s: number, c: any) => s + (c.attended_private ?? c.appointments_done ?? 0), 0);
-    const totalAttInsurance = checkins.reduce((s: number, c: any) => s + (c.attended_insurance ?? 0), 0);
-    const totalDone = totalAttPrivate + totalAttInsurance;
-    const totalScheduled = checkins.reduce((s: number, c: any) => s + c.appointments_scheduled, 0);
-    const totalNoshowPriv = checkins.reduce((s: number, c: any) => s + (c.noshows_private ?? c.no_show ?? 0), 0);
-    const totalNoshowIns = checkins.reduce((s: number, c: any) => s + (c.noshows_insurance ?? 0), 0);
-    const totalNoShow = totalNoshowPriv + totalNoshowIns;
-    const totalCancel = checkins.reduce((s: number, c: any) => s + c.cancellations, 0);
-    const totalEmpty = checkins.reduce((s: number, c: any) => s + c.empty_slots, 0);
+    // Build per-location maps
+    const locFinMap: Record<string, { ticketPriv: number; ticketIns: number; ticketAvg: number }> = {};
+    for (const f of (locationFinancials || [])) {
+      locFinMap[(f as any).location_id] = {
+        ticketPriv: (f as any).ticket_private ?? clinicTicketPriv,
+        ticketIns: (f as any).ticket_insurance ?? clinicTicketIns,
+        ticketAvg: (f as any).ticket_avg ?? 250,
+      };
+    }
 
-    const revenueEstimated = (totalAttPrivate * ticketPrivate) + (totalAttInsurance * ticketInsurance);
-    const revenueLost = (totalNoshowPriv * ticketPrivate) + (totalNoshowIns * ticketInsurance) + ((totalCancel + totalEmpty) * avgTicket);
+    const locNameMap: Record<string, string> = {};
+    for (const l of (locationsData || [])) {
+      locNameMap[l.id] = l.name;
+    }
+
+    // Aggregate using per-location split tickets
+    let totalAttPrivate = 0, totalAttInsurance = 0, totalNoshowPriv = 0, totalNoshowIns = 0;
+    let totalCancel = 0, totalEmpty = 0, totalScheduled = 0;
+    let revenueEstimated = 0, revenueLost = 0;
+    const perLocation: Record<string, { attended: number; lost: number; noshows: number; capacity: number }> = {};
+
+    for (const c of checkins) {
+      const locId = c.location_id || "unknown";
+      const fin = locFinMap[locId] ?? { ticketPriv: clinicTicketPriv, ticketIns: clinicTicketIns, ticketAvg: 250 };
+
+      const attP = c.attended_private ?? c.appointments_done ?? 0;
+      const attI = c.attended_insurance ?? 0;
+      const nsP = c.noshows_private ?? c.no_show ?? 0;
+      const nsI = c.noshows_insurance ?? 0;
+      const cancel = c.cancellations ?? 0;
+      const empty = c.empty_slots ?? 0;
+
+      totalAttPrivate += attP;
+      totalAttInsurance += attI;
+      totalNoshowPriv += nsP;
+      totalNoshowIns += nsI;
+      totalCancel += cancel;
+      totalEmpty += empty;
+      totalScheduled += c.appointments_scheduled ?? 0;
+
+      const est = (attP * fin.ticketPriv) + (attI * fin.ticketIns);
+      const lostNs = (nsP * fin.ticketPriv) + (nsI * fin.ticketIns);
+      const lostGen = (cancel + empty) * fin.ticketAvg;
+
+      revenueEstimated += est;
+      revenueLost += lostNs + lostGen;
+
+      if (!perLocation[locId]) perLocation[locId] = { attended: 0, lost: 0, noshows: 0, capacity: 0 };
+      perLocation[locId].attended += (attP + attI);
+      perLocation[locId].lost += (lostNs + lostGen);
+      perLocation[locId].noshows += (nsP + nsI);
+      perLocation[locId].capacity += capacity;
+    }
+
+    const totalDone = totalAttPrivate + totalAttInsurance;
+    const totalNoShow = totalNoshowPriv + totalNoshowIns;
+
+    const uniqueLocations = [...new Set(checkins.map((c: any) => c.location_id).filter(Boolean))];
+    const isMultiLocation = uniqueLocations.length > 1;
 
     const summary = {
       dias_com_checkin: checkins.length,
@@ -115,12 +173,17 @@ serve(async (req) => {
       total_buracos: totalEmpty,
       receita_estimada: revenueEstimated,
       receita_perdida: revenueLost,
-      ticket_particular: ticketPrivate,
-      ticket_convenio: ticketInsurance,
-      taxa_ocupacao_media: `${Math.round((totalDone / (checkins.length * capacity)) * 100)}%`,
+      taxa_ocupacao_media: `${checkins.length > 0 ? Math.round((totalDone / (checkins.length * Math.max(capacity, 1))) * 100) : 0}%`,
       taxa_noshow: `${totalScheduled > 0 ? Math.round((totalNoShow / totalScheduled) * 100) : 0}%`,
       meta_ocupacao: `${Math.round((clinic?.target_fill_rate ?? 0.85) * 100)}%`,
       meta_noshow: `${Math.round((clinic?.target_noshow_rate ?? 0.05) * 100)}%`,
+      multi_local: isMultiLocation,
+      locais: isMultiLocation ? Object.entries(perLocation).map(([id, d]) => ({
+        nome: locNameMap[id] || id,
+        atendidos: d.attended,
+        perdido: Math.round(d.lost),
+        noshows: d.noshows,
+      })) : undefined,
     };
 
     const hasSecretary = clinic?.has_secretary ?? false;
@@ -128,17 +191,37 @@ serve(async (req) => {
       ? "O médico TEM secretária. Nas prioridades, sugira delegação de tarefas operacionais à secretária."
       : "O médico NÃO tem secretária. Nas prioridades, sugira automação, uso de WhatsApp Business e ações diretas.";
 
-    const systemPrompt = `Você é um consultor de negócios sênior especialista em gestão de clínicas médicas. ${secretaryContext}
+    // CTA rotation based on month
+    const monthNum = d.getMonth();
+    const ctaVariations = [
+      "Se quiser, a DAMA pode implementar essa rotina para você com uma equipe dedicada.",
+      "Essa é uma área onde a DAMA pode atuar com secretária remota e rotina montada.",
+      "Que tal delegar isso para a DAMA? Agende uma conversa e veja como funciona.",
+      "A DAMA entrega isso pronto — secretária, rotina e acompanhamento. Saiba mais.",
+      "Quer ajuda prática? A DAMA monta essa operação para você.",
+    ];
+    const ctaForThisMonth = ctaVariations[monthNum % ctaVariations.length];
 
-Analise os dados consolidados deste mês e gere um relatório executivo em 3 seções:
+    const multiLocMonthlyRules = isMultiLocation
+      ? `\nEste relatório é CONSOLIDADO de ${uniqueLocations.length} locais. Inclua um bloco COMPARATIVO ENTRE LOCAIS com bullets: maior vazamento (R$), maior no-show (%), melhor ocupação (%).`
+      : "";
 
-1. **📈 Diagnóstico do Mês:** Qual foi o principal ponto forte e o principal ponto fraco do mês? (ex: "O faturamento cresceu, mas a taxa de no-show de convênio aumentou").
-2. **📊 Análise de Tendências:** Analise a performance dos KPIs principais e identifique tendências de melhora ou piora ao longo do mês.
-3. **🎯 Prioridades para o Próximo Mês:** Sugira 2 a 3 prioridades estratégicas para o médico focar no próximo mês.
+    const systemPrompt = `Você é o sistema de diagnóstico da DAMA, especializado em gestão de clínicas médicas. ${secretaryContext}${multiLocMonthlyRules}
 
-IMPORTANTE: Os dados diferenciam pacientes particulares e de convênio. Use essa informação para dar insights mais precisos sobre mix de receita e estratégia de precificação.
+Analise os dados consolidados deste mês e gere um relatório executivo em 4 seções:
 
-Use um tom profissional, direto e encorajador. Responda APENAS em português brasileiro. Máximo 400 palavras.`;
+1. **📈 Diagnóstico do Mês:** Qual foi o principal ponto forte e o principal ponto fraco do mês?
+2. **📊 Análise de Tendências:** Analise a performance dos KPIs principais e identifique tendências.
+3. **🔮 Previsão para o Próximo Mês:** Com base nos dados atuais, projete cenários: se manter a taxa atual de no-show/cancelamentos, quanto será perdido? Se reduzir em X%, quanto pode recuperar?
+4. **🎯 Prioridades para o Próximo Mês:** 2-3 prioridades estratégicas com impacto estimado em R$.
+
+REGRAS DE TEXTO:
+- Os dados diferenciam pacientes particulares e de convênio. Use isso para insights de mix de receita e precificação.
+- Tom direto, médico-friendly, realista. Nada professoral.
+- Se o resultado for crítico, use EXATAMENTE esta frase como CTA no final: "${ctaForThisMonth}" — use apenas UMA VEZ, nunca repita CTAs.
+- PROIBIDO: mencionar "IA", "inteligência artificial", "consultor" ou referências a ajuda externa. Tudo é funcionalidade nativa DAMA.
+- Máximo 500 palavras.
+- Responda APENAS em português brasileiro.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
