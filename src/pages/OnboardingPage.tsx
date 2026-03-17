@@ -300,7 +300,12 @@ export default function OnboardingPage() {
                 max={10}
                 value={numLocations}
                 onChange={e => {
-                  const n = Math.max(1, Math.min(10, Number(e.target.value)));
+                  const raw = e.target.value;
+                  if (raw === '') {
+                    setNumLocations('');
+                    return;
+                  }
+                  const n = Math.max(1, Math.min(10, Number(raw)));
                   setNumLocations(n);
                   setLocationNames(prev => {
                     const updated = [...prev];
