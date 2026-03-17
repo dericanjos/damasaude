@@ -279,6 +279,7 @@ export default function SettingsPage() {
   const [hasSecretary, setHasSecretary] = useState(false);
 
   // Operation fields
+  const [sameTickets, setSameTickets] = useState(true);
   const [ticketPrivate, setTicketPrivate] = useState<number | ''>(250);
   const [ticketInsurance, setTicketInsurance] = useState<number | ''>(100);
 
@@ -316,7 +317,7 @@ export default function SettingsPage() {
       setTicketInsurance(vals.ticketInsurance);
       setFillRate(vals.fillRate);
       setNoshowRate(vals.noshowRate);
-      setInitial(vals);
+      setInitial({ ...vals, sameTickets: true });
     }
   }, [clinic?.id]);
 
@@ -328,29 +329,46 @@ export default function SettingsPage() {
       doctorGender !== initial.doctorGender ||
       specialty !== initial.specialty ||
       hasSecretary !== initial.hasSecretary ||
+      sameTickets !== initial.sameTickets ||
       ticketPrivate !== initial.ticketPrivate ||
       ticketInsurance !== initial.ticketInsurance ||
       fillRate !== initial.fillRate ||
       noshowRate !== initial.noshowRate
     );
-  }, [initial, name, doctorName, specialty, hasSecretary, ticketPrivate, ticketInsurance, fillRate, noshowRate]);
+  }, [initial, name, doctorName, specialty, hasSecretary, sameTickets, ticketPrivate, ticketInsurance, fillRate, noshowRate]);
 
   const handleSave = async () => {
     try {
+      const tp = (ticketPrivate || 0) as number;
+      const ti = (ticketInsurance || 0) as number;
       await updateClinic.mutateAsync({
         name,
         doctor_name: doctorName,
         doctor_gender: doctorGender,
         specialty,
         has_secretary: hasSecretary,
-        ticket_private: (ticketPrivate || 0) as number,
-        ticket_insurance: (ticketInsurance || 0) as number,
+        ticket_private: tp,
+        ticket_insurance: ti,
         target_fill_rate: ((fillRate || 0) as number) / 100,
         target_noshow_rate: ((noshowRate || 0) as number) / 100,
       } as any);
+
+      // Sync tickets to all locations when "same tickets" is on
+      if (sameTickets && locations.length > 0) {
+        const ticketAvg = Math.round((tp + ti) / 2);
+        for (const loc of locations) {
+          await updateLocation.mutateAsync({
+            id: loc.id,
+            ticket_private: tp,
+            ticket_insurance: ti,
+            ticket_avg: ticketAvg,
+          });
+        }
+      }
+
       setInitial({
         name, doctorName, doctorGender, specialty, hasSecretary,
-        ticketPrivate, ticketInsurance, fillRate, noshowRate,
+        sameTickets, ticketPrivate, ticketInsurance, fillRate, noshowRate,
       });
       toast.success('Configurações salvas com sucesso!');
     } catch (err: any) {
@@ -519,27 +537,44 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Card 2: Operação da Clínica */}
+      {/* Card 2: Tickets */}
       <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
         <div className="px-4 pt-4 pb-2">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tickets Globais</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tickets</p>
         </div>
-        <div className="px-4 pb-4 space-y-5">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$)</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
-              <Input type="number" min={1} value={ticketPrivate} onChange={e => setTicketPrivate(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl pl-10" />
+        <div className="px-4 pb-4 space-y-4">
+          <div className="flex items-center justify-between rounded-xl border border-border p-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">Tickets iguais em todos os locais</p>
+              <p className="text-[10px] text-muted-foreground">Desative para definir valores diferentes por local</p>
             </div>
+            <Switch checked={sameTickets} onCheckedChange={setSameTickets} />
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$)</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
-              <Input type="number" min={1} value={ticketInsurance} onChange={e => setTicketInsurance(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl pl-10" />
+          {sameTickets ? (
+            <>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
+                  <Input type="number" min={1} value={ticketPrivate} onChange={e => setTicketPrivate(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl pl-10" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
+                  <Input type="number" min={1} value={ticketInsurance} onChange={e => setTicketInsurance(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl pl-10" />
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Esses valores serão aplicados a todos os locais ao salvar.</p>
+            </>
+          ) : (
+            <div className="rounded-xl bg-muted/50 border border-border/40 p-3">
+              <p className="text-xs text-muted-foreground">
+                Os tickets são gerenciados individualmente. Clique em <Pencil className="inline h-3 w-3 mx-0.5" /> em cada local abaixo para editar os valores.
+              </p>
             </div>
-          </div>
-          <p className="text-[11px] text-muted-foreground">A capacidade por dia agora é gerenciada em cada local de atendimento.</p>
+          )}
         </div>
       </div>
 
