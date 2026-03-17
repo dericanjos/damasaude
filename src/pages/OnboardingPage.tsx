@@ -445,7 +445,7 @@ export default function OnboardingPage() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta de ocupação (%) *</Label>
-              <Input type="number" min={0} max={100} value={fillRate} onChange={e => setFillRate(Number(e.target.value))} className="rounded-xl" />
+              <Input type="number" min={0} max={100} value={fillRate} onChange={e => setFillRate(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl" />
               <p className="text-[11px] text-muted-foreground">Porcentagem ideal de preenchimento da sua agenda.</p>
             </div>
             <div className="space-y-1.5">
