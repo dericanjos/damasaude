@@ -279,12 +279,12 @@ export default function SettingsPage() {
   const [hasSecretary, setHasSecretary] = useState(false);
 
   // Operation fields
-  const [ticketPrivate, setTicketPrivate] = useState(250);
-  const [ticketInsurance, setTicketInsurance] = useState(100);
+  const [ticketPrivate, setTicketPrivate] = useState<number | ''>(250);
+  const [ticketInsurance, setTicketInsurance] = useState<number | ''>(100);
 
   // Performance goals
-  const [fillRate, setFillRate] = useState(85);
-  const [noshowRate, setNoshowRate] = useState(5);
+  const [fillRate, setFillRate] = useState<number | ''>(85);
+  const [noshowRate, setNoshowRate] = useState<number | ''>(5);
 
   // Location editing
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
