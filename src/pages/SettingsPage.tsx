@@ -608,6 +608,9 @@ export default function SettingsPage() {
       {/* QA Simulation Mode */}
       <QASimulationSection />
 
+      {/* Ferramentas (uso interno) */}
+      <InternalToolsSection />
+
       <Button
         variant="outline"
         className="w-full rounded-xl border-destructive/30 text-destructive hover:bg-destructive/5"
