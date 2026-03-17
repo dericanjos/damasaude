@@ -339,20 +339,36 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     try {
+      const tp = (ticketPrivate || 0) as number;
+      const ti = (ticketInsurance || 0) as number;
       await updateClinic.mutateAsync({
         name,
         doctor_name: doctorName,
         doctor_gender: doctorGender,
         specialty,
         has_secretary: hasSecretary,
-        ticket_private: (ticketPrivate || 0) as number,
-        ticket_insurance: (ticketInsurance || 0) as number,
+        ticket_private: tp,
+        ticket_insurance: ti,
         target_fill_rate: ((fillRate || 0) as number) / 100,
         target_noshow_rate: ((noshowRate || 0) as number) / 100,
       } as any);
+
+      // Sync tickets to all locations when "same tickets" is on
+      if (sameTickets && locations.length > 0) {
+        const ticketAvg = Math.round((tp + ti) / 2);
+        for (const loc of locations) {
+          await updateLocation.mutateAsync({
+            id: loc.id,
+            ticket_private: tp,
+            ticket_insurance: ti,
+            ticket_avg: ticketAvg,
+          });
+        }
+      }
+
       setInitial({
         name, doctorName, doctorGender, specialty, hasSecretary,
-        ticketPrivate, ticketInsurance, fillRate, noshowRate,
+        sameTickets, ticketPrivate, ticketInsurance, fillRate, noshowRate,
       });
       toast.success('Configurações salvas com sucesso!');
     } catch (err: any) {
