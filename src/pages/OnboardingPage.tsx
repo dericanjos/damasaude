@@ -82,7 +82,8 @@ export default function OnboardingPage() {
   const [hasSecretary, setHasSecretary] = useState(false);
 
   // Step 2
-  const [clinicName, setClinicName] = useState('');
+  const [numLocations, setNumLocations] = useState(1);
+  const [locationNames, setLocationNames] = useState<string[]>(['']);
   const [numDoctors, setNumDoctors] = useState(1);
   const [paymentType, setPaymentType] = useState('ambos');
 
