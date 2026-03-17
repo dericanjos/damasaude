@@ -160,7 +160,7 @@ export default function OnboardingPage() {
       const ti = (ticketInsurance || 0) as number;
       const fr = (fillRate || 0) as number;
       const nr = (noshowRate || 0) as number;
-      const nd = (numDoctors || 1) as number;
+      const nd = (numDoctorsPerLoc[0] || 1) as number;
 
       // Use first location's schedule for the global clinic record
       const firstSched = locationSchedules[0];
