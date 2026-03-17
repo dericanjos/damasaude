@@ -323,7 +323,7 @@ export default function OnboardingPage() {
               </Label>
               {locationNames.map((name, idx) => (
                 <div key={idx} className="space-y-1">
-                  {numLocations > 1 && (
+                  {typeof numLocations === 'number' && numLocations > 1 && (
                     <p className="text-[11px] text-muted-foreground font-medium">Local {idx + 1}</p>
                   )}
                   <Input
