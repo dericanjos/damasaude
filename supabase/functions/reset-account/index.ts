@@ -28,15 +28,17 @@ Deno.serve(async (req) => {
     });
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data, error: claimsError } = await supabase.auth.getClaims(token);
 
-    if (authError || !user) {
-      console.error("Auth error:", authError);
+    if (claimsError || !data?.claims?.sub) {
+      console.error("Auth error:", claimsError);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const user = { id: data.claims.sub as string };
 
     const userId = user.id;
     const deleted: Record<string, number> = {};
