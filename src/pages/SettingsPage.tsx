@@ -622,13 +622,23 @@ export default function SettingsPage() {
   );
 }
 
+const ALLOWED_EMAILS = ['anjosderic@gmail.com'];
+
 function InternalToolsSection() {
+  const { user } = useAuth();
+  const { seed, cleanup } = useQASeed();
   const [resetReportsOpen, setResetReportsOpen] = useState(false);
   const [resetAccountOpen, setResetAccountOpen] = useState(false);
+  const [qaOpen, setQaOpen] = useState(false);
+  const [qaAction, setQaAction] = useState<'seed' | 'cleanup'>('seed');
   const [inputReports, setInputReports] = useState('');
   const [inputAccount, setInputAccount] = useState('');
+  const [inputQa, setInputQa] = useState('');
   const [loadingReports, setLoadingReports] = useState(false);
   const [loadingAccount, setLoadingAccount] = useState(false);
+  const [loadingQa, setLoadingQa] = useState(false);
+
+  if (!user?.email || !ALLOWED_EMAILS.includes(user.email)) return null;
 
   const handleResetReports = async () => {
     if (inputReports !== 'RESET') return;
@@ -666,6 +676,27 @@ function InternalToolsSection() {
     }
   };
 
+  const handleQaConfirm = async () => {
+    if (inputQa !== 'QA') return;
+    setLoadingQa(true);
+    try {
+      if (qaAction === 'seed') {
+        await seed.mutateAsync();
+        toast.success('Cenário gerado: 2 locais + 6 dias. Recarregando…');
+      } else {
+        await cleanup.mutateAsync();
+        toast.success('Cenário removido. Recarregando…');
+      }
+      setQaOpen(false);
+      setInputQa('');
+      setTimeout(() => window.location.reload(), 800);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro na operação QA');
+    } finally {
+      setLoadingQa(false);
+    }
+  };
+
   return (
     <>
       <div className="rounded-2xl bg-card border border-destructive/30 shadow-card overflow-hidden">
@@ -677,6 +708,22 @@ function InternalToolsSection() {
           <p className="text-[11px] text-muted-foreground mt-1">Ações destrutivas. Use apenas para testes.</p>
         </div>
         <div className="px-4 py-3 space-y-2">
+          <Button
+            onClick={() => { setQaAction('seed'); setQaOpen(true); }}
+            className="w-full rounded-xl"
+            variant="default"
+          >
+            <FlaskConical className="h-4 w-4 mr-2" />
+            Gerar cenário de teste (hoje)
+          </Button>
+          <Button
+            onClick={() => { setQaAction('cleanup'); setQaOpen(true); }}
+            className="w-full rounded-xl border-muted-foreground/30 text-muted-foreground hover:bg-muted/50"
+            variant="outline"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Remover cenário de teste
+          </Button>
           <Button
             onClick={() => setResetReportsOpen(true)}
             className="w-full rounded-xl border-orange-500/30 text-orange-600 hover:bg-orange-500/5"
@@ -695,6 +742,39 @@ function InternalToolsSection() {
           </Button>
         </div>
       </div>
+
+      {/* Modal: QA seed/cleanup */}
+      <Dialog open={qaOpen} onOpenChange={(o) => { setQaOpen(o); if (!o) setInputQa(''); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{qaAction === 'seed' ? 'Gerar cenário de teste' : 'Remover cenário de teste'}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {qaAction === 'seed'
+              ? 'Isso criará 2 locais (Anjos Clinic + Hospital São Lucas) com check-ins de 6 dias para testar Dashboard, Ações e Relatórios.'
+              : 'Isso removerá os dados do cenário de teste.'}
+          </p>
+          <p className="text-sm font-medium mt-2">Digite <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">QA</code> para confirmar:</p>
+          <Input
+            value={inputQa}
+            onChange={(e) => setInputQa(e.target.value)}
+            placeholder="QA"
+            className="font-mono"
+          />
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" size="sm" onClick={() => { setQaOpen(false); setInputQa(''); }}>
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              disabled={inputQa !== 'QA' || loadingQa}
+              onClick={handleQaConfirm}
+            >
+              {loadingQa ? 'Processando...' : 'Confirmar'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal: Resetar relatórios */}
       <Dialog open={resetReportsOpen} onOpenChange={(o) => { setResetReportsOpen(o); if (!o) setInputReports(''); }}>
