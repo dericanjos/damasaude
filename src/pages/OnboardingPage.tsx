@@ -208,8 +208,10 @@ export default function OnboardingPage() {
           const locName = locationNames[i];
           const sched = locationSchedules[i] || makeDefaultSchedule();
 
+          const locNumDoctors = (numDoctorsPerLoc[i] || 1) as number;
           const { data: newLoc, error: locError } = await supabase.from('locations').insert({
             user_id: user.id, clinic_id: clinicRow.id, name: locName.trim(), address: '', timezone,
+            num_doctors: locNumDoctors,
           } as any).select().single();
           if (locError) throw locError;
 
