@@ -1,0 +1,1 @@
+ALTER TABLE public.locations ADD COLUMN num_doctors integer NOT NULL DEFAULT 1;
