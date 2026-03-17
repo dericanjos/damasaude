@@ -622,8 +622,6 @@ export default function SettingsPage() {
   );
 }
 
-const ALLOWED_EMAILS = ['anjosderic@gmail.com'];
-
 function InternalToolsSection() {
   const { user } = useAuth();
   const { seed, cleanup } = useQASeed();
@@ -637,8 +635,6 @@ function InternalToolsSection() {
   const [loadingReports, setLoadingReports] = useState(false);
   const [loadingAccount, setLoadingAccount] = useState(false);
   const [loadingQa, setLoadingQa] = useState(false);
-
-  if (!user?.email || !ALLOWED_EMAILS.includes(user.email)) return null;
 
   const handleResetReports = async () => {
     if (inputReports !== 'RESET') return;
