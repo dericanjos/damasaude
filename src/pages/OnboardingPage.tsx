@@ -178,7 +178,7 @@ export default function OnboardingPage() {
         await supabase.from('locations').delete().eq('user_id', user.id);
 
         const dayMap: Record<string, number> = { dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
-        const ticketAvg = paymentType === 'ambos' ? Math.round((ticketPrivate + ticketInsurance) / 2) : (paymentType === 'particular' ? ticketPrivate : ticketInsurance);
+        const ticketAvg = paymentType === 'ambos' ? Math.round((tp + ti) / 2) : (paymentType === 'particular' ? tp : ti);
 
         for (const locName of locationNames) {
           const { data: newLoc, error: locError } = await supabase.from('locations').insert({
@@ -188,13 +188,13 @@ export default function OnboardingPage() {
 
           await supabase.from('location_financials').insert({
             user_id: user.id, location_id: newLoc.id, ticket_avg: ticketAvg,
-            ticket_private: paymentType === 'convenio' ? 0 : ticketPrivate,
-            ticket_insurance: paymentType === 'particular' ? 0 : ticketInsurance,
+            ticket_private: paymentType === 'convenio' ? 0 : tp,
+            ticket_insurance: paymentType === 'particular' ? 0 : ti,
           } as any);
 
-          const scheduleRows = workingDays.filter(d => (dailyCapacities[d] ?? 0) > 0).map(d => ({
+          const scheduleRows = workingDays.filter(d => (safeCaps[d] ?? 0) > 0).map(d => ({
             user_id: user.id, location_id: newLoc.id, weekday: dayMap[d],
-            daily_capacity: dailyCapacities[d] ?? 16, start_time: '08:00', end_time: '18:00',
+            daily_capacity: safeCaps[d] ?? 16, start_time: '08:00', end_time: '18:00',
           }));
           if (scheduleRows.length > 0) await supabase.from('location_schedules').insert(scheduleRows as any);
         }
