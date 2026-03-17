@@ -359,7 +359,7 @@ export default function OnboardingPage() {
                     while (updated.length < n) updated.push('');
                     return updated.slice(0, n);
                   });
-                  syncSchedules(n);
+                  syncArrays(n);
                 }}
                 className="rounded-xl"
               />
