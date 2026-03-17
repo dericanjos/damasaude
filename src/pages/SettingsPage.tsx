@@ -605,8 +605,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* QA Simulation Mode */}
-      <QASimulationSection />
+      {/* Ferramentas (uso interno) — only for allowlisted emails */}
 
       {/* Ferramentas (uso interno) */}
       <InternalToolsSection />
