@@ -154,9 +154,9 @@ function LocationEditDialog({
         await createLocation.mutateAsync({
           name: name.trim(),
           address: address.trim(),
-          ticket_avg: ticketAvg,
-          ticket_private: ticketPrivLoc,
-          ticket_insurance: ticketInsLoc,
+          ticket_avg: (ticketAvg || 0) as number,
+          ticket_private: (ticketPrivLoc || 0) as number,
+          ticket_insurance: (ticketInsLoc || 0) as number,
           has_secretary: hasSecretaryLoc,
           schedules: scheduleList,
         });
