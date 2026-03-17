@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.reset-weekly-reports]
 verify_jwt = false
+
+[functions.reset-account]
+verify_jwt = false
