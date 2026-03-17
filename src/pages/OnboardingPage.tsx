@@ -88,7 +88,7 @@ export default function OnboardingPage() {
   // Step 2
   const [numLocations, setNumLocations] = useState<number | ''>(1);
   const [locationNames, setLocationNames] = useState<string[]>(['']);
-  const [numDoctors, setNumDoctors] = useState<number | ''>(1);
+  const [numDoctorsPerLoc, setNumDoctorsPerLoc] = useState<(number | '')[]>([1]);
   const [paymentType, setPaymentType] = useState('ambos');
 
   // Step 3 — per-location schedules
