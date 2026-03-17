@@ -298,8 +298,6 @@ export default function SettingsPage() {
         doctorGender: c.doctor_gender || 'masculino',
         specialty: c.specialty || '',
         hasSecretary: c.has_secretary ?? false,
-        ticketPrivate: c.ticket_private ?? 250,
-        ticketInsurance: c.ticket_insurance ?? 100,
         fillRate: Math.round(Number(c.target_fill_rate) * 100),
         noshowRate: Math.round(Number(c.target_noshow_rate) * 100),
       };
