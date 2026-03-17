@@ -342,7 +342,7 @@ export default function OnboardingPage() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quantidade de médicos *</Label>
-              <Input type="number" min={1} value={numDoctors} onChange={e => setNumDoctors(Number(e.target.value))} className="rounded-xl" />
+              <Input type="number" min={1} value={numDoctors} onChange={e => setNumDoctors(e.target.value === '' ? '' : Math.max(1, Number(e.target.value)))} className="rounded-xl" />
               <p className="text-[11px] text-muted-foreground">Quantos médicos atendem na sua clínica, incluindo você.</p>
             </div>
             <div className="space-y-1.5">
