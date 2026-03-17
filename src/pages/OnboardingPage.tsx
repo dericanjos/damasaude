@@ -104,7 +104,7 @@ export default function OnboardingPage() {
   const canAdvance = () => {
     switch (step) {
       case 1: return doctorName.trim() && specialty;
-      case 2: return clinicName.trim() && numDoctors >= 1;
+      case 2: return locationNames.every(n => n.trim()) && numLocations >= 1 && numDoctors >= 1;
       case 3: return workingDays.length >= 1 && workingDays.some(d => (dailyCapacities[d] ?? 0) >= 1) && (
         paymentType === 'particular' ? ticketPrivate >= 1 :
         paymentType === 'convenio' ? ticketInsurance >= 1 :
