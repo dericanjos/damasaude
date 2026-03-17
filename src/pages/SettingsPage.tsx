@@ -560,7 +560,7 @@ export default function SettingsPage() {
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta de Taxa de No-show</Label>
             <div className="relative">
-              <Input type="number" min={0} max={100} value={noshowRate} onChange={e => setNoshowRate(Math.min(100, Math.max(0, Number(e.target.value))))} className="rounded-xl pr-10" />
+              <Input type="number" min={0} max={100} value={noshowRate} onChange={e => setNoshowRate(e.target.value === '' ? '' : Math.min(100, Math.max(0, Number(e.target.value))))} className="rounded-xl pr-10" />
               <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             </div>
             <p className="text-[11px] text-muted-foreground">Recomendado: abaixo de 5%.</p>
