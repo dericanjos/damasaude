@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Settings, LogOut, CreditCard, ExternalLink, Percent, MapPin, Plus, Pencil, Bell, FlaskConical, Trash2 } from 'lucide-react';
+import { Settings, LogOut, CreditCard, ExternalLink, Percent, MapPin, Plus, Pencil, Bell, FlaskConical, Trash2, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DAY_KEYS, DAY_LABELS, DAY_SHORT_LABELS, parseDailyCapacities, type DailyCapacities } from '@/lib/days';
 
@@ -608,6 +608,9 @@ export default function SettingsPage() {
       {/* QA Simulation Mode */}
       <QASimulationSection />
 
+      {/* Ferramentas (uso interno) */}
+      <InternalToolsSection />
+
       <Button
         variant="outline"
         className="w-full rounded-xl border-destructive/30 text-destructive hover:bg-destructive/5"
@@ -734,6 +737,147 @@ function QASimulationSection() {
               className="bg-orange-500 hover:bg-orange-600 text-white"
             >
               {resetLoading ? 'Removendo...' : 'Confirmar reset'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function InternalToolsSection() {
+  const [resetReportsOpen, setResetReportsOpen] = useState(false);
+  const [resetAccountOpen, setResetAccountOpen] = useState(false);
+  const [inputReports, setInputReports] = useState('');
+  const [inputAccount, setInputAccount] = useState('');
+  const [loadingReports, setLoadingReports] = useState(false);
+  const [loadingAccount, setLoadingAccount] = useState(false);
+
+  const handleResetReports = async () => {
+    if (inputReports !== 'RESET') return;
+    setLoadingReports(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-weekly-reports');
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Relatórios apagados: ${data?.deleted ?? 0}. Recarregando…`);
+      setResetReportsOpen(false);
+      setTimeout(() => window.location.reload(), 800);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao resetar relatórios');
+    } finally {
+      setLoadingReports(false);
+    }
+  };
+
+  const handleResetAccount = async () => {
+    if (inputAccount !== 'RESET') return;
+    setLoadingAccount(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-account');
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const d = data?.deleted ?? {};
+      const summary = Object.entries(d).map(([t, n]) => `${t}: ${n}`).join(', ');
+      toast.success(`Reset concluído. (${summary}). Recarregando…`);
+      setResetAccountOpen(false);
+      setTimeout(() => window.location.reload(), 800);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao resetar conta');
+    } finally {
+      setLoadingAccount(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="rounded-2xl bg-card border border-destructive/30 shadow-card overflow-hidden">
+        <div className="px-4 pt-4 pb-2">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-destructive" />
+            <p className="text-xs font-bold text-destructive uppercase tracking-wider">Ferramentas (uso interno)</p>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">Ações destrutivas. Use apenas para testes.</p>
+        </div>
+        <div className="px-4 py-3 space-y-2">
+          <Button
+            onClick={() => setResetReportsOpen(true)}
+            className="w-full rounded-xl border-orange-500/30 text-orange-600 hover:bg-orange-500/5"
+            variant="outline"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Resetar relatórios (cache)
+          </Button>
+          <Button
+            onClick={() => setResetAccountOpen(true)}
+            className="w-full rounded-xl border-destructive/40 text-destructive hover:bg-destructive/5"
+            variant="outline"
+          >
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            Reset total da conta (apagar tudo)
+          </Button>
+        </div>
+      </div>
+
+      {/* Modal: Resetar relatórios */}
+      <Dialog open={resetReportsOpen} onOpenChange={(o) => { setResetReportsOpen(o); if (!o) setInputReports(''); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Resetar relatórios semanais</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Isso apagará <strong>todos</strong> os seus relatórios semanais em cache. Ao acessar a página de relatório, um novo será gerado.
+          </p>
+          <p className="text-sm font-medium mt-2">Digite <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">RESET</code> para confirmar:</p>
+          <Input
+            value={inputReports}
+            onChange={(e) => setInputReports(e.target.value)}
+            placeholder="RESET"
+            className="font-mono"
+          />
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" size="sm" onClick={() => { setResetReportsOpen(false); setInputReports(''); }}>
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              disabled={inputReports !== 'RESET' || loadingReports}
+              onClick={handleResetReports}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              {loadingReports ? 'Removendo...' : 'Confirmar reset'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Reset total */}
+      <Dialog open={resetAccountOpen} onOpenChange={(o) => { setResetAccountOpen(o); if (!o) setInputAccount(''); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Reset total da conta</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Isso apagará <strong>todos</strong> os seus dados: check-ins, locais, relatórios, perfil e clínica. A conta voltará ao estado de nova.
+          </p>
+          <p className="text-sm font-medium mt-2">Digite <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">RESET</code> para confirmar:</p>
+          <Input
+            value={inputAccount}
+            onChange={(e) => setInputAccount(e.target.value)}
+            placeholder="RESET"
+            className="font-mono"
+          />
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" size="sm" onClick={() => { setResetAccountOpen(false); setInputAccount(''); }}>
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={inputAccount !== 'RESET' || loadingAccount}
+              onClick={handleResetAccount}
+            >
+              {loadingAccount ? 'Apagando tudo...' : 'Confirmar reset total'}
             </Button>
           </div>
         </DialogContent>
