@@ -65,7 +65,23 @@ function detectTimezone(): string {
   } catch {
     return 'America/Sao_Paulo';
   }
+
+interface LocationScheduleConfig {
+  workingDays: string[];
+  dailyCapacities: Record<string, number | ''>;
+  startTimes: Record<string, string>;
+  endTimes: Record<string, string>;
 }
+
+function makeDefaultSchedule(): LocationScheduleConfig {
+  return {
+    workingDays: ['seg', 'ter', 'qua', 'qui', 'sex'],
+    dailyCapacities: { dom: 0, seg: 16, ter: 16, qua: 16, qui: 16, sex: 16, sab: 0 },
+    startTimes: { dom: '08:00', seg: '08:00', ter: '08:00', qua: '08:00', qui: '08:00', sex: '08:00', sab: '08:00' },
+    endTimes: { dom: '18:00', seg: '18:00', ter: '18:00', qua: '18:00', qui: '18:00', sex: '18:00', sab: '18:00' },
+  };
+}
+
 
 export default function OnboardingPage() {
   const { user } = useAuth();
