@@ -89,28 +89,34 @@ export default function OnboardingPage() {
 
   // Step 3
   const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
-  const [dailyCapacities, setDailyCapacities] = useState<Record<string, number>>({
+  const [dailyCapacities, setDailyCapacities] = useState<Record<string, number | ''>>({
     dom: 0, seg: 16, ter: 16, qua: 16, qui: 16, sex: 16, sab: 0,
   });
-  const [ticketPrivate, setTicketPrivate] = useState(250);
-  const [ticketInsurance, setTicketInsurance] = useState(100);
+  const [ticketPrivate, setTicketPrivate] = useState<number | ''>(250);
+  const [ticketInsurance, setTicketInsurance] = useState<number | ''>(100);
   const [timezone, setTimezone] = useState(detectTimezone());
 
   // Step 4
-  const [fillRate, setFillRate] = useState(85);
-  const [noshowRate, setNoshowRate] = useState(5);
+  const [fillRate, setFillRate] = useState<number | ''>(85);
+  const [noshowRate, setNoshowRate] = useState<number | ''>(5);
   const [monthlyTarget, setMonthlyTarget] = useState<number | ''>('');
 
   const canAdvance = () => {
     switch (step) {
       case 1: return doctorName.trim() && specialty;
       case 2: return typeof numLocations === 'number' && numLocations >= 1 && locationNames.length === numLocations && locationNames.every(n => n.trim()) && typeof numDoctors === 'number' && numDoctors >= 1;
-      case 3: return workingDays.length >= 1 && workingDays.some(d => (dailyCapacities[d] ?? 0) >= 1) && (
-        paymentType === 'particular' ? ticketPrivate >= 1 :
-        paymentType === 'convenio' ? ticketInsurance >= 1 :
-        ticketPrivate >= 1 && ticketInsurance >= 1
-      );
-      case 4: return fillRate >= 0 && noshowRate >= 0;
+      case 3: {
+        const capsValid = workingDays.length >= 1 && workingDays.some(d => {
+          const c = dailyCapacities[d];
+          return typeof c === 'number' && c >= 1;
+        });
+        const ticketValid =
+          paymentType === 'particular' ? (typeof ticketPrivate === 'number' && ticketPrivate >= 1) :
+          paymentType === 'convenio' ? (typeof ticketInsurance === 'number' && ticketInsurance >= 1) :
+          (typeof ticketPrivate === 'number' && ticketPrivate >= 1 && typeof ticketInsurance === 'number' && ticketInsurance >= 1);
+        return capsValid && ticketValid;
+      }
+      case 4: return typeof fillRate === 'number' && fillRate >= 0 && typeof noshowRate === 'number' && noshowRate >= 0;
       default: return true;
     }
   };
@@ -126,23 +132,32 @@ export default function OnboardingPage() {
         .eq('user_id', user.id)
         .maybeSingle();
 
+      // Safe casts — canAdvance() guarantees these are valid numbers
+      const tp = (ticketPrivate || 0) as number;
+      const ti = (ticketInsurance || 0) as number;
+      const fr = (fillRate || 0) as number;
+      const nr = (noshowRate || 0) as number;
+      const nd = (numDoctors || 1) as number;
+      const safeCaps: Record<string, number> = {};
+      for (const [k, v] of Object.entries(dailyCapacities)) safeCaps[k] = (v || 0) as number;
+
       const clinicData = {
         name: locationNames[0] || 'Principal',
         doctor_name: doctorName,
         doctor_gender: doctorGender,
         specialty,
         has_secretary: hasSecretary,
-        num_doctors: numDoctors,
+        num_doctors: nd,
         payment_type: paymentType,
         working_days: workingDays,
-        daily_capacities: dailyCapacities,
-        daily_capacity: Math.max(...workingDays.map(d => dailyCapacities[d] ?? 0), 1),
-        ticket_private: paymentType === 'convenio' ? 0 : ticketPrivate,
-        ticket_insurance: paymentType === 'particular' ? 0 : ticketInsurance,
-        ticket_medio: paymentType === 'ambos' ? Math.round((ticketPrivate + ticketInsurance) / 2) : (paymentType === 'particular' ? ticketPrivate : ticketInsurance),
+        daily_capacities: safeCaps,
+        daily_capacity: Math.max(...workingDays.map(d => safeCaps[d] ?? 0), 1),
+        ticket_private: paymentType === 'convenio' ? 0 : tp,
+        ticket_insurance: paymentType === 'particular' ? 0 : ti,
+        ticket_medio: paymentType === 'ambos' ? Math.round((tp + ti) / 2) : (paymentType === 'particular' ? tp : ti),
         timezone,
-        target_fill_rate: fillRate / 100,
-        target_noshow_rate: noshowRate / 100,
+        target_fill_rate: fr / 100,
+        target_noshow_rate: nr / 100,
         monthly_revenue_target: monthlyTarget || null,
       };
 
@@ -163,7 +178,7 @@ export default function OnboardingPage() {
         await supabase.from('locations').delete().eq('user_id', user.id);
 
         const dayMap: Record<string, number> = { dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
-        const ticketAvg = paymentType === 'ambos' ? Math.round((ticketPrivate + ticketInsurance) / 2) : (paymentType === 'particular' ? ticketPrivate : ticketInsurance);
+        const ticketAvg = paymentType === 'ambos' ? Math.round((tp + ti) / 2) : (paymentType === 'particular' ? tp : ti);
 
         for (const locName of locationNames) {
           const { data: newLoc, error: locError } = await supabase.from('locations').insert({
@@ -173,13 +188,13 @@ export default function OnboardingPage() {
 
           await supabase.from('location_financials').insert({
             user_id: user.id, location_id: newLoc.id, ticket_avg: ticketAvg,
-            ticket_private: paymentType === 'convenio' ? 0 : ticketPrivate,
-            ticket_insurance: paymentType === 'particular' ? 0 : ticketInsurance,
+            ticket_private: paymentType === 'convenio' ? 0 : tp,
+            ticket_insurance: paymentType === 'particular' ? 0 : ti,
           } as any);
 
-          const scheduleRows = workingDays.filter(d => (dailyCapacities[d] ?? 0) > 0).map(d => ({
+          const scheduleRows = workingDays.filter(d => (safeCaps[d] ?? 0) > 0).map(d => ({
             user_id: user.id, location_id: newLoc.id, weekday: dayMap[d],
-            daily_capacity: dailyCapacities[d] ?? 16, start_time: '08:00', end_time: '18:00',
+            daily_capacity: safeCaps[d] ?? 16, start_time: '08:00', end_time: '18:00',
           }));
           if (scheduleRows.length > 0) await supabase.from('location_schedules').insert(scheduleRows as any);
         }
@@ -396,8 +411,8 @@ export default function OnboardingPage() {
                       type="number"
                       min={1}
                       max={100}
-                      value={dailyCapacities[day.value] ?? 16}
-                      onChange={e => setDailyCapacities(prev => ({ ...prev, [day.value]: Math.max(1, Number(e.target.value)) }))}
+                      value={dailyCapacities[day.value] ?? ''}
+                      onChange={e => setDailyCapacities(prev => ({ ...prev, [day.value]: e.target.value === '' ? '' : Math.max(0, Number(e.target.value)) }))}
                       className="rounded-xl"
                     />
                   </div>
@@ -407,14 +422,14 @@ export default function OnboardingPage() {
             {(paymentType === 'particular' || paymentType === 'ambos') && (
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$) *</Label>
-                <Input type="number" min={1} value={ticketPrivate} onChange={e => setTicketPrivate(Number(e.target.value))} className="rounded-xl" />
+                <Input type="number" min={1} value={ticketPrivate} onChange={e => setTicketPrivate(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))} className="rounded-xl" />
                 <p className="text-[11px] text-muted-foreground">Valor médio cobrado por consulta particular.</p>
               </div>
             )}
             {(paymentType === 'convenio' || paymentType === 'ambos') && (
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$) *</Label>
-                <Input type="number" min={1} value={ticketInsurance} onChange={e => setTicketInsurance(Number(e.target.value))} className="rounded-xl" />
+                <Input type="number" min={1} value={ticketInsurance} onChange={e => setTicketInsurance(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))} className="rounded-xl" />
                 <p className="text-[11px] text-muted-foreground">Valor médio recebido por consulta via convênio.</p>
               </div>
             )}
@@ -439,12 +454,12 @@ export default function OnboardingPage() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta de ocupação (%) *</Label>
-              <Input type="number" min={0} max={100} value={fillRate} onChange={e => setFillRate(Number(e.target.value))} className="rounded-xl" />
+              <Input type="number" min={0} max={100} value={fillRate} onChange={e => setFillRate(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl" />
               <p className="text-[11px] text-muted-foreground">Porcentagem ideal de preenchimento da sua agenda.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta de no-show (%) *</Label>
-              <Input type="number" min={0} max={100} value={noshowRate} onChange={e => setNoshowRate(Number(e.target.value))} className="rounded-xl" />
+              <Input type="number" min={0} max={100} value={noshowRate} onChange={e => setNoshowRate(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl" />
               <p className="text-[11px] text-muted-foreground">Taxa máxima de faltas que você considera aceitável.</p>
             </div>
             <div className="space-y-1.5">

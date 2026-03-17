@@ -82,8 +82,8 @@ function Stepper({ value, onChange }: { value: number; onChange: (v: number) => 
       <input
         type="number"
         min={0}
-        value={value}
-        onChange={e => onChange(Math.max(0, parseInt(e.target.value) || 0))}
+        value={value === 0 ? value : (value || '')}
+        onChange={e => onChange(e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
         className="w-14 text-center text-2xl font-bold bg-transparent border-none outline-none text-foreground"
       />
       <button

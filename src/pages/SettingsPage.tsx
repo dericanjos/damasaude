@@ -70,9 +70,9 @@ function LocationEditDialog({
 
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
-  const [ticketAvg, setTicketAvg] = useState(250);
-  const [ticketPrivLoc, setTicketPrivLoc] = useState(250);
-  const [ticketInsLoc, setTicketInsLoc] = useState(100);
+  const [ticketAvg, setTicketAvg] = useState<number | ''>(250);
+  const [ticketPrivLoc, setTicketPrivLoc] = useState<number | ''>(250);
+  const [ticketInsLoc, setTicketInsLoc] = useState<number | ''>(100);
   const [hasSecretaryLoc, setHasSecretaryLoc] = useState(false);
   const [activeDays, setActiveDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [schedules, setSchedules] = useState<Record<number, ScheduleEntry>>({});
@@ -143,9 +143,9 @@ function LocationEditDialog({
           id: location.id,
           name: name.trim(),
           address: address.trim(),
-          ticket_avg: ticketAvg,
-          ticket_private: ticketPrivLoc,
-          ticket_insurance: ticketInsLoc,
+          ticket_avg: (ticketAvg || 0) as number,
+          ticket_private: (ticketPrivLoc || 0) as number,
+          ticket_insurance: (ticketInsLoc || 0) as number,
           has_secretary: hasSecretaryLoc,
           schedules: scheduleList,
         });
@@ -154,9 +154,9 @@ function LocationEditDialog({
         await createLocation.mutateAsync({
           name: name.trim(),
           address: address.trim(),
-          ticket_avg: ticketAvg,
-          ticket_private: ticketPrivLoc,
-          ticket_insurance: ticketInsLoc,
+          ticket_avg: (ticketAvg || 0) as number,
+          ticket_private: (ticketPrivLoc || 0) as number,
+          ticket_insurance: (ticketInsLoc || 0) as number,
           has_secretary: hasSecretaryLoc,
           schedules: scheduleList,
         });
@@ -186,15 +186,15 @@ function LocationEditDialog({
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$)</Label>
-            <Input type="number" min={1} value={ticketPrivLoc} onChange={e => setTicketPrivLoc(Number(e.target.value))} className="rounded-xl" />
+            <Input type="number" min={1} value={ticketPrivLoc} onChange={e => setTicketPrivLoc(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$)</Label>
-            <Input type="number" min={1} value={ticketInsLoc} onChange={e => setTicketInsLoc(Number(e.target.value))} className="rounded-xl" />
+            <Input type="number" min={1} value={ticketInsLoc} onChange={e => setTicketInsLoc(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket médio (R$) — fallback</Label>
-            <Input type="number" min={1} value={ticketAvg} onChange={e => setTicketAvg(Number(e.target.value))} className="rounded-xl" />
+            <Input type="number" min={1} value={ticketAvg} onChange={e => setTicketAvg(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl" />
             <p className="text-[10px] text-muted-foreground">Usado para cancelamentos e buracos quando não há split por tipo.</p>
           </div>
 
@@ -279,12 +279,12 @@ export default function SettingsPage() {
   const [hasSecretary, setHasSecretary] = useState(false);
 
   // Operation fields
-  const [ticketPrivate, setTicketPrivate] = useState(250);
-  const [ticketInsurance, setTicketInsurance] = useState(100);
+  const [ticketPrivate, setTicketPrivate] = useState<number | ''>(250);
+  const [ticketInsurance, setTicketInsurance] = useState<number | ''>(100);
 
   // Performance goals
-  const [fillRate, setFillRate] = useState(85);
-  const [noshowRate, setNoshowRate] = useState(5);
+  const [fillRate, setFillRate] = useState<number | ''>(85);
+  const [noshowRate, setNoshowRate] = useState<number | ''>(5);
 
   // Location editing
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
@@ -343,10 +343,10 @@ export default function SettingsPage() {
         doctor_gender: doctorGender,
         specialty,
         has_secretary: hasSecretary,
-        ticket_private: ticketPrivate,
-        ticket_insurance: ticketInsurance,
-        target_fill_rate: fillRate / 100,
-        target_noshow_rate: noshowRate / 100,
+        ticket_private: (ticketPrivate || 0) as number,
+        ticket_insurance: (ticketInsurance || 0) as number,
+        target_fill_rate: ((fillRate || 0) as number) / 100,
+        target_noshow_rate: ((noshowRate || 0) as number) / 100,
       } as any);
       setInitial({
         name, doctorName, doctorGender, specialty, hasSecretary,
@@ -529,14 +529,14 @@ export default function SettingsPage() {
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$)</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
-              <Input type="number" min={1} value={ticketPrivate} onChange={e => setTicketPrivate(Number(e.target.value))} className="rounded-xl pl-10" />
+              <Input type="number" min={1} value={ticketPrivate} onChange={e => setTicketPrivate(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl pl-10" />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$)</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
-              <Input type="number" min={1} value={ticketInsurance} onChange={e => setTicketInsurance(Number(e.target.value))} className="rounded-xl pl-10" />
+              <Input type="number" min={1} value={ticketInsurance} onChange={e => setTicketInsurance(e.target.value === '' ? '' : Number(e.target.value))} className="rounded-xl pl-10" />
             </div>
           </div>
           <p className="text-[11px] text-muted-foreground">A capacidade por dia agora é gerenciada em cada local de atendimento.</p>
@@ -552,7 +552,7 @@ export default function SettingsPage() {
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta de Ocupação da Agenda</Label>
             <div className="relative">
-              <Input type="number" min={0} max={100} value={fillRate} onChange={e => setFillRate(Math.min(100, Math.max(0, Number(e.target.value))))} className="rounded-xl pr-10" />
+              <Input type="number" min={0} max={100} value={fillRate} onChange={e => setFillRate(e.target.value === '' ? '' : Math.min(100, Math.max(0, Number(e.target.value))))} className="rounded-xl pr-10" />
               <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             </div>
             <p className="text-[11px] text-muted-foreground">Recomendado: 85%.</p>
@@ -560,7 +560,7 @@ export default function SettingsPage() {
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta de Taxa de No-show</Label>
             <div className="relative">
-              <Input type="number" min={0} max={100} value={noshowRate} onChange={e => setNoshowRate(Math.min(100, Math.max(0, Number(e.target.value))))} className="rounded-xl pr-10" />
+              <Input type="number" min={0} max={100} value={noshowRate} onChange={e => setNoshowRate(e.target.value === '' ? '' : Math.min(100, Math.max(0, Number(e.target.value))))} className="rounded-xl pr-10" />
               <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             </div>
             <p className="text-[11px] text-muted-foreground">Recomendado: abaixo de 5%.</p>
