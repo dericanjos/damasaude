@@ -1142,7 +1142,13 @@ export default function CheckinPage() {
         <Button
           type="submit"
           className="w-full h-12 rounded-xl text-sm font-semibold shadow-premium"
-          disabled={saveCheckin.isPending || generateActions.isPending || !selectedLocationId || hasValidationError}
+          disabled={
+            saveCheckin.isPending ||
+            generateActions.isPending ||
+            !selectedLocationId ||
+            hasValidationError ||
+            (!quickMode && form.appointments_scheduled === 0 && totalAttendedNow === 0 && totalNoshowsNow === 0 && totalCancellationsNow === 0 && form.extra_appointments === 0)
+          }
         >
           {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : existing ? 'Atualizar check-in' : 'Salvar agenda do dia'}
         </Button>
