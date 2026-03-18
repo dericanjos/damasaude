@@ -274,11 +274,11 @@ ROTAÇÃO DE ABORDAGENS (use a abordagem indicada para cada tipo de problema nes
 
     // CTA rotation — never repeat the same phrase across sections
     const ctaVariations = [
-      "Se quiser, a DAMA pode implementar essa rotina para você com uma equipe dedicada.",
-      "Essa é uma área onde a DAMA pode atuar com secretária remota e rotina montada.",
-      "Que tal delegar isso para a DAMA? Agende uma conversa e veja como funciona.",
-      "A DAMA entrega isso pronto — secretária, rotina e acompanhamento. Saiba mais.",
-      "Quer ajuda prática? A DAMA monta essa operação para você.",
+      "A DAMA pode auxiliar você a estruturar essa rotina com uma equipe dedicada. Vale conhecer.",
+      "Essa é uma área onde a DAMA pode oferecer suporte com secretária remota e acompanhamento contínuo.",
+      "Se fizer sentido para você, a DAMA disponibiliza essa operação de forma estruturada. Saiba mais.",
+      "A DAMA pode implementar esse processo para você — com acompanhamento e equipe de apoio.",
+      "Caso queira, a DAMA pode apresentar uma solução prática para essa questão.",
     ];
     const ctaForThisWeek = ctaVariations[weekNum % ctaVariations.length];
 
