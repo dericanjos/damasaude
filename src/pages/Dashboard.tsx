@@ -526,10 +526,17 @@ export default function Dashboard() {
       {todayScore != null && (
         <div className="grid grid-cols-2 gap-3">
           {/* Streak */}
-          <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card flex flex-col items-center justify-center text-center">
+          <div className={cn(
+            'rounded-2xl p-4 shadow-card flex flex-col items-center justify-center text-center',
+            streak >= 3
+              ? 'bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30'
+              : 'bg-card border border-border/60'
+          )}>
             <Flame className={cn('h-8 w-8 mb-1', streak >= 3 ? 'text-orange-500' : 'text-muted-foreground')} />
             <p className="text-2xl font-bold text-foreground">{streak} {streak === 1 ? 'dia' : 'dias'}</p>
-            <p className="text-[11px] text-muted-foreground">de consistência</p>
+            <p className="text-[11px] text-muted-foreground">
+              {streak >= 3 ? '🔥 em chamas!' : 'de consistência'}
+            </p>
           </div>
           {/* IDEA Gauge */}
           <button
