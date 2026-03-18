@@ -216,10 +216,13 @@ Analise os dados consolidados deste mês e gere um relatório executivo em 4 se�
 4. **🎯 Prioridades para o Próximo Mês:** 2-3 prioridades estratégicas com impacto estimado em R$.
 
 REGRAS DE TEXTO:
+- Use sempre "você" em vez de "te" (ex: "ajudá-lo" ou "para você", nunca "te ajudar").
+- Tom consultivo e profissional, como um conselho de especialista. Nada professoral.
+- Prefira verbos como: oferecer, disponibilizar, estruturar, auxiliar, apresentar, implementar.
+- Evite gírias e expressões coloquiais como "blindada", "pronto", "montada", "na mão".
 - Os dados diferenciam pacientes particulares e de convênio. Use isso para insights de mix de receita e precificação.
-- Tom direto, médico-friendly, realista. Nada professoral.
-- Se o resultado for crítico, use EXATAMENTE esta frase como CTA no final: "${ctaForThisMonth}" — use apenas UMA VEZ, nunca repita CTAs.
-- PROIBIDO: mencionar "IA", "inteligência artificial", "consultor" ou referências a ajuda externa. Tudo é funcionalidade nativa DAMA.
+- Se o resultado for crítico, use EXATAMENTE esta frase como CTA no final: "${ctaForThisMonth}" — use apenas UMA VEZ, nunca repita CTAs. A menção à DAMA deve ser contextual e sutil, como um convite para conhecer mais.
+- PROIBIDO: mencionar "IA", "inteligência artificial", "consultor", "script", "roteiro", "copie e cole" ou "mensagem pronta". Tudo é funcionalidade nativa DAMA.
 - Máximo 500 palavras.
 - Responda APENAS em português brasileiro.`;
 
