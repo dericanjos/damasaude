@@ -274,11 +274,11 @@ ROTAÇÃO DE ABORDAGENS (use a abordagem indicada para cada tipo de problema nes
 
     // CTA rotation — never repeat the same phrase across sections
     const ctaVariations = [
-      "Se quiser, a DAMA pode implementar essa rotina para você com uma equipe dedicada.",
-      "Essa é uma área onde a DAMA pode atuar com secretária remota e rotina montada.",
-      "Que tal delegar isso para a DAMA? Agende uma conversa e veja como funciona.",
-      "A DAMA entrega isso pronto — secretária, rotina e acompanhamento. Saiba mais.",
-      "Quer ajuda prática? A DAMA monta essa operação para você.",
+      "A DAMA pode auxiliar você a estruturar essa rotina com uma equipe dedicada. Vale conhecer.",
+      "Essa é uma área onde a DAMA pode oferecer suporte com secretária remota e acompanhamento contínuo.",
+      "Se fizer sentido para você, a DAMA disponibiliza essa operação de forma estruturada. Saiba mais.",
+      "A DAMA pode implementar esse processo para você — com acompanhamento e equipe de apoio.",
+      "Caso queira, a DAMA pode apresentar uma solução prática para essa questão.",
     ];
     const ctaForThisWeek = ctaVariations[weekNum % ctaVariations.length];
 
@@ -305,13 +305,16 @@ ${rotationContext}
 ${isPartial ? "IMPORTANTE: Este é um relatório PARCIAL (" + checkins.length + " de " + workingDaysCount + " dias). Module afirmações — evite conclusões absolutas com dados incompletos. Sinalize a parcialidade no topo." : ""}
 
 REGRAS DE TEXTO:
-- Tom direto, médico-friendly, realista. Nada professoral ou de "curso".
-- Use expressões como "Uma prática comum é…", "Se fizer sentido no seu fluxo…", "Exemplo (adapte):…", "Opção 1 / Opção 2".
-- PROIBIDO: repetir fórmulas fixas como "WhatsApp 48h/24h, peça OK" toda semana. Varie as abordagens.
+- Use sempre "você" em vez de "te" (ex: "ajudá-lo" ou "para você", nunca "te ajudar").
+- Tom consultivo e profissional, como um conselho de especialista. Nada professoral ou de "curso".
+- Prefira verbos como: oferecer, disponibilizar, estruturar, auxiliar, apresentar, implementar.
+- Evite gírias e expressões coloquiais como "blindada", "pronto", "montada", "na mão".
+- Use expressões como "Uma prática recomendada é…", "Se fizer sentido no seu fluxo…", "Exemplo (adapte):…", "Opção 1 / Opção 2".
+- PROIBIDO: repetir fórmulas fixas toda semana. Varie as abordagens.
 - Sempre justifique com impacto (R$ ou agenda).
-- Se o resultado for crítico (muita perda), use EXATAMENTE esta frase como CTA no final: "${ctaForThisWeek}" — use apenas UMA VEZ no relatório todo, nunca repita CTAs.
+- Se o resultado for crítico (muita perda), use EXATAMENTE esta frase como CTA no final: "${ctaForThisWeek}" — use apenas UMA VEZ no relatório todo, nunca repita CTAs. A menção à DAMA deve ser contextual e sutil, como um convite para conhecer mais.
 - Os dados diferenciam pacientes particulares e de convênio. Use isso para insights de mix de receita.
-- PROIBIDO: mencionar "IA", "inteligência artificial", "consultor" ou referências a ajuda externa. Tudo é funcionalidade nativa DAMA.
+- PROIBIDO: mencionar "IA", "inteligência artificial", "consultor", "script", "roteiro", "copie e cole" ou "mensagem pronta". Tudo é funcionalidade nativa DAMA.
 - O mais importante é consistência; ajuste ao seu fluxo.
 - Máximo 400 palavras.
 - Responda APENAS em português brasileiro.`;

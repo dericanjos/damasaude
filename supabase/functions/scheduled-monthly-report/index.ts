@@ -181,11 +181,11 @@ serve(async (req) => {
 
         const monthNum = prevMonth.getMonth();
         const ctaVariations = [
-          "Se quiser, a DAMA pode implementar essa rotina para você com uma equipe dedicada.",
-          "Essa é uma área onde a DAMA pode atuar com secretária remota e rotina montada.",
-          "Que tal delegar isso para a DAMA? Agende uma conversa e veja como funciona.",
-          "A DAMA entrega isso pronto — secretária, rotina e acompanhamento. Saiba mais.",
-          "Quer ajuda prática? A DAMA monta essa operação para você.",
+          "A DAMA pode auxiliar você a estruturar essa rotina com uma equipe dedicada. Vale conhecer.",
+          "Essa é uma área onde a DAMA pode oferecer suporte com secretária remota e acompanhamento contínuo.",
+          "Se fizer sentido para você, a DAMA disponibiliza essa operação de forma estruturada. Saiba mais.",
+          "A DAMA pode implementar esse processo para você — com acompanhamento e equipe de apoio.",
+          "Caso queira, a DAMA pode apresentar uma solução prática para essa questão.",
         ];
         const ctaForThisMonth = ctaVariations[monthNum % ctaVariations.length];
 
@@ -203,10 +203,13 @@ Analise os dados consolidados deste mês e gere um relatório executivo em 4 se�
 4. **🎯 Prioridades para o Próximo Mês:** 2-3 prioridades estratégicas com impacto estimado em R$.
 
 REGRAS:
+- Use sempre "você" em vez de "te" (ex: "ajudá-lo" ou "para você", nunca "te ajudar").
+- Tom consultivo e profissional, como um conselho de especialista. Nada professoral.
+- Prefira verbos como: oferecer, disponibilizar, estruturar, auxiliar, apresentar, implementar.
+- Evite gírias e expressões coloquiais como "blindada", "pronto", "montada", "na mão".
 - Os dados diferenciam pacientes particulares e de convênio. Use isso para insights de mix de receita.
-- Tom direto, médico-friendly, realista.
-- Se o resultado for crítico, use EXATAMENTE esta frase como CTA no final: "${ctaForThisMonth}" — use apenas UMA VEZ.
-- PROIBIDO: mencionar "IA", "inteligência artificial", "consultor" ou referências a ajuda externa.
+- Se o resultado for crítico, use EXATAMENTE esta frase como CTA no final: "${ctaForThisMonth}" — use apenas UMA VEZ. A menção à DAMA deve ser contextual e sutil.
+- PROIBIDO: mencionar "IA", "inteligência artificial", "consultor", "script", "roteiro", "copie e cole" ou "mensagem pronta".
 - Máximo 500 palavras.
 - Responda APENAS em português brasileiro.`;
 
