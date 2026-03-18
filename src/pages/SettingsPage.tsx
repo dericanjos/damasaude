@@ -34,9 +34,10 @@ const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | '
 };
 
 const SPECIALTIES = [
-  'Clínica Geral', 'Dermatologia', 'Ortopedia', 'Cardiologia',
-  'Ginecologia', 'Pediatria', 'Oftalmologia', 'Odontologia',
-  'Psiquiatria', 'Outra',
+  'Clínica Geral', 'Cardiologia', 'Dermatologia', 'Endocrinologia',
+  'Gastroenterologia', 'Ginecologia', 'Neurologia', 'Oftalmologia',
+  'Odontologia', 'Ortopedia', 'Otorrinolaringologia', 'Pediatria',
+  'Psiquiatria', 'Urologia', 'Outra',
 ];
 
 const WEEKDAYS = [
