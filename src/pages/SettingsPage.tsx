@@ -489,7 +489,7 @@ export default function SettingsPage() {
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Especialidade</Label>
             <Select value={specialty} onValueChange={setSpecialty}>
-              <SelectTrigger className="rounded-xl"><SelectValue placeholder="Selecione..." /></SelectTrigger>
+              <SelectTrigger className="rounded-xl"><SelectValue placeholder="Selecione sua especialidade" /></SelectTrigger>
               <SelectContent>
                 {SPECIALTIES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>

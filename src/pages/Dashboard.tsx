@@ -676,9 +676,9 @@ export default function Dashboard() {
 
       {/* ── CRITICAL ACTION ── */}
       {criticalAction && (
-        <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+        <div className="rounded-2xl bg-gradient-to-r from-destructive/20 to-destructive/5 border border-destructive/30 shadow-card overflow-hidden">
           <div className="px-4 pt-3 pb-1">
-            <p className="text-[10px] font-bold text-primary uppercase tracking-widest">⚡ Ação Crítica de Hoje</p>
+            <p className="text-[10px] font-bold text-destructive uppercase tracking-widest">⚡ Ação Crítica de Hoje</p>
             <p className="text-[10px] text-muted-foreground">Esta é a ação com maior potencial de impacto no seu resultado de hoje.</p>
           </div>
           <div className="flex items-start gap-3 px-4 pb-4 pt-2">

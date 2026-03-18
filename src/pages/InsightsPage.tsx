@@ -275,15 +275,22 @@ export default function InsightsPage() {
       {locations.length > 1 && <LocationSelector />}
 
       {!hasEnoughData ? (
-        <div className="rounded-2xl bg-card border border-border/60 shadow-card py-12 text-center px-6">
-          <Sparkles className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
+        <div className="rounded-2xl bg-card border border-border/60 shadow-card py-8 text-center px-6 space-y-4">
+          <Sparkles className="mx-auto h-8 w-8 text-muted-foreground mb-1" />
           <p className="text-sm font-semibold text-foreground">Seus insights estão sendo construídos</p>
-          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             Continue fazendo seus check-ins diários. Após 3 dias de dados, seus insights e gráficos começarão a aparecer aqui!
           </p>
-          <p className="text-xs text-muted-foreground mt-3">
+          <p className="text-xs text-muted-foreground">
             Check-ins realizados: <span className="font-bold text-foreground">{totalCheckins}/3</span>
           </p>
+          {/* Animated skeleton placeholders */}
+          <div className="grid grid-cols-3 gap-2 mt-2">
+            <div className="rounded-xl bg-muted/50 h-20 animate-pulse" />
+            <div className="rounded-xl bg-muted/50 h-20 animate-pulse" style={{ animationDelay: '150ms' }} />
+            <div className="rounded-xl bg-muted/50 h-20 animate-pulse" style={{ animationDelay: '300ms' }} />
+          </div>
+          <div className="rounded-xl bg-muted/50 h-32 animate-pulse w-full" style={{ animationDelay: '450ms' }} />
         </div>
       ) : (
         <Tabs defaultValue="resumo" className="w-full">
