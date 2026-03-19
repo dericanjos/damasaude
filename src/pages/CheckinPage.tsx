@@ -1033,13 +1033,18 @@ export default function CheckinPage() {
             {/* ── SEÇÃO 2: ATENDIMENTOS (sempre visível no planejamento) ── */}
             {form.appointments_scheduled > 0 && (
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
-              <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  📋 Atendimentos previstos para hoje
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Quantos pacientes você espera atender?
-                </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    📋 Atendimentos previstos para hoje
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Quantos pacientes você espera atender?
+                  </p>
+                </div>
+                <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  Máx: {effectiveCapacity} {form.extra_appointments > 0 ? `(${form.appointments_scheduled}+${form.extra_appointments})` : ''}
+                </span>
               </div>
               {paymentType === 'ambos' ? (
                 <>
