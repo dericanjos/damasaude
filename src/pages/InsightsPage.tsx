@@ -110,7 +110,20 @@ export default function InsightsPage() {
   const lw = calcWeek(lastWeek);
 
   const totalCheckins = allCheckins.length;
-  const hasEnoughData = totalCheckins >= 3;
+  const isConsolidated = !selectedLocationId && locations.length > 1;
+
+  // In consolidated view, each location must individually have >= 3 checkins
+  const perLocationProgress = useMemo(() => {
+    if (!isConsolidated) return null;
+    return locations.map(loc => {
+      const count = allCheckins.filter(c => c.location_id === loc.id).length;
+      return { id: loc.id, name: loc.name, count, ready: count >= 3 };
+    });
+  }, [isConsolidated, locations, allCheckins]);
+
+  const hasEnoughData = isConsolidated
+    ? (perLocationProgress?.every(l => l.ready) ?? false)
+    : totalCheckins >= 3;
 
   const [aiRequested, setAiRequested] = useState(false);
   useEffect(() => {
@@ -279,11 +292,26 @@ export default function InsightsPage() {
           <Sparkles className="mx-auto h-8 w-8 text-muted-foreground mb-1" />
           <p className="text-sm font-semibold text-foreground">Seus insights estão sendo construídos</p>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Continue fazendo seus check-ins diários. Após 3 dias de dados, seus insights e gráficos começarão a aparecer aqui!
+            {isConsolidated
+              ? 'Os insights consolidados serão desbloqueados quando cada clínica tiver pelo menos 3 check-ins.'
+              : 'Continue fazendo seus check-ins diários. Após 3 dias de dados, seus insights e gráficos começarão a aparecer aqui!'}
           </p>
-          <p className="text-xs text-muted-foreground">
-            Check-ins realizados: <span className="font-bold text-foreground">{totalCheckins}/3</span>
-          </p>
+          {isConsolidated && perLocationProgress ? (
+            <div className="space-y-2 mt-2 text-left">
+              {perLocationProgress.map(loc => (
+                <div key={loc.id} className="flex items-center justify-between text-xs px-2">
+                  <span className="text-muted-foreground">{loc.name}</span>
+                  <span className={cn("font-bold", loc.ready ? "text-revenue-gain" : "text-foreground")}>
+                    {loc.count}/3 {loc.ready ? '✓' : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Check-ins realizados: <span className="font-bold text-foreground">{totalCheckins}/3</span>
+            </p>
+          )}
           {/* Animated skeleton placeholders */}
           <div className="grid grid-cols-3 gap-2 mt-2">
             <div className="rounded-xl bg-muted/50 h-20 animate-pulse" />
