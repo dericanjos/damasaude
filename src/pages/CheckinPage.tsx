@@ -306,7 +306,8 @@ export default function CheckinPage() {
         followup_done: submitData.followup_done,
       };
 
-      const ideaScore = calculateIDEA(checkinData, dailyCapacity, ticketPrivate, ticketInsurance);
+      const actualCapacity = submitData.appointments_scheduled + (submitData.extra_appointments || 0);
+      const ideaScore = calculateIDEA(checkinData, actualCapacity, ticketPrivate, ticketInsurance);
       const insightText = generateInsightText(checkinData, ideaScore);
       const lossSources = getTopLossSources(checkinData);
 
