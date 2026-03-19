@@ -169,8 +169,8 @@ export default function OnboardingPage() {
       const { data: existingClinic } = await supabase
         .from('clinics').select('id').eq('user_id', user.id).maybeSingle();
 
-      const tp = (ticketPrivate || 0) as number;
-      const ti = (ticketInsurance || 0) as number;
+      const tp0 = (ticketsPrivate[0] || 0) as number;
+      const ti0 = (ticketsInsurance[0] || 0) as number;
       const fr = (fillRate || 0) as number;
       const nr = (noshowRate || 0) as number;
       const nd = (numDoctorsPerLoc[0] || 1) as number;
@@ -191,9 +191,9 @@ export default function OnboardingPage() {
         working_days: firstSched.workingDays,
         daily_capacities: safeCaps,
         daily_capacity: Math.max(...firstSched.workingDays.map(d => safeCaps[d] ?? 0), 1),
-        ticket_private: paymentType === 'convenio' ? 0 : tp,
-        ticket_insurance: paymentType === 'particular' ? 0 : ti,
-        ticket_medio: paymentType === 'ambos' ? Math.round((tp + ti) / 2) : (paymentType === 'particular' ? tp : ti),
+        ticket_private: paymentType === 'convenio' ? 0 : tp0,
+        ticket_insurance: paymentType === 'particular' ? 0 : ti0,
+        ticket_medio: paymentType === 'ambos' ? Math.round((tp0 + ti0) / 2) : (paymentType === 'particular' ? tp0 : ti0),
         timezone,
         target_fill_rate: fr / 100,
         target_noshow_rate: nr / 100,
