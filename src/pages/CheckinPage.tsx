@@ -1087,15 +1087,13 @@ export default function CheckinPage() {
                     label="No-shows Particular"
                     value={form.noshows_private}
                     onChange={v => setField('noshows_private', v)}
-                    max={Math.max(0, maxNoshowsTotal - form.noshows_insurance)}
-                    hint={maxNoshowsTotal <= 0 ? 'Todos os horários já foram preenchidos.' : undefined}
+                    max={Math.max(0, effectiveCapacity - form.noshows_insurance - totalCancellationsNow)}
                   />
                   <CheckinField
                     label="No-shows Convênio"
                     value={form.noshows_insurance}
                     onChange={v => setField('noshows_insurance', v)}
-                    max={Math.max(0, maxNoshowsTotal - form.noshows_private)}
-                    hint={maxNoshowsTotal <= 0 ? 'Todos os horários já foram preenchidos.' : undefined}
+                    max={Math.max(0, effectiveCapacity - form.noshows_private - totalCancellationsNow)}
                   />
                 </>
               ) : (
@@ -1113,15 +1111,13 @@ export default function CheckinPage() {
                     label="Cancelamentos Particular"
                     value={form.cancellations_private}
                     onChange={v => setField('cancellations_private', v)}
-                    max={Math.max(0, maxCancellationsTotal - form.cancellations_insurance)}
-                    hint={maxCancellationsTotal <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
+                    max={Math.max(0, effectiveCapacity - form.cancellations_insurance - totalNoshowsNow)}
                   />
                   <CheckinField
                     label="Cancelamentos Convênio"
                     value={form.cancellations_insurance}
                     onChange={v => setField('cancellations_insurance', v)}
-                    max={Math.max(0, maxCancellationsTotal - form.cancellations_private)}
-                    hint={maxCancellationsTotal <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
+                    max={Math.max(0, effectiveCapacity - form.cancellations_private - totalNoshowsNow)}
                   />
                 </>
               ) : (
@@ -1130,7 +1126,6 @@ export default function CheckinPage() {
                   value={paymentType === 'particular' ? form.cancellations_private : form.cancellations_insurance}
                   onChange={v => setField(paymentType === 'particular' ? 'cancellations_private' : 'cancellations_insurance', v)}
                   max={Math.max(0, maxCancellationsTotal)}
-                  hint={maxCancellationsTotal <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
                 />
               )}
               {/* Buracos auto */}
