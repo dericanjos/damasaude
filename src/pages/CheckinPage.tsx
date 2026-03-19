@@ -736,13 +736,13 @@ export default function CheckinPage() {
                 label="Cancelamentos Particular"
                 value={form.cancellations_private}
                 onChange={v => setField('cancellations_private', v)}
-                max={Math.max(0, effectiveCapacity - form.cancellations_insurance - totalNoshowsNow)}
+                max={maxCancelPrivate}
               />
               <CheckinField
                 label="Cancelamentos Convênio"
                 value={form.cancellations_insurance}
                 onChange={v => setField('cancellations_insurance', v)}
-                max={Math.max(0, effectiveCapacity - form.cancellations_private - totalNoshowsNow)}
+                max={maxCancelInsurance}
               />
             </>
           ) : (
