@@ -294,21 +294,19 @@ export default function SettingsPage() {
     if (clinic) {
       const c = clinic as any;
       const vals = {
-        name: c.name || '',
         doctorName: c.doctor_name || '',
         doctorGender: c.doctor_gender || 'masculino',
         specialty: c.specialty || '',
-        hasSecretary: c.has_secretary ?? false,
         fillRate: Math.round(Number(c.target_fill_rate) * 100),
         noshowRate: Math.round(Number(c.target_noshow_rate) * 100),
+        revenueTarget: c.monthly_revenue_target ?? '',
       };
-      setName(vals.name);
       setDoctorName(vals.doctorName);
       setDoctorGender(vals.doctorGender);
       setSpecialty(vals.specialty);
-      setHasSecretary(vals.hasSecretary);
       setFillRate(vals.fillRate);
       setNoshowRate(vals.noshowRate);
+      setRevenueTarget(vals.revenueTarget);
       setInitial(vals);
     }
   }, [clinic?.id]);
