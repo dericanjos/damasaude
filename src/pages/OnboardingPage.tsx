@@ -653,3 +653,37 @@ function LocationScheduleForm({
     </div>
   );
 }
+
+/** Sub-component: ticket fields for one location */
+function LocationTicketFields({
+  paymentType,
+  ticketPrivate,
+  ticketInsurance,
+  onChangePrivate,
+  onChangeInsurance,
+}: {
+  paymentType: string;
+  ticketPrivate: number | '';
+  ticketInsurance: number | '';
+  onChangePrivate: (v: number | '') => void;
+  onChangeInsurance: (v: number | '') => void;
+}) {
+  return (
+    <div className="space-y-3">
+      {(paymentType === 'particular' || paymentType === 'ambos') && (
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$) *</Label>
+          <Input type="number" min={1} value={ticketPrivate} onChange={e => onChangePrivate(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))} className="rounded-xl" />
+          <p className="text-[11px] text-muted-foreground">Valor médio cobrado por consulta particular neste local.</p>
+        </div>
+      )}
+      {(paymentType === 'convenio' || paymentType === 'ambos') && (
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$) *</Label>
+          <Input type="number" min={1} value={ticketInsurance} onChange={e => onChangeInsurance(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))} className="rounded-xl" />
+          <p className="text-[11px] text-muted-foreground">Valor médio recebido por consulta via convênio neste local.</p>
+        </div>
+      )}
+    </div>
+  );
+}
