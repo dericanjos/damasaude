@@ -430,12 +430,20 @@ export default function CheckinPage() {
                           <p className="text-xs text-muted-foreground mt-0.5">{loc.address}</p>
                         )}
                       </div>
-                      {alreadyDone && (
+                      {alreadyDone ? (
                         <CheckCircle2 className="h-4 w-4 text-revenue-gain shrink-0" />
+                      ) : (
+                        <span className="flex items-center gap-1 text-[11px] font-medium text-amber-400 shrink-0">
+                          <AlertCircle className="h-3.5 w-3.5" />
+                          Pendente
+                        </span>
                       )}
                     </div>
                     {alreadyDone && (
                       <p className="text-[11px] text-revenue-gain mt-1">✓ Check-in já feito • Toque para editar</p>
+                    )}
+                    {!alreadyDone && (
+                      <p className="text-[11px] text-amber-400/80 mt-1">⚠ Check-in ainda não realizado hoje</p>
                     )}
                   </button>
                 );
