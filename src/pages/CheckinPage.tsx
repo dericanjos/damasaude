@@ -230,13 +230,13 @@ export default function CheckinPage() {
   // Effective capacity = scheduled slots + extra (encaixes)
   const effectiveCapacity = form.appointments_scheduled + form.extra_appointments;
 
-  // Symmetric limits: each outcome type competes equally for remaining capacity
+  // Symmetric limits for attended; loss fields can grow by consuming attended automatically
   const totalAttendedNow = form.attended_private + form.attended_insurance;
   const totalNoshowsNow = form.noshows_private + form.noshows_insurance;
   const totalCancellationsNow = form.cancellations_private + form.cancellations_insurance;
   const maxAttendedTotal = Math.max(0, effectiveCapacity - totalNoshowsNow - totalCancellationsNow);
-  const maxNoshowsTotal = Math.max(0, effectiveCapacity - totalAttendedNow - totalCancellationsNow);
-  const maxCancellationsTotal = Math.max(0, effectiveCapacity - totalAttendedNow - totalNoshowsNow);
+  const maxNoshowsTotal = Math.max(0, effectiveCapacity - totalCancellationsNow);
+  const maxCancellationsTotal = Math.max(0, effectiveCapacity - totalNoshowsNow);
 
   const totalOutcomes = totalAttendedNow + totalNoshowsNow + totalCancellationsNow;
 
