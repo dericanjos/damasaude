@@ -45,7 +45,16 @@ export default function WeeklyReportPage() {
   const caps = parseDailyCapacities((clinic as any)?.daily_capacities);
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
   const workingDays: string[] = Array.isArray((clinic as any)?.working_days) ? (clinic as any).working_days : ['seg', 'ter', 'qua', 'qui', 'sex'];
-  const workingDaysCount = workingDays.length;
+
+  // Per-location working days count based on active schedules
+  const locationWorkingDaysCount = useMemo(() => {
+    if (selectedLocationId) {
+      const activeSchedules = allSchedules.filter(s => s.location_id === selectedLocationId && s.is_active);
+      return activeSchedules.length || workingDays.length;
+    }
+    return workingDays.length;
+  }, [selectedLocationId, allSchedules, workingDays.length]);
+
   const targetFillRate = clinic?.target_fill_rate ?? 0.85;
   const targetNoShowRate = clinic?.target_noshow_rate ?? 0.05;
 
