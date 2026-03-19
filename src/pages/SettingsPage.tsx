@@ -331,9 +331,10 @@ export default function SettingsPage() {
         specialty,
         target_fill_rate: ((fillRate || 0) as number) / 100,
         target_noshow_rate: ((noshowRate || 0) as number) / 100,
+        monthly_revenue_target: revenueTarget === '' ? null : revenueTarget,
       } as any);
       setInitial({
-        doctorName, doctorGender, specialty, fillRate, noshowRate,
+        doctorName, doctorGender, specialty, fillRate, noshowRate, revenueTarget,
       });
       toast.success('Configurações salvas com sucesso!');
     } catch (err: any) {
