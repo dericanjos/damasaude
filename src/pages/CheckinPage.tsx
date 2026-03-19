@@ -807,7 +807,8 @@ export default function CheckinPage() {
       empty_slots: e.empty_slots,
       followup_done: e.followup_done,
     };
-    const ideaScore = calculateIDEA(checkinData, dailyCapacity, ticketPrivate, ticketInsurance);
+    const summaryCapacity = e.appointments_scheduled + (e.extra_appointments ?? 0);
+    const ideaScore = calculateIDEA(checkinData, summaryCapacity, ticketPrivate, ticketInsurance);
     const status = getIdeaStatus(ideaScore);
 
     const extraAppts = e.extra_appointments ?? 0;
