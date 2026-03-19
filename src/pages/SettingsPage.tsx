@@ -281,6 +281,7 @@ export default function SettingsPage() {
   // Performance goals
   const [fillRate, setFillRate] = useState<number | ''>(85);
   const [noshowRate, setNoshowRate] = useState<number | ''>(5);
+  const [revenueTarget, setRevenueTarget] = useState<number | ''>('');
 
   // Location editing
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
