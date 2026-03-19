@@ -230,14 +230,27 @@ export default function CheckinPage() {
   // Effective capacity = scheduled slots + extra (encaixes)
   const effectiveCapacity = form.appointments_scheduled + form.extra_appointments;
 
-  // Symmetric limits for attended; loss fields can grow by consuming attended automatically
+  // ── Category-based limits ──
   const totalAttendedNow = form.attended_private + form.attended_insurance;
   const totalNoshowsNow = form.noshows_private + form.noshows_insurance;
   const totalCancellationsNow = form.cancellations_private + form.cancellations_insurance;
-  const maxAttendedTotal = Math.max(0, effectiveCapacity - totalNoshowsNow - totalCancellationsNow);
-  const maxNoshowsTotal = Math.max(0, effectiveCapacity - totalCancellationsNow);
-  const maxCancellationsTotal = Math.max(0, effectiveCapacity - totalNoshowsNow);
 
+  // Attended per category limited by effectiveCapacity
+  const maxAttendedPrivate = Math.max(0, effectiveCapacity - form.attended_insurance);
+  const maxAttendedInsurance = Math.max(0, effectiveCapacity - form.attended_private);
+
+  // Losses per category limited by what was scheduled in that category
+  const maxNoshowPrivate = Math.max(0, form.attended_private - form.cancellations_private);
+  const maxNoshowInsurance = Math.max(0, form.attended_insurance - form.cancellations_insurance);
+  const maxCancelPrivate = Math.max(0, form.attended_private - form.noshows_private);
+  const maxCancelInsurance = Math.max(0, form.attended_insurance - form.noshows_insurance);
+
+  // For single payment type modes
+  const maxNoshowsTotal = paymentType === 'particular' ? maxNoshowPrivate : maxNoshowInsurance;
+  const maxCancellationsTotal = paymentType === 'particular' ? maxCancelPrivate : maxCancelInsurance;
+
+  const totalLossesPrivate = form.noshows_private + form.cancellations_private;
+  const totalLossesInsurance = form.noshows_insurance + form.cancellations_insurance;
   const totalOutcomes = totalAttendedNow + totalNoshowsNow + totalCancellationsNow;
 
   // Auto-calculate empty_slots = scheduled - outcomes (buracos are only from scheduled slots)
@@ -249,7 +262,11 @@ export default function CheckinPage() {
       setForm(prev => ({ ...prev, empty_slots: autoEmptySlots }));
     }
   }, [autoEmptySlots, quickMode]);
-  const hasValidationError = !quickMode && effectiveCapacity > 0 && totalOutcomes > effectiveCapacity;
+  const hasValidationError = !quickMode && effectiveCapacity > 0 && (
+    totalAttendedNow > effectiveCapacity ||
+    totalLossesPrivate > form.attended_private ||
+    totalLossesInsurance > form.attended_insurance
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -339,26 +356,31 @@ export default function CheckinPage() {
     setForm(prev => {
       const next = { ...prev, [key]: value };
 
-      // When in perdas section, auto-reduce attended if total outcomes would exceed capacity
-      if (activeSection === 'perdas' && typeof value === 'number') {
-        const isLossField = ['noshows_private', 'noshows_insurance', 'cancellations_private', 'cancellations_insurance'].includes(key);
-        if (isLossField) {
-          const totalNoshows = next.noshows_private + next.noshows_insurance;
-          const totalCancellations = next.cancellations_private + next.cancellations_insurance;
-          const totalLosses = totalNoshows + totalCancellations;
-          const cap = next.appointments_scheduled + next.extra_appointments;
-          const maxAttended = Math.max(0, cap - totalLosses);
-          const currentAttended = next.attended_private + next.attended_insurance;
+      // When changing a loss field, clamp it to the category limit
+      if (typeof value === 'number') {
+        if (key === 'noshows_private') {
+          next.noshows_private = Math.min(value, Math.max(0, next.attended_private - next.cancellations_private));
+        } else if (key === 'noshows_insurance') {
+          next.noshows_insurance = Math.min(value, Math.max(0, next.attended_insurance - next.cancellations_insurance));
+        } else if (key === 'cancellations_private') {
+          next.cancellations_private = Math.min(value, Math.max(0, next.attended_private - next.noshows_private));
+        } else if (key === 'cancellations_insurance') {
+          next.cancellations_insurance = Math.min(value, Math.max(0, next.attended_insurance - next.noshows_insurance));
+        }
 
-          if (currentAttended > maxAttended) {
-            // Proportionally reduce attended
-            const ratio = maxAttended > 0 && currentAttended > 0 ? maxAttended / currentAttended : 0;
-            next.attended_private = Math.round(next.attended_private * ratio);
-            next.attended_insurance = maxAttended - next.attended_private;
-            if (next.attended_insurance < 0) {
-              next.attended_insurance = 0;
-              next.attended_private = maxAttended;
-            }
+        // When reducing attended, also clamp any losses that now exceed it
+        if (key === 'attended_private') {
+          const maxLossPrivate = Math.max(0, next.attended_private);
+          if (next.noshows_private + next.cancellations_private > maxLossPrivate) {
+            next.noshows_private = Math.min(next.noshows_private, maxLossPrivate);
+            next.cancellations_private = Math.min(next.cancellations_private, maxLossPrivate - next.noshows_private);
+          }
+        }
+        if (key === 'attended_insurance') {
+          const maxLossInsurance = Math.max(0, next.attended_insurance);
+          if (next.noshows_insurance + next.cancellations_insurance > maxLossInsurance) {
+            next.noshows_insurance = Math.min(next.noshows_insurance, maxLossInsurance);
+            next.cancellations_insurance = Math.min(next.cancellations_insurance, maxLossInsurance - next.noshows_insurance);
           }
         }
       }
@@ -690,13 +712,13 @@ export default function CheckinPage() {
                 label="No-shows Particular"
                 value={form.noshows_private}
                 onChange={v => setField('noshows_private', v)}
-                max={Math.max(0, effectiveCapacity - form.noshows_insurance - totalCancellationsNow)}
+                max={maxNoshowPrivate}
               />
               <CheckinField
                 label="No-shows Convênio"
                 value={form.noshows_insurance}
                 onChange={v => setField('noshows_insurance', v)}
-                max={Math.max(0, effectiveCapacity - form.noshows_private - totalCancellationsNow)}
+                max={maxNoshowInsurance}
               />
             </>
           ) : (
@@ -714,13 +736,13 @@ export default function CheckinPage() {
                 label="Cancelamentos Particular"
                 value={form.cancellations_private}
                 onChange={v => setField('cancellations_private', v)}
-                max={Math.max(0, effectiveCapacity - form.cancellations_insurance - totalNoshowsNow)}
+                max={maxCancelPrivate}
               />
               <CheckinField
                 label="Cancelamentos Convênio"
                 value={form.cancellations_insurance}
                 onChange={v => setField('cancellations_insurance', v)}
-                max={Math.max(0, effectiveCapacity - form.cancellations_private - totalNoshowsNow)}
+                max={maxCancelInsurance}
               />
             </>
           ) : (
@@ -1021,15 +1043,15 @@ export default function CheckinPage() {
                     label="Atendimentos Particular"
                     value={form.attended_private}
                     onChange={v => setField('attended_private', v)}
-                    max={Math.max(0, maxAttendedTotal - form.attended_insurance)}
-                    hint={totalAttendedNow >= maxAttendedTotal && maxAttendedTotal < effectiveCapacity ? `Restam ${maxAttendedTotal} vagas (descontando perdas já registradas).` : undefined}
+                    max={maxAttendedPrivate}
+                    hint={totalAttendedNow >= effectiveCapacity ? `Soma particular + convênio atingiu a capacidade (${effectiveCapacity}).` : undefined}
                   />
                   <CheckinField
                     label="Atendimentos Convênio"
                     value={form.attended_insurance}
                     onChange={v => setField('attended_insurance', v)}
-                    max={Math.max(0, maxAttendedTotal - form.attended_private)}
-                    hint={totalAttendedNow >= maxAttendedTotal && maxAttendedTotal < effectiveCapacity ? `Restam ${maxAttendedTotal} vagas (descontando perdas já registradas).` : undefined}
+                    max={maxAttendedInsurance}
+                    hint={totalAttendedNow >= effectiveCapacity ? `Soma particular + convênio atingiu a capacidade (${effectiveCapacity}).` : undefined}
                   />
                 </>
               ) : (
@@ -1087,13 +1109,13 @@ export default function CheckinPage() {
                     label="No-shows Particular"
                     value={form.noshows_private}
                     onChange={v => setField('noshows_private', v)}
-                    max={Math.max(0, effectiveCapacity - form.noshows_insurance - totalCancellationsNow)}
+                    max={maxNoshowPrivate}
                   />
                   <CheckinField
                     label="No-shows Convênio"
                     value={form.noshows_insurance}
                     onChange={v => setField('noshows_insurance', v)}
-                    max={Math.max(0, effectiveCapacity - form.noshows_private - totalCancellationsNow)}
+                    max={maxNoshowInsurance}
                   />
                 </>
               ) : (
@@ -1111,13 +1133,13 @@ export default function CheckinPage() {
                     label="Cancelamentos Particular"
                     value={form.cancellations_private}
                     onChange={v => setField('cancellations_private', v)}
-                    max={Math.max(0, effectiveCapacity - form.cancellations_insurance - totalNoshowsNow)}
+                    max={maxCancelPrivate}
                   />
                   <CheckinField
                     label="Cancelamentos Convênio"
                     value={form.cancellations_insurance}
                     onChange={v => setField('cancellations_insurance', v)}
-                    max={Math.max(0, effectiveCapacity - form.cancellations_private - totalNoshowsNow)}
+                    max={maxCancelInsurance}
                   />
                 </>
               ) : (
