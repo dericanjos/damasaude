@@ -318,9 +318,10 @@ export default function SettingsPage() {
       doctorGender !== initial.doctorGender ||
       specialty !== initial.specialty ||
       fillRate !== initial.fillRate ||
-      noshowRate !== initial.noshowRate
+      noshowRate !== initial.noshowRate ||
+      revenueTarget !== initial.revenueTarget
     );
-  }, [initial, doctorName, doctorGender, specialty, fillRate, noshowRate]);
+  }, [initial, doctorName, doctorGender, specialty, fillRate, noshowRate, revenueTarget]);
 
   const handleSave = async () => {
     try {
