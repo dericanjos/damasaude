@@ -474,10 +474,19 @@ export default function OnboardingPage() {
                 ))}
               </Tabs>
             ) : (
+            <div className="space-y-4">
               <LocationScheduleForm
                 sched={locationSchedules[0]}
                 onChange={updated => updateLocSchedule(0, () => updated)}
               />
+              <LocationTicketFields
+                paymentType={paymentType}
+                ticketPrivate={ticketsPrivate[0] ?? 250}
+                ticketInsurance={ticketsInsurance[0] ?? 100}
+                onChangePrivate={v => setTicketsPrivate(prev => prev.map((old, i) => i === 0 ? v : old))}
+                onChangeInsurance={v => setTicketsInsurance(prev => prev.map((old, i) => i === 0 ? v : old))}
+              />
+            </div>
             )}
 
             {/* Tickets (global) */}
