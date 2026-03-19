@@ -148,10 +148,13 @@ export default function OnboardingPage() {
             return typeof c === 'number' && c >= 1;
           })
         );
-        const ticketValid =
-          paymentType === 'particular' ? (typeof ticketPrivate === 'number' && ticketPrivate >= 1) :
-          paymentType === 'convenio' ? (typeof ticketInsurance === 'number' && ticketInsurance >= 1) :
-          (typeof ticketPrivate === 'number' && ticketPrivate >= 1 && typeof ticketInsurance === 'number' && ticketInsurance >= 1);
+        const ticketValid = locationNames.every((_, idx) => {
+          const tp = ticketsPrivate[idx];
+          const ti = ticketsInsurance[idx];
+          if (paymentType === 'particular') return typeof tp === 'number' && tp >= 1;
+          if (paymentType === 'convenio') return typeof ti === 'number' && ti >= 1;
+          return (typeof tp === 'number' && tp >= 1 && typeof ti === 'number' && ti >= 1);
+        });
         return schedulesValid && ticketValid;
       }
       case 4: return typeof fillRate === 'number' && fillRate >= 0 && typeof noshowRate === 'number' && noshowRate >= 0;
