@@ -1109,13 +1109,13 @@ export default function CheckinPage() {
                     label="No-shows Particular"
                     value={form.noshows_private}
                     onChange={v => setField('noshows_private', v)}
-                    max={Math.max(0, effectiveCapacity - form.noshows_insurance - totalCancellationsNow)}
+                    max={maxNoshowPrivate}
                   />
                   <CheckinField
                     label="No-shows Convênio"
                     value={form.noshows_insurance}
                     onChange={v => setField('noshows_insurance', v)}
-                    max={Math.max(0, effectiveCapacity - form.noshows_private - totalCancellationsNow)}
+                    max={maxNoshowInsurance}
                   />
                 </>
               ) : (
