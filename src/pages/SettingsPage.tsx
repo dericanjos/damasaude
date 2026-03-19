@@ -272,15 +272,14 @@ export default function SettingsPage() {
   const [portalLoading, setPortalLoading] = useState(false);
 
   // Profile fields
-  const [name, setName] = useState('');
   const [doctorName, setDoctorName] = useState('');
   const [doctorGender, setDoctorGender] = useState('masculino');
   const [specialty, setSpecialty] = useState('');
-  const [hasSecretary, setHasSecretary] = useState(false);
 
   // Performance goals
   const [fillRate, setFillRate] = useState<number | ''>(85);
   const [noshowRate, setNoshowRate] = useState<number | ''>(5);
+  const [revenueTarget, setRevenueTarget] = useState<number | ''>('');
 
   // Location editing
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
@@ -293,21 +292,19 @@ export default function SettingsPage() {
     if (clinic) {
       const c = clinic as any;
       const vals = {
-        name: c.name || '',
         doctorName: c.doctor_name || '',
         doctorGender: c.doctor_gender || 'masculino',
         specialty: c.specialty || '',
-        hasSecretary: c.has_secretary ?? false,
         fillRate: Math.round(Number(c.target_fill_rate) * 100),
         noshowRate: Math.round(Number(c.target_noshow_rate) * 100),
+        revenueTarget: c.monthly_revenue_target ?? '',
       };
-      setName(vals.name);
       setDoctorName(vals.doctorName);
       setDoctorGender(vals.doctorGender);
       setSpecialty(vals.specialty);
-      setHasSecretary(vals.hasSecretary);
       setFillRate(vals.fillRate);
       setNoshowRate(vals.noshowRate);
+      setRevenueTarget(vals.revenueTarget);
       setInitial(vals);
     }
   }, [clinic?.id]);
@@ -319,9 +316,10 @@ export default function SettingsPage() {
       doctorGender !== initial.doctorGender ||
       specialty !== initial.specialty ||
       fillRate !== initial.fillRate ||
-      noshowRate !== initial.noshowRate
+      noshowRate !== initial.noshowRate ||
+      revenueTarget !== initial.revenueTarget
     );
-  }, [initial, doctorName, doctorGender, specialty, fillRate, noshowRate]);
+  }, [initial, doctorName, doctorGender, specialty, fillRate, noshowRate, revenueTarget]);
 
   const handleSave = async () => {
     try {
@@ -331,9 +329,10 @@ export default function SettingsPage() {
         specialty,
         target_fill_rate: ((fillRate || 0) as number) / 100,
         target_noshow_rate: ((noshowRate || 0) as number) / 100,
+        monthly_revenue_target: revenueTarget === '' ? null : revenueTarget,
       } as any);
       setInitial({
-        doctorName, doctorGender, specialty, fillRate, noshowRate,
+        doctorName, doctorGender, specialty, fillRate, noshowRate, revenueTarget,
       });
       toast.success('Configurações salvas com sucesso!');
     } catch (err: any) {
@@ -516,6 +515,21 @@ export default function SettingsPage() {
               <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             </div>
             <p className="text-[11px] text-muted-foreground">Recomendado: abaixo de 5%.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta de Receita Mensal</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+              <Input
+                type="number"
+                min={0}
+                value={revenueTarget}
+                onChange={e => setRevenueTarget(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
+                className="rounded-xl pl-10"
+                placeholder="Ex: 50000"
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground">Opcional. Usado para projeções e comparações nos relatórios.</p>
           </div>
         </div>
       </div>
