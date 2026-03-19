@@ -201,12 +201,34 @@ export default function WeeklyReportPage() {
       {!hasEnoughData ? (
         <div className="rounded-2xl bg-card border border-border/60 shadow-card py-12 text-center px-6">
           <Sparkles className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
-          <p className="text-sm font-semibold text-foreground">Seu primeiro relatório semanal está quase pronto</p>
+          <p className="text-sm font-semibold text-foreground">
+            {isConsolidated && locations.length > 1
+              ? 'Relatório consolidado requer dados de todas as clínicas'
+              : 'Seu primeiro relatório semanal está quase pronto'}
+          </p>
           <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-            Seu primeiro relatório semanal será gerado após {workingDaysCount} dias de dados. Continue fazendo seus check-ins diários!
+            {isConsolidated && locations.length > 1
+              ? 'O relatório consolidado será gerado quando cada clínica tiver completado seus check-ins mínimos da semana.'
+              : `Seu primeiro relatório semanal será gerado após ${locationWorkingDaysCount} dias de dados. Continue fazendo seus check-ins diários!`}
           </p>
           <p className="text-xs text-muted-foreground mt-3">
-            Check-ins realizados: <span className="font-bold text-foreground">{allCheckins.length}/{workingDaysCount}</span>
+            {isConsolidated && locations.length > 1 ? (
+              <span className="flex flex-col gap-1 items-center">
+                {locations.map(loc => {
+                  const locSchedules = allSchedules.filter(s => s.location_id === loc.id && s.is_active);
+                  const locWorkingDays = locSchedules.length || workingDays.length;
+                  const locCheckins = allCheckins.filter((c: any) => c.location_id === loc.id);
+                  const done = locCheckins.length >= locWorkingDays;
+                  return (
+                    <span key={loc.id} className={cn('text-xs', done ? 'text-revenue-gain' : 'text-muted-foreground')}>
+                      {loc.name}: <span className="font-bold">{locCheckins.length}/{locWorkingDays}</span> {done ? '✓' : ''}
+                    </span>
+                  );
+                })}
+              </span>
+            ) : (
+              <>Check-ins realizados: <span className="font-bold text-foreground">{allCheckins.length}/{locationWorkingDaysCount}</span></>
+            )}
           </p>
         </div>
       ) : checkins.length === 0 ? (
