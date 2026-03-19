@@ -1043,15 +1043,15 @@ export default function CheckinPage() {
                     label="Atendimentos Particular"
                     value={form.attended_private}
                     onChange={v => setField('attended_private', v)}
-                    max={Math.max(0, maxAttendedTotal - form.attended_insurance)}
-                    hint={totalAttendedNow >= maxAttendedTotal && maxAttendedTotal < effectiveCapacity ? `Restam ${maxAttendedTotal} vagas (descontando perdas já registradas).` : undefined}
+                    max={maxAttendedPrivate}
+                    hint={totalAttendedNow >= effectiveCapacity ? `Soma particular + convênio atingiu a capacidade (${effectiveCapacity}).` : undefined}
                   />
                   <CheckinField
                     label="Atendimentos Convênio"
                     value={form.attended_insurance}
                     onChange={v => setField('attended_insurance', v)}
-                    max={Math.max(0, maxAttendedTotal - form.attended_private)}
-                    hint={totalAttendedNow >= maxAttendedTotal && maxAttendedTotal < effectiveCapacity ? `Restam ${maxAttendedTotal} vagas (descontando perdas já registradas).` : undefined}
+                    max={maxAttendedInsurance}
+                    hint={totalAttendedNow >= effectiveCapacity ? `Soma particular + convênio atingiu a capacidade (${effectiveCapacity}).` : undefined}
                   />
                 </>
               ) : (
