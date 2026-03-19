@@ -272,11 +272,9 @@ export default function SettingsPage() {
   const [portalLoading, setPortalLoading] = useState(false);
 
   // Profile fields
-  const [name, setName] = useState('');
   const [doctorName, setDoctorName] = useState('');
   const [doctorGender, setDoctorGender] = useState('masculino');
   const [specialty, setSpecialty] = useState('');
-  const [hasSecretary, setHasSecretary] = useState(false);
 
   // Performance goals
   const [fillRate, setFillRate] = useState<number | ''>(85);
