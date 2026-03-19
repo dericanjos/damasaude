@@ -1165,7 +1165,7 @@ export default function CheckinPage() {
                 </p>
               </div>
               <p className="text-sm font-extrabold text-foreground uppercase tracking-wider mt-4 pt-4 border-t border-border/40">🔄 Remarcações</p>
-              <CheckinField label="Consultas remarcadas" value={form.rescheduled} onChange={v => setField('rescheduled', v)} />
+              <CheckinField label="Consultas remarcadas" value={form.rescheduled} onChange={v => setField('rescheduled', v)} max={form.appointments_scheduled} />
             </div>
             )}
 
