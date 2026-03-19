@@ -518,6 +518,21 @@ export default function SettingsPage() {
             </div>
             <p className="text-[11px] text-muted-foreground">Recomendado: abaixo de 5%.</p>
           </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Meta de Receita Mensal</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+              <Input
+                type="number"
+                min={0}
+                value={revenueTarget}
+                onChange={e => setRevenueTarget(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
+                className="rounded-xl pl-10"
+                placeholder="Ex: 50000"
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground">Opcional. Usado para projeções e comparações nos relatórios.</p>
+          </div>
         </div>
       </div>
 
