@@ -566,10 +566,6 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Ferramentas (uso interno) — only for allowlisted emails */}
-
-      {/* Ferramentas (uso interno) */}
-      <InternalToolsSection />
 
       <Button
         variant="outline"
