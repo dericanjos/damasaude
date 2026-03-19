@@ -23,13 +23,20 @@ serve(async (req) => {
     let systemPrompt: string;
     let userPrompt: string;
 
+    const textRules = `REGRAS DE TEXTO OBRIGATÓRIAS:
+- PROIBIDO: mencionar "script", "roteiro", "copie e cole", "mensagem pronta", "IA", "inteligência artificial", "consultor".
+- PROIBIDO: sugerir "cobrança antecipada", "cobrança pré-consulta" ou "pendências financeiras" — isso é vedado pelo CFM e pode gerar mal-entendidos.
+- Substitua por: "comunicação", "abordagem", "rotina", "padrão de atendimento", "boas práticas de confirmação".
+- Use sempre "você" em vez de "te". Tom consultivo e profissional.
+- Prefira verbos: oferecer, disponibilizar, estruturar, auxiliar, implementar.`;
+
     if (type === "micro") {
       systemPrompt =
-        `Você é um consultor de gestão para clínicas médicas. Seja direto e prático. ${secretaryContext} Responda APENAS em português brasileiro.`;
+        `Você é um especialista em gestão para clínicas médicas. Seja direto e prático. ${secretaryContext} ${textRules} Responda APENAS em português brasileiro.`;
       userPrompt = `Analise este check-in diário e retorne UMA observação rápida e acionável em no máximo 1 frase curta. Dados do check-in: ${JSON.stringify(checkins)}`;
     } else {
       systemPrompt =
-        `Você é um consultor de gestão para clínicas médicas. ${secretaryContext} Analise os dados e retorne um resumo em 3 parágrafos (no máximo 150 palavras total) com: 1) Um diagnóstico da semana, 2) O principal ponto de melhoria, e 3) Uma recomendação acionável. Use um tom profissional e direto. Responda APENAS em português brasileiro.`;
+        `Você é um especialista em gestão para clínicas médicas. ${secretaryContext} ${textRules} Analise os dados e retorne um resumo em 3 parágrafos (no máximo 150 palavras total) com: 1) Um diagnóstico da semana, 2) O principal ponto de melhoria, e 3) Uma recomendação acionável. Use um tom profissional e direto. Responda APENAS em português brasileiro.`;
       userPrompt = `Dados dos check-ins da semana: ${JSON.stringify(checkins)}`;
     }
 

@@ -314,6 +314,7 @@ REGRAS DE TEXTO:
 - Se o resultado for crítico (muita perda), use EXATAMENTE esta frase como CTA no final: "${ctaForThisWeek}" — use apenas UMA VEZ no relatório todo, nunca repita CTAs. A menção à DAMA deve ser contextual e sutil, como um convite para conhecer mais.
 - Os dados diferenciam pacientes particulares e de convênio. Use isso para insights de mix de receita.
 - PROIBIDO: mencionar "IA", "inteligência artificial", "consultor", "script", "roteiro", "copie e cole" ou "mensagem pronta". Tudo é funcionalidade nativa DAMA.
+- PROIBIDO: sugerir "cobrança antecipada", "cobrança pré-consulta", "pendências financeiras" ou qualquer forma de cobrança antes do atendimento — isso é vedado pelo CFM e gera mal-entendidos. Substitua por boas práticas de confirmação e organização de agenda.
 - O mais importante é consistência; ajuste ao seu fluxo.
 - Máximo 400 palavras.
 - Responda APENAS em português brasileiro.`;
