@@ -495,10 +495,6 @@ export default function SettingsPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome da clínica</Label>
-            <Input value={name} onChange={e => setName(e.target.value)} className="rounded-xl" />
-          </div>
         </div>
       </div>
 
