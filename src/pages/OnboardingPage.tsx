@@ -215,11 +215,12 @@ export default function OnboardingPage() {
         await supabase.from('location_financials').delete().eq('user_id', user.id);
         await supabase.from('locations').delete().eq('user_id', user.id);
 
-        const ticketAvg = paymentType === 'ambos' ? Math.round((tp + ti) / 2) : (paymentType === 'particular' ? tp : ti);
-
         for (let i = 0; i < locationNames.length; i++) {
           const locName = locationNames[i];
           const sched = locationSchedules[i] || makeDefaultSchedule();
+          const tp = (ticketsPrivate[i] || 0) as number;
+          const ti = (ticketsInsurance[i] || 0) as number;
+          const ticketAvg = paymentType === 'ambos' ? Math.round((tp + ti) / 2) : (paymentType === 'particular' ? tp : ti);
 
           const locNumDoctors = (numDoctorsPerLoc[i] || 1) as number;
           const { data: newLoc, error: locError } = await supabase.from('locations').insert({
