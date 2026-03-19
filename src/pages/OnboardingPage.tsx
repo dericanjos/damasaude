@@ -120,6 +120,16 @@ export default function OnboardingPage() {
       while (updated.length < n) updated.push(1);
       return updated.slice(0, n);
     });
+    setTicketsPrivate(prev => {
+      const updated = [...prev];
+      while (updated.length < n) updated.push(prev[0] || 250);
+      return updated.slice(0, n);
+    });
+    setTicketsInsurance(prev => {
+      const updated = [...prev];
+      while (updated.length < n) updated.push(prev[0] || 100);
+      return updated.slice(0, n);
+    });
   };
 
   const canAdvance = () => {
