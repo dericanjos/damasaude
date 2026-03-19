@@ -110,7 +110,20 @@ export default function InsightsPage() {
   const lw = calcWeek(lastWeek);
 
   const totalCheckins = allCheckins.length;
-  const hasEnoughData = totalCheckins >= 3;
+  const isConsolidated = !selectedLocationId && locations.length > 1;
+
+  // In consolidated view, each location must individually have >= 3 checkins
+  const perLocationProgress = useMemo(() => {
+    if (!isConsolidated) return null;
+    return locations.map(loc => {
+      const count = allCheckins.filter(c => c.location_id === loc.id).length;
+      return { id: loc.id, name: loc.name, count, ready: count >= 3 };
+    });
+  }, [isConsolidated, locations, allCheckins]);
+
+  const hasEnoughData = isConsolidated
+    ? (perLocationProgress?.every(l => l.ready) ?? false)
+    : totalCheckins >= 3;
 
   const [aiRequested, setAiRequested] = useState(false);
   useEffect(() => {
