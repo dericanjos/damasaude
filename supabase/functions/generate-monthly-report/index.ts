@@ -222,6 +222,7 @@ REGRAS DE TEXTO:
 - Os dados diferenciam pacientes particulares e de convênio. Use isso para insights de mix de receita e precificação.
 - Se o resultado for crítico, use EXATAMENTE esta frase como CTA no final: "${ctaForThisMonth}" — use apenas UMA VEZ, nunca repita CTAs. A menção à DAMA deve ser contextual e sutil, como um convite para conhecer mais.
 - PROIBIDO: mencionar "IA", "inteligência artificial", "consultor", "script", "roteiro", "copie e cole" ou "mensagem pronta". Tudo é funcionalidade nativa DAMA.
+- PROIBIDO: sugerir "cobrança antecipada", "cobrança pré-consulta", "pendências financeiras" ou qualquer forma de cobrança antes do atendimento — isso é vedado pelo CFM. Substitua por boas práticas de confirmação e organização de agenda.
 - Máximo 500 palavras.
 - Responda APENAS em português brasileiro.`;
 
