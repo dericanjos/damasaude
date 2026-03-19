@@ -315,29 +315,25 @@ export default function SettingsPage() {
   const isDirty = useMemo(() => {
     if (!initial) return false;
     return (
-      name !== initial.name ||
       doctorName !== initial.doctorName ||
       doctorGender !== initial.doctorGender ||
       specialty !== initial.specialty ||
-      hasSecretary !== initial.hasSecretary ||
       fillRate !== initial.fillRate ||
       noshowRate !== initial.noshowRate
     );
-  }, [initial, name, doctorName, specialty, hasSecretary, fillRate, noshowRate]);
+  }, [initial, doctorName, doctorGender, specialty, fillRate, noshowRate]);
 
   const handleSave = async () => {
     try {
       await updateClinic.mutateAsync({
-        name,
         doctor_name: doctorName,
         doctor_gender: doctorGender,
         specialty,
-        has_secretary: hasSecretary,
         target_fill_rate: ((fillRate || 0) as number) / 100,
         target_noshow_rate: ((noshowRate || 0) as number) / 100,
       } as any);
       setInitial({
-        name, doctorName, doctorGender, specialty, hasSecretary, fillRate, noshowRate,
+        doctorName, doctorGender, specialty, fillRate, noshowRate,
       });
       toast.success('Configurações salvas com sucesso!');
     } catch (err: any) {
@@ -494,10 +490,6 @@ export default function SettingsPage() {
                 {SPECIALTIES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome da clínica</Label>
-            <Input value={name} onChange={e => setName(e.target.value)} className="rounded-xl" />
           </div>
         </div>
       </div>
