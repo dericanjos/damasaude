@@ -658,9 +658,12 @@ export default function CheckinPage() {
             value={form.extra_appointments}
             onChange={v => setField('extra_appointments', v)}
           />
+          <p className="text-[10px] text-muted-foreground">
+            Os encaixes serão somados aos agendamentos em "Atendimentos Previstos".
+          </p>
           {form.extra_appointments > 0 && (
             <p className="text-[10px] text-primary font-medium">
-              ✨ Capacidade efetiva: {effectiveCapacity} ({form.appointments_scheduled} agendadas + {form.extra_appointments} encaixes)
+              ✨ Total previsto: {effectiveCapacity} ({form.appointments_scheduled} agendados + {form.extra_appointments} encaixes)
             </p>
           )}
         </div>
