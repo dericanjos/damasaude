@@ -51,7 +51,7 @@ export function useGenerateActions() {
         .eq('date', today)
         .eq('location_id', locationId);
 
-      const ideaScore = calculateIDEA(checkinData);
+      const ideaScore = calculateIDEA(checkinData, checkinData.appointments_scheduled || undefined);
       // Get has_secretary and tickets from the specific location
       const { data: loc } = await supabase
         .from('locations')
