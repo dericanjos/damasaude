@@ -690,13 +690,13 @@ export default function CheckinPage() {
                 label="No-shows Particular"
                 value={form.noshows_private}
                 onChange={v => setField('noshows_private', v)}
-                max={Math.max(0, maxNoshowsTotal - form.noshows_insurance)}
+                max={Math.max(0, effectiveCapacity - form.noshows_insurance - totalCancellationsNow)}
               />
               <CheckinField
                 label="No-shows Convênio"
                 value={form.noshows_insurance}
                 onChange={v => setField('noshows_insurance', v)}
-                max={Math.max(0, maxNoshowsTotal - form.noshows_private)}
+                max={Math.max(0, effectiveCapacity - form.noshows_private - totalCancellationsNow)}
               />
             </>
           ) : (
@@ -714,13 +714,13 @@ export default function CheckinPage() {
                 label="Cancelamentos Particular"
                 value={form.cancellations_private}
                 onChange={v => setField('cancellations_private', v)}
-                max={Math.max(0, maxCancellationsTotal - form.cancellations_insurance)}
+                max={Math.max(0, effectiveCapacity - form.cancellations_insurance - totalNoshowsNow)}
               />
               <CheckinField
                 label="Cancelamentos Convênio"
                 value={form.cancellations_insurance}
                 onChange={v => setField('cancellations_insurance', v)}
-                max={Math.max(0, maxCancellationsTotal - form.cancellations_private)}
+                max={Math.max(0, effectiveCapacity - form.cancellations_private - totalNoshowsNow)}
               />
             </>
           ) : (
