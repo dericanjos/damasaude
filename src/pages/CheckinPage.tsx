@@ -323,7 +323,7 @@ export default function CheckinPage() {
 
       const rev = calculateRevenue({
         ...checkinData,
-        daily_capacity: dailyCapacity,
+        daily_capacity: actualCapacity,
         ticket_private: ticketPrivate,
         ticket_insurance: ticketInsurance,
       });
