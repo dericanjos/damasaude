@@ -230,14 +230,27 @@ export default function CheckinPage() {
   // Effective capacity = scheduled slots + extra (encaixes)
   const effectiveCapacity = form.appointments_scheduled + form.extra_appointments;
 
-  // Symmetric limits for attended; loss fields can grow by consuming attended automatically
+  // ── Category-based limits ──
   const totalAttendedNow = form.attended_private + form.attended_insurance;
   const totalNoshowsNow = form.noshows_private + form.noshows_insurance;
   const totalCancellationsNow = form.cancellations_private + form.cancellations_insurance;
-  const maxAttendedTotal = Math.max(0, effectiveCapacity - totalNoshowsNow - totalCancellationsNow);
-  const maxNoshowsTotal = Math.max(0, effectiveCapacity - totalCancellationsNow);
-  const maxCancellationsTotal = Math.max(0, effectiveCapacity - totalNoshowsNow);
 
+  // Attended per category limited by effectiveCapacity
+  const maxAttendedPrivate = Math.max(0, effectiveCapacity - form.attended_insurance);
+  const maxAttendedInsurance = Math.max(0, effectiveCapacity - form.attended_private);
+
+  // Losses per category limited by what was scheduled in that category
+  const maxNoshowPrivate = Math.max(0, form.attended_private - form.cancellations_private);
+  const maxNoshowInsurance = Math.max(0, form.attended_insurance - form.cancellations_insurance);
+  const maxCancelPrivate = Math.max(0, form.attended_private - form.noshows_private);
+  const maxCancelInsurance = Math.max(0, form.attended_insurance - form.noshows_insurance);
+
+  // For single payment type modes
+  const maxNoshowsTotal = paymentType === 'particular' ? maxNoshowPrivate : maxNoshowInsurance;
+  const maxCancellationsTotal = paymentType === 'particular' ? maxCancelPrivate : maxCancelInsurance;
+
+  const totalLossesPrivate = form.noshows_private + form.cancellations_private;
+  const totalLossesInsurance = form.noshows_insurance + form.cancellations_insurance;
   const totalOutcomes = totalAttendedNow + totalNoshowsNow + totalCancellationsNow;
 
   // Auto-calculate empty_slots = scheduled - outcomes (buracos are only from scheduled slots)
@@ -249,7 +262,11 @@ export default function CheckinPage() {
       setForm(prev => ({ ...prev, empty_slots: autoEmptySlots }));
     }
   }, [autoEmptySlots, quickMode]);
-  const hasValidationError = !quickMode && effectiveCapacity > 0 && totalOutcomes > effectiveCapacity;
+  const hasValidationError = !quickMode && effectiveCapacity > 0 && (
+    totalAttendedNow > effectiveCapacity ||
+    totalLossesPrivate > form.attended_private ||
+    totalLossesInsurance > form.attended_insurance
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
