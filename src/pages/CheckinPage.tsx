@@ -306,7 +306,8 @@ export default function CheckinPage() {
         followup_done: submitData.followup_done,
       };
 
-      const ideaScore = calculateIDEA(checkinData, dailyCapacity, ticketPrivate, ticketInsurance);
+      const actualCapacity = submitData.appointments_scheduled + (submitData.extra_appointments || 0);
+      const ideaScore = calculateIDEA(checkinData, actualCapacity, ticketPrivate, ticketInsurance);
       const insightText = generateInsightText(checkinData, ideaScore);
       const lossSources = getTopLossSources(checkinData);
 
@@ -322,7 +323,7 @@ export default function CheckinPage() {
 
       const rev = calculateRevenue({
         ...checkinData,
-        daily_capacity: dailyCapacity,
+        daily_capacity: actualCapacity,
         ticket_private: ticketPrivate,
         ticket_insurance: ticketInsurance,
       });
@@ -658,9 +659,12 @@ export default function CheckinPage() {
             value={form.extra_appointments}
             onChange={v => setField('extra_appointments', v)}
           />
+          <p className="text-[10px] text-muted-foreground">
+            Os encaixes serão somados aos agendamentos em "Atendimentos Previstos".
+          </p>
           {form.extra_appointments > 0 && (
             <p className="text-[10px] text-primary font-medium">
-              ✨ Capacidade efetiva: {effectiveCapacity} ({form.appointments_scheduled} agendadas + {form.extra_appointments} encaixes)
+              ✨ Total previsto: {effectiveCapacity} ({form.appointments_scheduled} agendados + {form.extra_appointments} encaixes)
             </p>
           )}
         </div>
@@ -803,7 +807,8 @@ export default function CheckinPage() {
       empty_slots: e.empty_slots,
       followup_done: e.followup_done,
     };
-    const ideaScore = calculateIDEA(checkinData, dailyCapacity, ticketPrivate, ticketInsurance);
+    const summaryCapacity = e.appointments_scheduled + (e.extra_appointments ?? 0);
+    const ideaScore = calculateIDEA(checkinData, summaryCapacity, ticketPrivate, ticketInsurance);
     const status = getIdeaStatus(ideaScore);
 
     const extraAppts = e.extra_appointments ?? 0;
@@ -1030,13 +1035,18 @@ export default function CheckinPage() {
             {/* ── SEÇÃO 2: ATENDIMENTOS (sempre visível no planejamento) ── */}
             {form.appointments_scheduled > 0 && (
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-5">
-              <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  📋 Atendimentos previstos para hoje
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Quantos pacientes você espera atender?
-                </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    📋 Atendimentos previstos para hoje
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Quantos pacientes você espera atender?
+                  </p>
+                </div>
+                <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  Máx: {effectiveCapacity} {form.extra_appointments > 0 ? `(${form.appointments_scheduled}+${form.extra_appointments})` : ''}
+                </span>
               </div>
               {paymentType === 'ambos' ? (
                 <>
@@ -1079,9 +1089,12 @@ export default function CheckinPage() {
                 value={form.extra_appointments}
                 onChange={v => setField('extra_appointments', v)}
               />
+              <p className="text-[10px] text-muted-foreground">
+                Os encaixes serão somados aos agendamentos em "Atendimentos Previstos".
+              </p>
               {form.extra_appointments > 0 && (
                 <p className="text-[10px] text-primary font-medium">
-                  ✨ Capacidade efetiva: {effectiveCapacity} ({dailyCapacity} agendadas + {form.extra_appointments} encaixes)
+                  ✨ Total previsto: {effectiveCapacity} ({form.appointments_scheduled} agendados + {form.extra_appointments} encaixes)
                 </p>
               )}
             </div>

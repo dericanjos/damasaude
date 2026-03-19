@@ -167,8 +167,10 @@ export default function Dashboard() {
 
   // Compute todayScore: prefer single-location data, fallback to consolidated
   const todayScore = useMemo(() => {
-    if (checkinData) {
-      return calculateIDEA(checkinData, dailyCapacity, ticketPrivate, ticketInsurance);
+    if (checkinData && todayCheckin) {
+      const ec = (todayCheckin as any);
+      const effectiveCap = ec.appointments_scheduled + (ec.extra_appointments ?? 0);
+      return calculateIDEA(checkinData, effectiveCap || dailyCapacity, ticketPrivate, ticketInsurance);
     }
     // If no single checkin but we have consolidated data (multiple locations, no filter)
     if (consolidated) {
@@ -187,16 +189,16 @@ export default function Dashboard() {
       return calculateIDEA(syntheticData, safeCap, ticketPrivate, ticketInsurance);
     }
     return null;
-  }, [checkinData, dailyCapacity, ticketPrivate, ticketInsurance, consolidated]);
+  }, [checkinData, todayCheckin, dailyCapacity, ticketPrivate, ticketInsurance, consolidated]);
 
   const yesterdayScore = yesterdayCheckin
-    ? calculateIDEA(toCheckinData(yesterdayCheckin), dailyCapacity, ticketPrivate, ticketInsurance)
+    ? calculateIDEA(toCheckinData(yesterdayCheckin), (yesterdayCheckin as any).appointments_scheduled + ((yesterdayCheckin as any).extra_appointments ?? 0) || dailyCapacity, ticketPrivate, ticketInsurance)
     : null;
 
-  const revenue = checkinData
+  const revenue = checkinData && todayCheckin
     ? calculateRevenue({
         ...checkinData,
-        daily_capacity: dailyCapacity,
+        daily_capacity: (todayCheckin as any).appointments_scheduled + ((todayCheckin as any).extra_appointments ?? 0) || dailyCapacity,
         ticket_private: ticketPrivate,
         ticket_insurance: ticketInsurance,
       })
