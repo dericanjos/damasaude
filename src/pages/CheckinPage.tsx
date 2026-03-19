@@ -1051,7 +1051,6 @@ export default function CheckinPage() {
                     value={form.attended_insurance}
                     onChange={v => setField('attended_insurance', v)}
                     max={maxAttendedInsurance}
-                    hint={totalAttendedNow >= effectiveCapacity ? `Soma particular + convênio atingiu a capacidade (${effectiveCapacity}).` : undefined}
                   />
                 </>
               ) : (
