@@ -326,16 +326,14 @@ export default function SettingsPage() {
   const handleSave = async () => {
     try {
       await updateClinic.mutateAsync({
-        name,
         doctor_name: doctorName,
         doctor_gender: doctorGender,
         specialty,
-        has_secretary: hasSecretary,
         target_fill_rate: ((fillRate || 0) as number) / 100,
         target_noshow_rate: ((noshowRate || 0) as number) / 100,
       } as any);
       setInitial({
-        name, doctorName, doctorGender, specialty, hasSecretary, fillRate, noshowRate,
+        doctorName, doctorGender, specialty, fillRate, noshowRate,
       });
       toast.success('Configurações salvas com sucesso!');
     } catch (err: any) {
