@@ -458,10 +458,17 @@ export default function OnboardingPage() {
                   ))}
                 </TabsList>
                 {locationSchedules.map((sched, idx) => (
-                  <TabsContent key={idx} value={String(idx)} className="mt-4">
+                  <TabsContent key={idx} value={String(idx)} className="mt-4 space-y-4">
                     <LocationScheduleForm
                       sched={sched}
                       onChange={updated => updateLocSchedule(idx, () => updated)}
+                    />
+                    <LocationTicketFields
+                      paymentType={paymentType}
+                      ticketPrivate={ticketsPrivate[idx] ?? 250}
+                      ticketInsurance={ticketsInsurance[idx] ?? 100}
+                      onChangePrivate={v => setTicketsPrivate(prev => prev.map((old, i) => i === idx ? v : old))}
+                      onChangeInsurance={v => setTicketsInsurance(prev => prev.map((old, i) => i === idx ? v : old))}
                     />
                   </TabsContent>
                 ))}
