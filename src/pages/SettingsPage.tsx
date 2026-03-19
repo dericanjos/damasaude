@@ -3,7 +3,6 @@ import { useClinic, useUpdateClinic } from '@/hooks/useClinic';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useLocations, useCreateLocation, useUpdateLocation, useLocationSchedules, useLocationFinancial, type Location } from '@/hooks/useLocations';
-import { useQASeed } from '@/hooks/useQASeed';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
