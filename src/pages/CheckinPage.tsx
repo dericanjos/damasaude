@@ -230,13 +230,13 @@ export default function CheckinPage() {
   // Effective capacity = scheduled slots + extra (encaixes)
   const effectiveCapacity = form.appointments_scheduled + form.extra_appointments;
 
-  // Symmetric limits: each outcome type competes equally for remaining capacity
+  // Symmetric limits for attended; loss fields can grow by consuming attended automatically
   const totalAttendedNow = form.attended_private + form.attended_insurance;
   const totalNoshowsNow = form.noshows_private + form.noshows_insurance;
   const totalCancellationsNow = form.cancellations_private + form.cancellations_insurance;
   const maxAttendedTotal = Math.max(0, effectiveCapacity - totalNoshowsNow - totalCancellationsNow);
-  const maxNoshowsTotal = Math.max(0, effectiveCapacity - totalAttendedNow - totalCancellationsNow);
-  const maxCancellationsTotal = Math.max(0, effectiveCapacity - totalAttendedNow - totalNoshowsNow);
+  const maxNoshowsTotal = Math.max(0, effectiveCapacity - totalCancellationsNow);
+  const maxCancellationsTotal = Math.max(0, effectiveCapacity - totalNoshowsNow);
 
   const totalOutcomes = totalAttendedNow + totalNoshowsNow + totalCancellationsNow;
 
@@ -690,13 +690,13 @@ export default function CheckinPage() {
                 label="No-shows Particular"
                 value={form.noshows_private}
                 onChange={v => setField('noshows_private', v)}
-                max={Math.max(0, maxNoshowsTotal - form.noshows_insurance)}
+                max={Math.max(0, effectiveCapacity - form.noshows_insurance - totalCancellationsNow)}
               />
               <CheckinField
                 label="No-shows Convênio"
                 value={form.noshows_insurance}
                 onChange={v => setField('noshows_insurance', v)}
-                max={Math.max(0, maxNoshowsTotal - form.noshows_private)}
+                max={Math.max(0, effectiveCapacity - form.noshows_private - totalCancellationsNow)}
               />
             </>
           ) : (
@@ -714,13 +714,13 @@ export default function CheckinPage() {
                 label="Cancelamentos Particular"
                 value={form.cancellations_private}
                 onChange={v => setField('cancellations_private', v)}
-                max={Math.max(0, maxCancellationsTotal - form.cancellations_insurance)}
+                max={Math.max(0, effectiveCapacity - form.cancellations_insurance - totalNoshowsNow)}
               />
               <CheckinField
                 label="Cancelamentos Convênio"
                 value={form.cancellations_insurance}
                 onChange={v => setField('cancellations_insurance', v)}
-                max={Math.max(0, maxCancellationsTotal - form.cancellations_private)}
+                max={Math.max(0, effectiveCapacity - form.cancellations_private - totalNoshowsNow)}
               />
             </>
           ) : (
@@ -1087,15 +1087,13 @@ export default function CheckinPage() {
                     label="No-shows Particular"
                     value={form.noshows_private}
                     onChange={v => setField('noshows_private', v)}
-                    max={Math.max(0, maxNoshowsTotal - form.noshows_insurance)}
-                    hint={maxNoshowsTotal <= 0 ? 'Todos os horários já foram preenchidos.' : undefined}
+                    max={Math.max(0, effectiveCapacity - form.noshows_insurance - totalCancellationsNow)}
                   />
                   <CheckinField
                     label="No-shows Convênio"
                     value={form.noshows_insurance}
                     onChange={v => setField('noshows_insurance', v)}
-                    max={Math.max(0, maxNoshowsTotal - form.noshows_private)}
-                    hint={maxNoshowsTotal <= 0 ? 'Todos os horários já foram preenchidos.' : undefined}
+                    max={Math.max(0, effectiveCapacity - form.noshows_private - totalCancellationsNow)}
                   />
                 </>
               ) : (
@@ -1113,15 +1111,13 @@ export default function CheckinPage() {
                     label="Cancelamentos Particular"
                     value={form.cancellations_private}
                     onChange={v => setField('cancellations_private', v)}
-                    max={Math.max(0, maxCancellationsTotal - form.cancellations_insurance)}
-                    hint={maxCancellationsTotal <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
+                    max={Math.max(0, effectiveCapacity - form.cancellations_insurance - totalNoshowsNow)}
                   />
                   <CheckinField
                     label="Cancelamentos Convênio"
                     value={form.cancellations_insurance}
                     onChange={v => setField('cancellations_insurance', v)}
-                    max={Math.max(0, maxCancellationsTotal - form.cancellations_private)}
-                    hint={maxCancellationsTotal <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
+                    max={Math.max(0, effectiveCapacity - form.cancellations_private - totalNoshowsNow)}
                   />
                 </>
               ) : (
@@ -1130,7 +1126,6 @@ export default function CheckinPage() {
                   value={paymentType === 'particular' ? form.cancellations_private : form.cancellations_insurance}
                   onChange={v => setField(paymentType === 'particular' ? 'cancellations_private' : 'cancellations_insurance', v)}
                   max={Math.max(0, maxCancellationsTotal)}
-                  hint={maxCancellationsTotal <= 0 ? 'Todos os horários já estão contabilizados.' : undefined}
                 />
               )}
               {/* Buracos auto */}
