@@ -35,6 +35,13 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [doctorName, setDoctorName] = useState('');
   const [clinicName, setClinicName] = useState('');
+  const [keepLoggedIn, setKeepLoggedIn] = useState(() => {
+    return localStorage.getItem('keep_logged_in') !== 'false';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('keep_logged_in', String(keepLoggedIn));
+  }, [keepLoggedIn]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
