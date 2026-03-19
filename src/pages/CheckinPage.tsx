@@ -1045,7 +1045,6 @@ export default function CheckinPage() {
                     value={form.attended_private}
                     onChange={v => setField('attended_private', v)}
                     max={maxAttendedPrivate}
-                    hint={totalAttendedNow >= effectiveCapacity ? `Soma particular + convênio atingiu a capacidade (${effectiveCapacity}).` : undefined}
                   />
                   <CheckinField
                     label="Atendimentos Convênio"
