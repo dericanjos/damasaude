@@ -336,7 +336,35 @@ export default function CheckinPage() {
   };
 
   const setField = (key: keyof FormData, value: number | boolean | string) =>
-    setForm(prev => ({ ...prev, [key]: value }));
+    setForm(prev => {
+      const next = { ...prev, [key]: value };
+
+      // When in perdas section, auto-reduce attended if total outcomes would exceed capacity
+      if (activeSection === 'perdas' && typeof value === 'number') {
+        const isLossField = ['noshows_private', 'noshows_insurance', 'cancellations_private', 'cancellations_insurance'].includes(key);
+        if (isLossField) {
+          const totalNoshows = next.noshows_private + next.noshows_insurance;
+          const totalCancellations = next.cancellations_private + next.cancellations_insurance;
+          const totalLosses = totalNoshows + totalCancellations;
+          const cap = next.appointments_scheduled + next.extra_appointments;
+          const maxAttended = Math.max(0, cap - totalLosses);
+          const currentAttended = next.attended_private + next.attended_insurance;
+
+          if (currentAttended > maxAttended) {
+            // Proportionally reduce attended
+            const ratio = maxAttended > 0 && currentAttended > 0 ? maxAttended / currentAttended : 0;
+            next.attended_private = Math.round(next.attended_private * ratio);
+            next.attended_insurance = maxAttended - next.attended_private;
+            if (next.attended_insurance < 0) {
+              next.attended_insurance = 0;
+              next.attended_private = maxAttended;
+            }
+          }
+        }
+      }
+
+      return next;
+    });
 
   // ── LOCATION SELECTOR (if no location selected yet) ──
   if (!selectedLocationId && allLocations.length > 0) {
