@@ -94,8 +94,8 @@ export default function OnboardingPage() {
   // Step 3 — per-location schedules
   const [locationSchedules, setLocationSchedules] = useState<LocationScheduleConfig[]>([makeDefaultSchedule()]);
   const [activeLocTab, setActiveLocTab] = useState('0');
-  const [ticketPrivate, setTicketPrivate] = useState<number | ''>(250);
-  const [ticketInsurance, setTicketInsurance] = useState<number | ''>(100);
+  const [ticketsPrivate, setTicketsPrivate] = useState<(number | '')[]>([250]);
+  const [ticketsInsurance, setTicketsInsurance] = useState<(number | '')[]>([100]);
   const [timezone, setTimezone] = useState(detectTimezone());
 
   // Step 4
