@@ -356,26 +356,31 @@ export default function CheckinPage() {
     setForm(prev => {
       const next = { ...prev, [key]: value };
 
-      // When in perdas section, auto-reduce attended if total outcomes would exceed capacity
-      if (activeSection === 'perdas' && typeof value === 'number') {
-        const isLossField = ['noshows_private', 'noshows_insurance', 'cancellations_private', 'cancellations_insurance'].includes(key);
-        if (isLossField) {
-          const totalNoshows = next.noshows_private + next.noshows_insurance;
-          const totalCancellations = next.cancellations_private + next.cancellations_insurance;
-          const totalLosses = totalNoshows + totalCancellations;
-          const cap = next.appointments_scheduled + next.extra_appointments;
-          const maxAttended = Math.max(0, cap - totalLosses);
-          const currentAttended = next.attended_private + next.attended_insurance;
+      // When changing a loss field, clamp it to the category limit
+      if (typeof value === 'number') {
+        if (key === 'noshows_private') {
+          next.noshows_private = Math.min(value, Math.max(0, next.attended_private - next.cancellations_private));
+        } else if (key === 'noshows_insurance') {
+          next.noshows_insurance = Math.min(value, Math.max(0, next.attended_insurance - next.cancellations_insurance));
+        } else if (key === 'cancellations_private') {
+          next.cancellations_private = Math.min(value, Math.max(0, next.attended_private - next.noshows_private));
+        } else if (key === 'cancellations_insurance') {
+          next.cancellations_insurance = Math.min(value, Math.max(0, next.attended_insurance - next.noshows_insurance));
+        }
 
-          if (currentAttended > maxAttended) {
-            // Proportionally reduce attended
-            const ratio = maxAttended > 0 && currentAttended > 0 ? maxAttended / currentAttended : 0;
-            next.attended_private = Math.round(next.attended_private * ratio);
-            next.attended_insurance = maxAttended - next.attended_private;
-            if (next.attended_insurance < 0) {
-              next.attended_insurance = 0;
-              next.attended_private = maxAttended;
-            }
+        // When reducing attended, also clamp any losses that now exceed it
+        if (key === 'attended_private') {
+          const maxLossPrivate = Math.max(0, next.attended_private);
+          if (next.noshows_private + next.cancellations_private > maxLossPrivate) {
+            next.noshows_private = Math.min(next.noshows_private, maxLossPrivate);
+            next.cancellations_private = Math.min(next.cancellations_private, maxLossPrivate - next.noshows_private);
+          }
+        }
+        if (key === 'attended_insurance') {
+          const maxLossInsurance = Math.max(0, next.attended_insurance);
+          if (next.noshows_insurance + next.cancellations_insurance > maxLossInsurance) {
+            next.noshows_insurance = Math.min(next.noshows_insurance, maxLossInsurance);
+            next.cancellations_insurance = Math.min(next.cancellations_insurance, maxLossInsurance - next.noshows_insurance);
           }
         }
       }
