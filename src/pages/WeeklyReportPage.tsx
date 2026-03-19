@@ -155,7 +155,19 @@ export default function WeeklyReportPage() {
   const avgOccupancy = agg?.occupancyRate ?? 0;
   const avgNoShow = agg?.noShowRate ?? 0;
 
-  const hasEnoughData = allCheckins.length >= workingDaysCount;
+  // For consolidated view: require all locations to have enough data individually
+  const hasEnoughData = useMemo(() => {
+    if (isConsolidated && locations.length > 1) {
+      // Each location must have enough check-ins based on its own schedule
+      return locations.every(loc => {
+        const locSchedules = allSchedules.filter(s => s.location_id === loc.id && s.is_active);
+        const locWorkingDays = locSchedules.length || workingDays.length;
+        const locCheckins = allCheckins.filter((c: any) => c.location_id === loc.id);
+        return locCheckins.length >= locWorkingDays;
+      });
+    }
+    return allCheckins.length >= locationWorkingDaysCount;
+  }, [isConsolidated, locations, allSchedules, allCheckins, locationWorkingDaysCount, workingDays.length]);
 
   return (
     <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
