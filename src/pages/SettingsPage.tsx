@@ -315,15 +315,13 @@ export default function SettingsPage() {
   const isDirty = useMemo(() => {
     if (!initial) return false;
     return (
-      name !== initial.name ||
       doctorName !== initial.doctorName ||
       doctorGender !== initial.doctorGender ||
       specialty !== initial.specialty ||
-      hasSecretary !== initial.hasSecretary ||
       fillRate !== initial.fillRate ||
       noshowRate !== initial.noshowRate
     );
-  }, [initial, name, doctorName, specialty, hasSecretary, fillRate, noshowRate]);
+  }, [initial, doctorName, doctorGender, specialty, fillRate, noshowRate]);
 
   const handleSave = async () => {
     try {
