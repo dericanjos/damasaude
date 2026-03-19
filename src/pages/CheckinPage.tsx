@@ -772,6 +772,7 @@ export default function CheckinPage() {
             label="Consultas remarcadas"
             value={form.rescheduled}
             onChange={v => setField('rescheduled', v)}
+            max={form.appointments_scheduled}
           />
         </div>
 
