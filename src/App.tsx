@@ -32,9 +32,12 @@ function hasSeenVerseToday(): boolean {
 }
 
 function ProtectedRoutes() {
+  const { user, loading } = useAuth();
   const { data: onboardingCompleted, isLoading } = useOnboardingStatus();
   
-  if (isLoading) return null;
+  if (loading || isLoading) return null;
+  
+  if (!user) return <Navigate to="/auth" replace />;
   
   if (onboardingCompleted === false) {
     return <Navigate to="/onboarding" replace />;
