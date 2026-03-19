@@ -94,8 +94,8 @@ export default function OnboardingPage() {
   // Step 3 — per-location schedules
   const [locationSchedules, setLocationSchedules] = useState<LocationScheduleConfig[]>([makeDefaultSchedule()]);
   const [activeLocTab, setActiveLocTab] = useState('0');
-  const [ticketPrivate, setTicketPrivate] = useState<number | ''>(250);
-  const [ticketInsurance, setTicketInsurance] = useState<number | ''>(100);
+  const [ticketsPrivate, setTicketsPrivate] = useState<(number | '')[]>([250]);
+  const [ticketsInsurance, setTicketsInsurance] = useState<(number | '')[]>([100]);
   const [timezone, setTimezone] = useState(detectTimezone());
 
   // Step 4
@@ -120,6 +120,16 @@ export default function OnboardingPage() {
       while (updated.length < n) updated.push(1);
       return updated.slice(0, n);
     });
+    setTicketsPrivate(prev => {
+      const updated = [...prev];
+      while (updated.length < n) updated.push(prev[0] || 250);
+      return updated.slice(0, n);
+    });
+    setTicketsInsurance(prev => {
+      const updated = [...prev];
+      while (updated.length < n) updated.push(prev[0] || 100);
+      return updated.slice(0, n);
+    });
   };
 
   const canAdvance = () => {
@@ -138,10 +148,13 @@ export default function OnboardingPage() {
             return typeof c === 'number' && c >= 1;
           })
         );
-        const ticketValid =
-          paymentType === 'particular' ? (typeof ticketPrivate === 'number' && ticketPrivate >= 1) :
-          paymentType === 'convenio' ? (typeof ticketInsurance === 'number' && ticketInsurance >= 1) :
-          (typeof ticketPrivate === 'number' && ticketPrivate >= 1 && typeof ticketInsurance === 'number' && ticketInsurance >= 1);
+        const ticketValid = locationNames.every((_, idx) => {
+          const tp = ticketsPrivate[idx];
+          const ti = ticketsInsurance[idx];
+          if (paymentType === 'particular') return typeof tp === 'number' && tp >= 1;
+          if (paymentType === 'convenio') return typeof ti === 'number' && ti >= 1;
+          return (typeof tp === 'number' && tp >= 1 && typeof ti === 'number' && ti >= 1);
+        });
         return schedulesValid && ticketValid;
       }
       case 4: return typeof fillRate === 'number' && fillRate >= 0 && typeof noshowRate === 'number' && noshowRate >= 0;
@@ -156,8 +169,8 @@ export default function OnboardingPage() {
       const { data: existingClinic } = await supabase
         .from('clinics').select('id').eq('user_id', user.id).maybeSingle();
 
-      const tp = (ticketPrivate || 0) as number;
-      const ti = (ticketInsurance || 0) as number;
+      const tp0 = (ticketsPrivate[0] || 0) as number;
+      const ti0 = (ticketsInsurance[0] || 0) as number;
       const fr = (fillRate || 0) as number;
       const nr = (noshowRate || 0) as number;
       const nd = (numDoctorsPerLoc[0] || 1) as number;
@@ -178,9 +191,9 @@ export default function OnboardingPage() {
         working_days: firstSched.workingDays,
         daily_capacities: safeCaps,
         daily_capacity: Math.max(...firstSched.workingDays.map(d => safeCaps[d] ?? 0), 1),
-        ticket_private: paymentType === 'convenio' ? 0 : tp,
-        ticket_insurance: paymentType === 'particular' ? 0 : ti,
-        ticket_medio: paymentType === 'ambos' ? Math.round((tp + ti) / 2) : (paymentType === 'particular' ? tp : ti),
+        ticket_private: paymentType === 'convenio' ? 0 : tp0,
+        ticket_insurance: paymentType === 'particular' ? 0 : ti0,
+        ticket_medio: paymentType === 'ambos' ? Math.round((tp0 + ti0) / 2) : (paymentType === 'particular' ? tp0 : ti0),
         timezone,
         target_fill_rate: fr / 100,
         target_noshow_rate: nr / 100,
@@ -202,11 +215,12 @@ export default function OnboardingPage() {
         await supabase.from('location_financials').delete().eq('user_id', user.id);
         await supabase.from('locations').delete().eq('user_id', user.id);
 
-        const ticketAvg = paymentType === 'ambos' ? Math.round((tp + ti) / 2) : (paymentType === 'particular' ? tp : ti);
-
         for (let i = 0; i < locationNames.length; i++) {
           const locName = locationNames[i];
           const sched = locationSchedules[i] || makeDefaultSchedule();
+          const tp = (ticketsPrivate[i] || 0) as number;
+          const ti = (ticketsInsurance[i] || 0) as number;
+          const ticketAvg = paymentType === 'ambos' ? Math.round((tp + ti) / 2) : (paymentType === 'particular' ? tp : ti);
 
           const locNumDoctors = (numDoctorsPerLoc[i] || 1) as number;
           const { data: newLoc, error: locError } = await supabase.from('locations').insert({
@@ -444,36 +458,39 @@ export default function OnboardingPage() {
                   ))}
                 </TabsList>
                 {locationSchedules.map((sched, idx) => (
-                  <TabsContent key={idx} value={String(idx)} className="mt-4">
+                  <TabsContent key={idx} value={String(idx)} className="mt-4 space-y-4">
                     <LocationScheduleForm
                       sched={sched}
                       onChange={updated => updateLocSchedule(idx, () => updated)}
+                    />
+                    <LocationTicketFields
+                      paymentType={paymentType}
+                      ticketPrivate={ticketsPrivate[idx] ?? 250}
+                      ticketInsurance={ticketsInsurance[idx] ?? 100}
+                      onChangePrivate={v => setTicketsPrivate(prev => prev.map((old, i) => i === idx ? v : old))}
+                      onChangeInsurance={v => setTicketsInsurance(prev => prev.map((old, i) => i === idx ? v : old))}
                     />
                   </TabsContent>
                 ))}
               </Tabs>
             ) : (
+            <div className="space-y-4">
               <LocationScheduleForm
                 sched={locationSchedules[0]}
                 onChange={updated => updateLocSchedule(0, () => updated)}
               />
+              <LocationTicketFields
+                paymentType={paymentType}
+                ticketPrivate={ticketsPrivate[0] ?? 250}
+                ticketInsurance={ticketsInsurance[0] ?? 100}
+                onChangePrivate={v => setTicketsPrivate(prev => prev.map((old, i) => i === 0 ? v : old))}
+                onChangeInsurance={v => setTicketsInsurance(prev => prev.map((old, i) => i === 0 ? v : old))}
+              />
+            </div>
             )}
 
-            {/* Tickets (global) */}
-            {(paymentType === 'particular' || paymentType === 'ambos') && (
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$) *</Label>
-                <Input type="number" min={1} value={ticketPrivate} onChange={e => setTicketPrivate(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))} className="rounded-xl" />
-                <p className="text-[11px] text-muted-foreground">Valor médio cobrado por consulta particular.</p>
-              </div>
-            )}
-            {(paymentType === 'convenio' || paymentType === 'ambos') && (
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$) *</Label>
-                <Input type="number" min={1} value={ticketInsurance} onChange={e => setTicketInsurance(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))} className="rounded-xl" />
-                <p className="text-[11px] text-muted-foreground">Valor médio recebido por consulta via convênio.</p>
-              </div>
-            )}
+
+            {/* Timezone */}
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fuso horário</Label>
               <Select value={timezone} onValueChange={setTimezone}>
@@ -631,6 +648,40 @@ function LocationScheduleForm({
               </div>
             ))}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Sub-component: ticket fields for one location */
+function LocationTicketFields({
+  paymentType,
+  ticketPrivate,
+  ticketInsurance,
+  onChangePrivate,
+  onChangeInsurance,
+}: {
+  paymentType: string;
+  ticketPrivate: number | '';
+  ticketInsurance: number | '';
+  onChangePrivate: (v: number | '') => void;
+  onChangeInsurance: (v: number | '') => void;
+}) {
+  return (
+    <div className="space-y-3">
+      {(paymentType === 'particular' || paymentType === 'ambos') && (
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Particular (R$) *</Label>
+          <Input type="number" min={1} value={ticketPrivate} onChange={e => onChangePrivate(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))} className="rounded-xl" />
+          <p className="text-[11px] text-muted-foreground">Valor médio cobrado por consulta particular neste local.</p>
+        </div>
+      )}
+      {(paymentType === 'convenio' || paymentType === 'ambos') && (
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ticket Convênio (R$) *</Label>
+          <Input type="number" min={1} value={ticketInsurance} onChange={e => onChangeInsurance(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))} className="rounded-xl" />
+          <p className="text-[11px] text-muted-foreground">Valor médio recebido por consulta via convênio neste local.</p>
         </div>
       )}
     </div>
