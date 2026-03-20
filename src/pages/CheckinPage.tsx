@@ -939,6 +939,18 @@ export default function CheckinPage() {
               <p className="text-sm text-foreground mt-1">{e.notes}</p>
             </div>
           )}
+          {/* Protocols summary */}
+          {existingProtocols.length > 0 && (
+            <div className="pt-2 border-t border-border/40">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">💉 Protocolos</p>
+              {existingProtocols.map(p => (
+                <div key={p.id} className="flex items-center justify-between py-1">
+                  <span className="text-sm text-muted-foreground">{p.name}</span>
+                  <span className="text-sm font-bold text-primary">{formatBRL(Number(p.value))}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Edit full check-in */}
