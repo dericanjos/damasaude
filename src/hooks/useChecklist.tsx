@@ -288,6 +288,17 @@ export function useCheckinStreak() {
     queryKey: ['checkin-streak', clinic?.id],
     queryFn: async () => {
       if (!clinic) return 0;
+
+      const dayMap: Record<string, number> = {
+        dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6,
+      };
+      const workingDays = (clinic as any)?.working_days ?? ['seg', 'ter', 'qua', 'qui', 'sex'];
+      const workingDaysSet = new Set<number>();
+      for (const day of workingDays) {
+        const num = dayMap[day];
+        if (num !== undefined) workingDaysSet.add(num);
+      }
+
       const { data, error } = await supabase
         .from('daily_checkins')
         .select('date')
@@ -297,20 +308,26 @@ export function useCheckinStreak() {
       if (error) throw error;
       if (!data || data.length === 0) return 0;
 
-      let streak = 0;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const checkinDates = new Set(data.map(c => c.date));
 
-      for (let i = 0; i < data.length; i++) {
-        const expectedDate = new Date(today);
-        expectedDate.setDate(expectedDate.getDate() - i);
-        const expectedStr = format(expectedDate, 'yyyy-MM-dd');
-        if (data[i].date === expectedStr) {
-          streak++;
-        } else {
-          break;
+      let streak = 0;
+      let currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+
+      while (true) {
+        const weekday = currentDate.getDay();
+        if (workingDaysSet.has(weekday)) {
+          const dateStr = format(currentDate, 'yyyy-MM-dd');
+          if (checkinDates.has(dateStr)) {
+            streak++;
+          } else {
+            break;
+          }
         }
+        currentDate.setDate(currentDate.getDate() - 1);
+        if (streak > 30) break;
       }
+
       return streak;
     },
     enabled: !!clinic,
