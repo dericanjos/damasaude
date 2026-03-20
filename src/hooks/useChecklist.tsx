@@ -282,34 +282,49 @@ export function useSaveChecklist() {
 }
 
 export function useCheckinStreak() {
-  const { data: clinic } = useClinic();
+  const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['checkin-streak', clinic?.id],
+    queryKey: ['checkin-streak-global', user?.id],
     queryFn: async () => {
-      if (!clinic) return 0;
+      if (!user) return 0;
 
+      // 1. Buscar todas as clínicas do usuário
+      const { data: clinics, error: clinicsError } = await supabase
+        .from('clinics')
+        .select('id, working_days')
+        .eq('user_id', user.id);
+      if (clinicsError) throw clinicsError;
+      if (!clinics || clinics.length === 0) return 0;
+
+      // 2. Unificar os dias de funcionamento de todas as clínicas
       const dayMap: Record<string, number> = {
         dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6,
       };
-      const workingDays = (clinic as any)?.working_days ?? ['seg', 'ter', 'qua', 'qui', 'sex'];
       const workingDaysSet = new Set<number>();
-      for (const day of workingDays) {
-        const num = dayMap[day];
-        if (num !== undefined) workingDaysSet.add(num);
+      for (const clinic of clinics) {
+        const wd = (clinic.working_days as string[] | null) ?? ['seg', 'ter', 'qua', 'qui', 'sex'];
+        for (const day of wd) {
+          const num = dayMap[day];
+          if (num !== undefined) workingDaysSet.add(num);
+        }
       }
 
+      // 3. Buscar check-ins de todas as clínicas do usuário
+      const clinicIds = clinics.map(c => c.id);
       const { data, error } = await supabase
         .from('daily_checkins')
         .select('date')
-        .eq('clinic_id', clinic.id)
+        .in('clinic_id', clinicIds)
         .order('date', { ascending: false })
         .limit(200);
       if (error) throw error;
       if (!data || data.length === 0) return 0;
 
+      // Set com datas únicas de check-in (qualquer clínica conta)
       const checkinDates = new Set(data.map(c => c.date));
 
+      // 4. Calcular streak percorrendo dias para trás
       let streak = 0;
       let currentDate = new Date();
       currentDate.setHours(0, 0, 0, 0);
@@ -325,11 +340,11 @@ export function useCheckinStreak() {
           }
         }
         currentDate.setDate(currentDate.getDate() - 1);
-        if (streak > 30) break;
+        if (streak > 90) break;
       }
 
       return streak;
     },
-    enabled: !!clinic,
+    enabled: !!user,
   });
 }
