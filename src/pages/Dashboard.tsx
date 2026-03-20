@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 import { useTodayCheckin, useYesterdayCheckin, useTodayCheckins } from '@/hooks/useCheckin';
+import { useTodayProtocolRevenue } from '@/hooks/useProtocols';
 import { useTodayActions, useCompleteAction } from '@/hooks/useActions';
 import { useClinic } from '@/hooks/useClinic';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -71,6 +72,10 @@ export default function Dashboard() {
   const { data: allSchedules = [] } = useAllLocationSchedules();
 
   useCheckinRealtime();
+
+  // Protocol revenue for today
+  const todayCheckinIds = useMemo(() => allTodayCheckins.map((c: any) => c.id).filter(Boolean), [allTodayCheckins]);
+  const { data: protocolRevenue = 0 } = useTodayProtocolRevenue(todayCheckinIds);
 
   const [checkinCollapsed, setCheckinCollapsed] = useState(true);
 
@@ -208,7 +213,7 @@ export default function Dashboard() {
   const displayRevenue = useMemo(() => {
     if (consolidated) {
       return {
-        estimated: consolidated.totalRevenueEstimated,
+        estimated: consolidated.totalRevenueEstimated + protocolRevenue,
         lost: consolidated.totalRevenueLost,
         occupancyRate: consolidated.totalCapacity > 0 ? consolidated.occupancyRate : null,
         noShowRate: consolidated.noShowRate,
@@ -219,7 +224,7 @@ export default function Dashboard() {
     }
     if (revenue && checkinData) {
       return {
-        estimated: revenue.estimated,
+        estimated: revenue.estimated + protocolRevenue,
         lost: revenue.lost,
         occupancyRate: dailyCapacity > 0 ? revenue.occupancyRate : null,
         noShowRate: revenue.noShowRate,
@@ -229,7 +234,7 @@ export default function Dashboard() {
       };
     }
     return null;
-  }, [consolidated, revenue, checkinData, dailyCapacity]);
+  }, [consolidated, revenue, checkinData, dailyCapacity, protocolRevenue]);
 
   const ideaStatus = todayScore != null ? getIdeaStatus(todayScore) : null;
 

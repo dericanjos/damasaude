@@ -7,6 +7,8 @@ import { useClinic } from '@/hooks/useClinic';
 import { useCheckinStreak } from '@/hooks/useChecklist';
 import { useGenerateInsight } from '@/hooks/useInsights';
 import { useTodayLocations, useLocationSchedules, useLocationFinancial, type Location } from '@/hooks/useLocations';
+import { useCheckinProtocols, useSaveCheckinProtocols, type ProtocolEntry } from '@/hooks/useProtocols';
+import CheckinProtocolSection from '@/components/CheckinProtocolSection';
 import { calculateIDEA, generateInsightText, getIdeaStatus, getIdeaLabel, getTopLossSources, totalAttended, totalNoshows, calculateLossMap } from '@/lib/idea';
 import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET_PRIVATE, DEFAULT_TICKET_INSURANCE } from '@/lib/revenue';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
@@ -137,8 +139,13 @@ export default function CheckinPage() {
   const { data: clinic } = useClinic();
   const { data: streak = 0 } = useCheckinStreak();
   const saveCheckin = useSaveCheckin();
+  const saveCheckinProtocols = useSaveCheckinProtocols();
   const generateActions = useGenerateActions();
   const { generate: generateMicroInsight } = useGenerateInsight();
+
+  // Protocol entries for this checkin
+  const [protocolEntries, setProtocolEntries] = useState<ProtocolEntry[]>([]);
+  const hasProtocols = (clinic as any)?.has_protocols ?? false;
 
   // Location selection
   const paramLocationId = searchParams.get('location');
@@ -170,6 +177,21 @@ export default function CheckinPage() {
   const { data: schedules = [] } = useLocationSchedules(selectedLocationId || undefined);
   const { data: financial } = useLocationFinancial(selectedLocationId || undefined);
   const { data: allTodayCheckins = [] } = useTodayCheckins();
+  const { data: existingProtocols = [] } = useCheckinProtocols(existing?.id);
+
+  // Load existing protocols when editing
+  useEffect(() => {
+    if (existingProtocols.length > 0) {
+      setProtocolEntries(existingProtocols.map(p => ({
+        protocol_id: p.protocol_id,
+        name: p.name,
+        description: p.description || '',
+        value: Number(p.value),
+      })));
+    } else if (!existing) {
+      setProtocolEntries([]);
+    }
+  }, [existingProtocols.length, existing?.id]);
 
   const paymentType = (clinic as any)?.payment_type ?? 'ambos';
   const [quickMode, setQuickMode] = useState(false);
@@ -316,7 +338,7 @@ export default function CheckinPage() {
       const insightText = generateInsightText(checkinData, ideaScore);
       const lossSources = getTopLossSources(checkinData);
 
-      await saveCheckin.mutateAsync({
+      const savedCheckin = await saveCheckin.mutateAsync({
         ...submitData,
         cancellations: submitData.cancellations_private + submitData.cancellations_insurance,
         location_id: selectedLocationId,
@@ -324,6 +346,15 @@ export default function CheckinPage() {
         no_show: submitData.noshows_private + submitData.noshows_insurance,
         insight_text: insightText,
       });
+
+      // Save protocols associated with this checkin
+      if (savedCheckin?.id && protocolEntries.length > 0) {
+        await saveCheckinProtocols.mutateAsync({
+          checkinId: savedCheckin.id,
+          protocols: protocolEntries,
+        });
+      }
+
       await generateActions.mutateAsync({ checkinData, locationId: selectedLocationId });
 
       const rev = calculateRevenue({
@@ -332,10 +363,11 @@ export default function CheckinPage() {
         ticket_private: ticketPrivate,
         ticket_insurance: ticketInsurance,
       });
+      const protocolRevenue = protocolEntries.reduce((s, p) => s + p.value, 0);
       const lossMap = calculateLossMap(checkinData, ticketAvg);
       setReward({
         score: ideaScore,
-        estimated: rev.estimated,
+        estimated: rev.estimated + protocolRevenue,
         lost: rev.lost,
         occupancyRate: rev.occupancyRate,
         insightText,
@@ -907,6 +939,18 @@ export default function CheckinPage() {
               <p className="text-sm text-foreground mt-1">{e.notes}</p>
             </div>
           )}
+          {/* Protocols summary */}
+          {existingProtocols.length > 0 && (
+            <div className="pt-2 border-t border-border/40">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">💉 Protocolos</p>
+              {existingProtocols.map(p => (
+                <div key={p.id} className="flex items-center justify-between py-1">
+                  <span className="text-sm text-muted-foreground">{p.name}</span>
+                  <span className="text-sm font-bold text-primary">{formatBRL(Number(p.value))}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Edit full check-in */}
@@ -1220,6 +1264,13 @@ export default function CheckinPage() {
                 className="border-border/50 rounded-xl resize-none"
               />
             </div>
+
+            {/* Protocols section */}
+            <CheckinProtocolSection
+              entries={protocolEntries}
+              onChange={setProtocolEntries}
+              hasProtocols={hasProtocols}
+            />
           </>
         )}
 
