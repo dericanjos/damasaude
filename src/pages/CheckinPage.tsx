@@ -338,7 +338,7 @@ export default function CheckinPage() {
       const insightText = generateInsightText(checkinData, ideaScore);
       const lossSources = getTopLossSources(checkinData);
 
-      await saveCheckin.mutateAsync({
+      const savedCheckin = await saveCheckin.mutateAsync({
         ...submitData,
         cancellations: submitData.cancellations_private + submitData.cancellations_insurance,
         location_id: selectedLocationId,
@@ -346,6 +346,15 @@ export default function CheckinPage() {
         no_show: submitData.noshows_private + submitData.noshows_insurance,
         insight_text: insightText,
       });
+
+      // Save protocols associated with this checkin
+      if (savedCheckin?.id && protocolEntries.length > 0) {
+        await saveCheckinProtocols.mutateAsync({
+          checkinId: savedCheckin.id,
+          protocols: protocolEntries,
+        });
+      }
+
       await generateActions.mutateAsync({ checkinData, locationId: selectedLocationId });
 
       const rev = calculateRevenue({
@@ -354,10 +363,11 @@ export default function CheckinPage() {
         ticket_private: ticketPrivate,
         ticket_insurance: ticketInsurance,
       });
+      const protocolRevenue = protocolEntries.reduce((s, p) => s + p.value, 0);
       const lossMap = calculateLossMap(checkinData, ticketAvg);
       setReward({
         score: ideaScore,
-        estimated: rev.estimated,
+        estimated: rev.estimated + protocolRevenue,
         lost: rev.lost,
         occupancyRate: rev.occupancyRate,
         insightText,
