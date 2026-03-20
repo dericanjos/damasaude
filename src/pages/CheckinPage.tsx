@@ -139,8 +139,13 @@ export default function CheckinPage() {
   const { data: clinic } = useClinic();
   const { data: streak = 0 } = useCheckinStreak();
   const saveCheckin = useSaveCheckin();
+  const saveCheckinProtocols = useSaveCheckinProtocols();
   const generateActions = useGenerateActions();
   const { generate: generateMicroInsight } = useGenerateInsight();
+
+  // Protocol entries for this checkin
+  const [protocolEntries, setProtocolEntries] = useState<ProtocolEntry[]>([]);
+  const hasProtocols = (clinic as any)?.has_protocols ?? false;
 
   // Location selection
   const paramLocationId = searchParams.get('location');
