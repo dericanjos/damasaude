@@ -1251,6 +1251,12 @@ export default function CheckinPage() {
             </div>
             )}
 
+            {/* Protocols section - after losses, before notes */}
+            <CheckinProtocolSection
+              entries={protocolEntries}
+              onChange={setProtocolEntries}
+              hasProtocols={hasProtocols}
+            />
 
             <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-2">
               <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
@@ -1264,13 +1270,6 @@ export default function CheckinPage() {
                 className="border-border/50 rounded-xl resize-none"
               />
             </div>
-
-            {/* Protocols section */}
-            <CheckinProtocolSection
-              entries={protocolEntries}
-              onChange={setProtocolEntries}
-              hasProtocols={hasProtocols}
-            />
           </>
         )}
 
