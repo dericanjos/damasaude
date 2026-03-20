@@ -1054,11 +1054,18 @@ export default function CheckinPage() {
                     📋 Atendimentos previstos para hoje
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    Quantos pacientes você espera atender?
+                    Distribua os {effectiveCapacity} agendamentos por tipo de atendimento
                   </p>
                 </div>
-                <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                  Máx: {effectiveCapacity} {form.extra_appointments > 0 ? `(${form.appointments_scheduled}+${form.extra_appointments})` : ''}
+                <span className={cn(
+                  'text-[10px] font-medium px-2 py-0.5 rounded-full',
+                  attendedMismatch
+                    ? 'bg-destructive/10 text-destructive'
+                    : 'bg-muted text-muted-foreground'
+                )}>
+                  {attendedMismatch
+                    ? `Faltam: ${attendedRemaining}`
+                    : `Total: ${effectiveCapacity}`}
                 </span>
               </div>
               {paymentType === 'ambos' ? (
@@ -1075,6 +1082,13 @@ export default function CheckinPage() {
                     onChange={v => setField('attended_insurance', v)}
                     max={maxAttendedInsurance}
                   />
+                  {attendedMismatch && (
+                    <p className="text-[10px] text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3 shrink-0" />
+                      A soma ({totalAttendedNow}) precisa ser igual aos agendamentos ({effectiveCapacity}).
+                      {attendedRemaining > 0 ? ` Distribua mais ${attendedRemaining}.` : ` Reduza ${Math.abs(attendedRemaining)}.`}
+                    </p>
+                  )}
                 </>
               ) : (
                 <CheckinField
