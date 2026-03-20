@@ -7,6 +7,8 @@ import { useClinic } from '@/hooks/useClinic';
 import { useCheckinStreak } from '@/hooks/useChecklist';
 import { useGenerateInsight } from '@/hooks/useInsights';
 import { useTodayLocations, useLocationSchedules, useLocationFinancial, type Location } from '@/hooks/useLocations';
+import { useCheckinProtocols, useSaveCheckinProtocols, type ProtocolEntry } from '@/hooks/useProtocols';
+import CheckinProtocolSection from '@/components/CheckinProtocolSection';
 import { calculateIDEA, generateInsightText, getIdeaStatus, getIdeaLabel, getTopLossSources, totalAttended, totalNoshows, calculateLossMap } from '@/lib/idea';
 import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET_PRIVATE, DEFAULT_TICKET_INSURANCE } from '@/lib/revenue';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
