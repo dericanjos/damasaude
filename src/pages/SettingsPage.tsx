@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Settings, LogOut, CreditCard, ExternalLink, Percent, MapPin, Plus, Pencil, Bell } from 'lucide-react';
+import ProtocolManager from '@/components/ProtocolManager';
 import { cn } from '@/lib/utils';
 import { DAY_KEYS, DAY_LABELS, DAY_SHORT_LABELS, parseDailyCapacities, type DailyCapacities } from '@/lib/days';
 
