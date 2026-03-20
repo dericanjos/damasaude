@@ -239,6 +239,10 @@ export default function CheckinPage() {
   const maxAttendedPrivate = Math.max(0, effectiveCapacity - form.attended_insurance);
   const maxAttendedInsurance = Math.max(0, effectiveCapacity - form.attended_private);
 
+  // How many slots still need to be distributed by payment type
+  const attendedRemaining = effectiveCapacity - totalAttendedNow;
+  const attendedMismatch = paymentType === 'ambos' && effectiveCapacity > 0 && totalAttendedNow !== effectiveCapacity;
+
   // Losses per category limited by what was scheduled in that category
   const maxNoshowPrivate = Math.max(0, form.attended_private - form.cancellations_private);
   const maxNoshowInsurance = Math.max(0, form.attended_insurance - form.cancellations_insurance);
