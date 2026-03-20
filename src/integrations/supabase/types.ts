@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      checkin_protocols: {
+        Row: {
+          checkin_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          protocol_id: string | null
+          value: number
+        }
+        Insert: {
+          checkin_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          protocol_id?: string | null
+          value?: number
+        }
+        Update: {
+          checkin_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          protocol_id?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkin_protocols_checkin_id_fkey"
+            columns: ["checkin_id"]
+            isOneToOne: false
+            referencedRelation: "daily_checkins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_protocols_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklists: {
         Row: {
           category: string
@@ -63,6 +108,7 @@ export type Database = {
           daily_capacity: number
           doctor_gender: string
           doctor_name: string | null
+          has_protocols: boolean
           has_secretary: boolean
           id: string
           monthly_revenue_target: number | null
@@ -85,6 +131,7 @@ export type Database = {
           daily_capacity?: number
           doctor_gender?: string
           doctor_name?: string | null
+          has_protocols?: boolean
           has_secretary?: boolean
           id?: string
           monthly_revenue_target?: number | null
@@ -107,6 +154,7 @@ export type Database = {
           daily_capacity?: number
           doctor_gender?: string
           doctor_name?: string | null
+          has_protocols?: boolean
           has_secretary?: boolean
           id?: string
           monthly_revenue_target?: number | null
@@ -649,6 +697,36 @@ export type Database = {
           onboarding_completed?: boolean
           stripe_customer_id?: string | null
           subscription_status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      protocols: {
+        Row: {
+          created_at: string
+          default_value: number
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_value?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          default_value?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
           user_id?: string
         }
         Relationships: []
