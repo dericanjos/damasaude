@@ -213,7 +213,7 @@ export default function Dashboard() {
   const displayRevenue = useMemo(() => {
     if (consolidated) {
       return {
-        estimated: consolidated.totalRevenueEstimated,
+        estimated: consolidated.totalRevenueEstimated + protocolRevenue,
         lost: consolidated.totalRevenueLost,
         occupancyRate: consolidated.totalCapacity > 0 ? consolidated.occupancyRate : null,
         noShowRate: consolidated.noShowRate,
@@ -224,7 +224,7 @@ export default function Dashboard() {
     }
     if (revenue && checkinData) {
       return {
-        estimated: revenue.estimated,
+        estimated: revenue.estimated + protocolRevenue,
         lost: revenue.lost,
         occupancyRate: dailyCapacity > 0 ? revenue.occupancyRate : null,
         noShowRate: revenue.noShowRate,
@@ -234,7 +234,7 @@ export default function Dashboard() {
       };
     }
     return null;
-  }, [consolidated, revenue, checkinData, dailyCapacity]);
+  }, [consolidated, revenue, checkinData, dailyCapacity, protocolRevenue]);
 
   const ideaStatus = todayScore != null ? getIdeaStatus(todayScore) : null;
 
