@@ -304,7 +304,7 @@ export function useCheckinStreak() {
         .select('date')
         .eq('clinic_id', clinic.id)
         .order('date', { ascending: false })
-        .limit(30);
+        .limit(200);
       if (error) throw error;
       if (!data || data.length === 0) return 0;
 
