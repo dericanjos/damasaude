@@ -494,6 +494,9 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Protocolos */}
+      <ProtocolManager />
+
 
       {/* Card 3: Metas de Performance */}
       <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
