@@ -73,6 +73,10 @@ export default function Dashboard() {
 
   useCheckinRealtime();
 
+  // Protocol revenue for today
+  const todayCheckinIds = useMemo(() => allTodayCheckins.map((c: any) => c.id).filter(Boolean), [allTodayCheckins]);
+  const { data: protocolRevenue = 0 } = useTodayProtocolRevenue(todayCheckinIds);
+
   const [checkinCollapsed, setCheckinCollapsed] = useState(true);
 
   const doctorName = (clinic as any)?.doctor_name || user?.user_metadata?.doctor_name || '';
