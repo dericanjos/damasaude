@@ -1264,6 +1264,13 @@ export default function CheckinPage() {
                 className="border-border/50 rounded-xl resize-none"
               />
             </div>
+
+            {/* Protocols section */}
+            <CheckinProtocolSection
+              entries={protocolEntries}
+              onChange={setProtocolEntries}
+              hasProtocols={hasProtocols}
+            />
           </>
         )}
 
