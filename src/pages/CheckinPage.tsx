@@ -177,6 +177,21 @@ export default function CheckinPage() {
   const { data: schedules = [] } = useLocationSchedules(selectedLocationId || undefined);
   const { data: financial } = useLocationFinancial(selectedLocationId || undefined);
   const { data: allTodayCheckins = [] } = useTodayCheckins();
+  const { data: existingProtocols = [] } = useCheckinProtocols(existing?.id);
+
+  // Load existing protocols when editing
+  useEffect(() => {
+    if (existingProtocols.length > 0) {
+      setProtocolEntries(existingProtocols.map(p => ({
+        protocol_id: p.protocol_id,
+        name: p.name,
+        description: p.description || '',
+        value: Number(p.value),
+      })));
+    } else if (!existing) {
+      setProtocolEntries([]);
+    }
+  }, [existingProtocols.length, existing?.id]);
 
   const paymentType = (clinic as any)?.payment_type ?? 'ambos';
   const [quickMode, setQuickMode] = useState(false);
