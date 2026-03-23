@@ -621,6 +621,9 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* DAMA insight touchpoint */}
+      {displayRevenue && <DamaInsightCard lost={displayRevenue.lost} />}
+
       {/* Worst leaker + most efficient - consolidated mode */}
       {worstLeaker && isConsolidated && (
         <div className="rounded-xl bg-card border border-revenue-loss/30 p-3.5 flex items-start gap-3 shadow-card">
