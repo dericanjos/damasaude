@@ -194,7 +194,7 @@ export default function CheckinPage() {
   }, [existingProtocols.length, existing?.id]);
 
   const paymentType = (clinic as any)?.payment_type ?? 'ambos';
-  const [quickMode, setQuickMode] = useState(false);
+  const [quickMode, setQuickMode] = useState(true);
   const [quickHasBuracos, setQuickHasBuracos] = useState(false);
   const [quickHasNoShow, setQuickHasNoShow] = useState(false);
   const [quickFollowup, setQuickFollowup] = useState(false);
