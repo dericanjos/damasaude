@@ -23,6 +23,7 @@ import {
   Minus, Plus, Zap, Flame, Info, MapPin, AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import RewardSurprise from '@/components/RewardSurprise';
 
 type FormData = {
   appointments_scheduled: number;
