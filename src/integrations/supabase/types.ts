@@ -664,6 +664,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          badge_lost_seen: boolean
+          badge_seen_at: string | null
           checklist_level: number
           created_at: string
           current_period_end: string | null
@@ -676,6 +678,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          badge_lost_seen?: boolean
+          badge_seen_at?: string | null
           checklist_level?: number
           created_at?: string
           current_period_end?: string | null
@@ -688,6 +692,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          badge_lost_seen?: boolean
+          badge_seen_at?: string | null
           checklist_level?: number
           created_at?: string
           current_period_end?: string | null
@@ -727,6 +733,27 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      verse_views: {
+        Row: {
+          created_at: string
+          id: string
+          seen_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          seen_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          seen_date?: string
           user_id?: string
         }
         Relationships: []

@@ -2,7 +2,7 @@ import { createContext, useContext, useState, ReactNode, useEffect } from 'react
 import { useActiveLocations } from './useLocations';
 
 interface LocationFilterContextType {
-  selectedLocationId: string | null; // null = "Todas as clínicas"
+  selectedLocationId: string | null;
   setSelectedLocationId: (id: string | null) => void;
 }
 
@@ -10,18 +10,7 @@ const LocationFilterContext = createContext<LocationFilterContextType | undefine
 
 export function LocationFilterProvider({ children }: { children: ReactNode }) {
   const activeLocations = useActiveLocations();
-  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(() => {
-    const saved = localStorage.getItem('selected_location_id');
-    return saved || null;
-  });
-
-  useEffect(() => {
-    if (selectedLocationId) {
-      localStorage.setItem('selected_location_id', selectedLocationId);
-    } else {
-      localStorage.removeItem('selected_location_id');
-    }
-  }, [selectedLocationId]);
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
 
   // Reset to null if selected location no longer exists
   useEffect(() => {

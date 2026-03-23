@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useMarkVerseSeen } from '@/hooks/useVerseSeen';
 import { Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toPng } from 'html-to-image';
@@ -27,8 +28,10 @@ export default function VersePage() {
     fetchVerse();
   }, []);
 
+  const markSeen = useMarkVerseSeen();
+
   const handleContinue = () => {
-    localStorage.setItem('verse_seen_date', new Date().toISOString().slice(0, 10));
+    markSeen.mutate();
     navigate('/', { replace: true });
   };
 

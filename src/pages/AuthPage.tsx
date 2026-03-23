@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,13 +35,6 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [doctorName, setDoctorName] = useState('');
   const [clinicName, setClinicName] = useState('');
-  const [keepLoggedIn, setKeepLoggedIn] = useState(() => {
-    return localStorage.getItem('keep_logged_in') !== 'false';
-  });
-
-  useEffect(() => {
-    localStorage.setItem('keep_logged_in', String(keepLoggedIn));
-  }, [keepLoggedIn]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,20 +137,6 @@ export default function AuthPage() {
                   required
                 />
               </div>
-              {!isSignUp && (
-                <div className="flex items-center gap-2 pt-1">
-                  <input
-                    type="checkbox"
-                    id="keepLoggedIn"
-                    checked={keepLoggedIn}
-                    onChange={(e) => setKeepLoggedIn(e.target.checked)}
-                    className="h-4 w-4 rounded border-white/30 bg-white/10 accent-white"
-                  />
-                  <Label htmlFor="keepLoggedIn" className="text-sm text-white/70 cursor-pointer font-normal">
-                    Manter conectado
-                  </Label>
-                </div>
-              )}
 
               <Button type="submit" className="w-full bg-white text-blue-900 font-semibold hover:bg-white/90" disabled={loading}>
                 {loading ? 'Aguarde...' : isSignUp ? 'Criar conta' : 'Entrar'}

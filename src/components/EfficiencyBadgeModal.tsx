@@ -1,42 +1,62 @@
 import { useEffect, useState } from 'react';
 import { useEfficiencyBadge } from '@/hooks/useEfficiencyBadge';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Award } from 'lucide-react';
 
-const BADGE_SEEN_KEY = 'dama_badge_seen';
-const BADGE_LOST_KEY = 'dama_badge_lost_seen';
+function useBadgeProfile() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['badge-profile', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('badge_seen_at, badge_lost_seen')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { badge_seen_at: string | null; badge_lost_seen: boolean } | null;
+    },
+    enabled: !!user,
+  });
+}
 
 export default function EfficiencyBadgeModal() {
+  const { user } = useAuth();
   const { data: hasBadge } = useEfficiencyBadge();
+  const { data: profile } = useBadgeProfile();
+  const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
 
+  const updateProfile = async (updates: Record<string, any>) => {
+    if (!user) return;
+    await supabase.from('profiles').update(updates as any).eq('user_id', user.id);
+    queryClient.invalidateQueries({ queryKey: ['badge-profile'] });
+  };
+
   useEffect(() => {
-    if (hasBadge === undefined) return;
+    if (hasBadge === undefined || profile === undefined) return;
 
     if (hasBadge) {
-      const seen = localStorage.getItem(BADGE_SEEN_KEY);
-      if (!seen) {
+      if (!profile?.badge_seen_at) {
         setShowModal(true);
-        localStorage.setItem(BADGE_SEEN_KEY, 'true');
+        updateProfile({ badge_seen_at: new Date().toISOString(), badge_lost_seen: false });
       }
-      // Reset lost key so if they lose it again we can notify
-      localStorage.removeItem(BADGE_LOST_KEY);
     } else {
-      // If they had it and lost it
-      const wasSeen = localStorage.getItem(BADGE_SEEN_KEY);
-      const lostSeen = localStorage.getItem(BADGE_LOST_KEY);
-      if (wasSeen && !lostSeen) {
+      if (profile?.badge_seen_at && !profile?.badge_lost_seen) {
         toast.error(
           'Atenção! Sua performance caiu e o Selo de Clínica Eficiente foi temporariamente removido. Recupere sua média de 80 para conquistá-lo novamente.',
           { duration: 8000 }
         );
-        localStorage.setItem(BADGE_LOST_KEY, 'true');
-        localStorage.removeItem(BADGE_SEEN_KEY);
+        updateProfile({ badge_lost_seen: true, badge_seen_at: null });
       }
     }
-  }, [hasBadge]);
+  }, [hasBadge, profile]);
 
   return (
     <Dialog open={showModal} onOpenChange={setShowModal}>

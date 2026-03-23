@@ -25,7 +25,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const value: SubscriptionContextType = {
     subscribed: true,
     subscriptionStatus: 'ativo',
-    subscriptionEnd: null,
+    // TODO: restaurar lógica real quando Stripe for reativado
+    subscriptionEnd: '2099-12-31T23:59:59Z',
     loading: false,
     refresh: async () => {},
   };
