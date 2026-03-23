@@ -1,11 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Users, DollarSign } from 'lucide-react';
+import { ArrowLeft, Users, Target, GraduationCap, Share2 } from 'lucide-react';
 import logoDamaTagline from '@/assets/logo-dama-tagline.png';
-import { Button } from '@/components/ui/button';
 
 export default function InstitucionalPage() {
   const navigate = useNavigate();
-  const whatsappUrl = 'https://wa.me/5521959214292?text=Ol%C3%A1!%20Quero%20agendar%20meu%20Diagn%C3%B3stico%20Estrat%C3%A9gico%20gratuito.';
+  const whatsappUrl = 'https://wa.me/5521959214292?text=Ol%C3%A1!%20Vim%20pelo%20app%20DAMA%20Sa%C3%BAde%20e%20quero%20saber%20como%20reduzir%20os%20vazamentos%20da%20minha%20agenda.';
 
   return (
     <div className="min-h-screen bg-[hsl(220,30%,7%)]">
@@ -25,49 +24,77 @@ export default function InstitucionalPage() {
         <div className="flex flex-col items-center text-center pt-4 pb-10">
           <img src={logoDamaTagline} alt="DAMA" className="h-14 w-auto mb-8 opacity-90" />
           <h1 className="text-2xl font-bold text-white leading-snug mb-3">
-            Transforme sua clínica em uma operação previsível e lucrativa.
+            Pare de perder receita com uma agenda reativa.
           </h1>
           <p className="text-sm text-white/60 leading-relaxed max-w-sm">
-            A DAMA implementa uma gestão comercial e operacional robusta para médicos que buscam excelência e crescimento sustentável.
+            A DAMA é o time comercial estratégico que cuida da sua agenda, seus pacientes e seu faturamento. Presente em 16+ estados com 90+ médicos parceiros.
           </p>
         </div>
 
-        {/* Problem cards */}
+        {/* Service cards */}
         <div className="space-y-3 mb-10">
           <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-5">
             <div className="flex items-center gap-3 mb-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/20">
-                <Calendar className="h-4.5 w-4.5 text-primary" style={{ width: 18, height: 18 }} />
+                <Users className="h-[18px] w-[18px] text-primary" />
               </div>
-              <p className="text-sm font-bold text-white">Agenda Reativa?</p>
+              <p className="text-sm font-bold text-white">Time comercial dedicado</p>
             </div>
             <p className="text-[13px] text-white/55 leading-relaxed">
-              Vive apagando incêndios e com buracos inesperados na agenda? Uma equipe treinada transforma a agenda reativa em proativa.
+              Equipe treinada em vendas médicas que converte leads em pacientes particulares. Atendimento humanizado e estratégico.
             </p>
           </div>
 
           <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-5">
             <div className="flex items-center gap-3 mb-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/20">
-                <Users className="h-4.5 w-4.5 text-primary" style={{ width: 18, height: 18 }} />
+                <Target className="h-[18px] w-[18px] text-primary" />
               </div>
-              <p className="text-sm font-bold text-white">Secretária sobrecarregada?</p>
+              <p className="text-sm font-bold text-white">Captação de pacientes</p>
             </div>
             <p className="text-[13px] text-white/55 leading-relaxed">
-              Sua equipe de frente precisa de rotinas de comunicação, processos de confirmação e protocolos de reagendamento para se tornar um centro de lucro.
+              Campanhas estratégicas para atrair pacientes qualificados e gerar agendamentos previsíveis para seu consultório.
             </p>
           </div>
 
           <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-5">
             <div className="flex items-center gap-3 mb-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/20">
-                <DollarSign className="h-4.5 w-4.5 text-primary" style={{ width: 18, height: 18 }} />
+                <GraduationCap className="h-[18px] w-[18px] text-primary" />
               </div>
-              <p className="text-sm font-bold text-white">Receita Imprevisível?</p>
+              <p className="text-sm font-bold text-white">Treinamento da sua equipe</p>
             </div>
             <p className="text-[13px] text-white/55 leading-relaxed">
-              Não sabe quanto vai faturar no próximo mês e perde dinheiro com no-shows? Identificamos os vazamentos e criamos contramedidas.
+              Transformamos secretárias em multiplicadoras de receita com técnicas de conversão e atendimento via WhatsApp.
             </p>
+          </div>
+
+          <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/20">
+                <Share2 className="h-[18px] w-[18px] text-primary" />
+              </div>
+              <p className="text-sm font-bold text-white">Presença estratégica nas redes</p>
+            </div>
+            <p className="text-[13px] text-white/55 leading-relaxed">
+              Atrair, nutrir e converter pacientes de forma orgânica, conectando sua autoridade médica com o desejo do público.
+            </p>
+          </div>
+        </div>
+
+        {/* Social proof */}
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-white">90+</p>
+            <p className="text-[11px] text-white/50">médicos parceiros</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-white">16+</p>
+            <p className="text-[11px] text-white/50">estados atendidos</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-white">25k+</p>
+            <p className="text-[11px] text-white/50">consultas agendadas</p>
           </div>
         </div>
 
@@ -76,7 +103,7 @@ export default function InstitucionalPage() {
           <p className="text-xs font-bold text-primary uppercase tracking-widest mb-2">Próximo passo</p>
           <h2 className="text-lg font-bold text-white mb-2">Nosso Diagnóstico Estratégico é o Ponto de Partida.</h2>
           <p className="text-[13px] text-white/55 leading-relaxed mb-5">
-            Em uma conversa de 30 minutos, sem compromisso, mapeamos os gargalos da sua operação e entregamos um plano de ação claro para transformar seus processos e sua equipe.
+            Em 30 minutos, mapeamos os gargalos da sua operação e mostramos exatamente onde você está perdendo receita — e como resolver.
           </p>
           <a
             href={whatsappUrl}
@@ -86,7 +113,7 @@ export default function InstitucionalPage() {
           >
             Pedir meu Diagnóstico Gratuito
           </a>
-          <p className="text-xs text-white/40 mt-3">Uma conversa de 30 min. Sem compromisso.</p>
+          <p className="text-xs text-white/40 mt-3">Implantação em até 24 horas</p>
         </div>
       </div>
     </div>
