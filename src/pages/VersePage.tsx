@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useMarkVerseSeen } from '@/hooks/useVerseSeen';
 import { Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toPng } from 'html-to-image';
