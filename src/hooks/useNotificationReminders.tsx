@@ -1,16 +1,21 @@
 import { useEffect, useCallback } from 'react';
 import { useTodayLocations, useLocationSchedules } from '@/hooks/useLocations';
+import { useTodayCheckin } from '@/hooks/useCheckin';
+import { useCheckinStreak } from '@/hooks/useChecklist';
 
 /**
  * Schedules browser notifications for check-in reminders:
  * 1. Start of shift → register today's appointments
  * 2. Mid-shift → update attended/losses so far
  * 3. End of shift → finalize the day's results
+ * 4. Streak risk → 1 hour before end if no check-in done
  */
 export function useNotificationReminders() {
   const { todayLocations } = useTodayLocations();
   const firstLocation = todayLocations[0];
   const { data: schedules = [] } = useLocationSchedules(firstLocation?.id);
+  const { data: todayCheckin } = useTodayCheckin(firstLocation?.id);
+  const { data: streak = 0 } = useCheckinStreak();
 
   const requestPermission = useCallback(async () => {
     if (!('Notification' in window)) return false;
@@ -78,10 +83,22 @@ export function useNotificationReminders() {
       'checkin-evening'
     );
 
+    // 4. Streak risk: 1 hour before end, only if no check-in and streak > 0
+    if (!todayCheckin && streak > 0) {
+      const streakRiskTime = new Date(endTime.getTime() - 60 * 60 * 1000);
+      const hoursLeft = Math.max(1, Math.round((endTime.getTime() - streakRiskTime.getTime()) / (1000 * 60 * 60)));
+      scheduleNotification(
+        streakRiskTime,
+        `🔥 Seu streak de ${streak} dias está em risco!`,
+        `Faltam ${hoursLeft} hora${hoursLeft > 1 ? 's' : ''} para fechar o expediente. Faça o check-in para manter sua sequência.`,
+        'checkin-streak-risk'
+      );
+    }
+
     return () => {
       timers.forEach(clearTimeout);
     };
-  }, [schedules, firstLocation]);
+  }, [schedules, firstLocation, todayCheckin, streak]);
 
   return { requestPermission };
 }

@@ -23,6 +23,7 @@ import {
   Minus, Plus, Zap, Flame, Info, MapPin, AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import RewardSurprise from '@/components/RewardSurprise';
 
 type FormData = {
   appointments_scheduled: number;
@@ -558,6 +559,15 @@ export default function CheckinPage() {
             </p>
           </div>
         )}
+
+        {/* Variable reward */}
+        <RewardSurprise
+          score={reward.score}
+          streak={newStreak}
+          lost={reward.lost}
+          yesterdayScore={null}
+        />
+
         <p className="text-xs text-muted-foreground text-center">
           Você acaba de transformar dados em inteligência. Consistência é a chave para a previsibilidade.
         </p>
@@ -629,6 +639,33 @@ export default function CheckinPage() {
             />
           </div>
         </div>
+
+        {/* DAMA touchpoint for low scores */}
+        {reward.score < 60 && reward.lost > 300 && (
+          <div className="w-full rounded-2xl border border-[#D4AF37]/20 bg-card p-4 shadow-card">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#D4AF37]/10">
+                <Zap className="h-5 w-5 text-[#D4AF37]" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-foreground">
+                  Seu consultório pode estar perdendo até {formatBRL(reward.lost * 22)}/mês
+                </p>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  Médicos parceiros da DAMA reduzem no-shows e buracos com processos comerciais validados em 90+ consultórios.
+                </p>
+                <a
+                  href="https://wa.me/5521959214292?text=Ol%C3%A1!%20Vim%20pelo%20app%20DAMA%20Sa%C3%BAde%20e%20quero%20saber%20como%20reduzir%20os%20vazamentos%20da%20minha%20agenda."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-[#D4AF37] font-semibold mt-2 hover:text-[#e0c04a] transition-colors"
+                >
+                  Quero um diagnóstico gratuito →
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Check other locations */}
         {todayLocations.filter(l => l.id !== selectedLocationId && !checkedInLocationIds.includes(l.id)).length > 0 && (

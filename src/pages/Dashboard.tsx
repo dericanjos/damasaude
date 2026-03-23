@@ -35,6 +35,7 @@ import LossRadarCard from '@/components/LossRadarCard';
 import EfficiencyBadgeModal from '@/components/EfficiencyBadgeModal';
 import { useCheckinRealtime } from '@/hooks/useCheckinRealtime';
 import WelcomeCard from '@/components/WelcomeCard';
+import DamaInsightCard from '@/components/DamaInsightCard';
 
 /** Helper to convert DB row to CheckinData */
 function toCheckinData(c: any): CheckinData {
@@ -620,6 +621,9 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* DAMA insight touchpoint */}
+      {displayRevenue && <DamaInsightCard lost={displayRevenue.lost} />}
 
       {/* Worst leaker + most efficient - consolidated mode */}
       {worstLeaker && isConsolidated && (
