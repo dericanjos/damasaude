@@ -332,9 +332,29 @@ export default function Dashboard() {
       {/* ── SUCCESS CHECKLIST (always first action) ── */}
       <SuccessChecklistCard />
 
+      {/* ── WELCOME CARD (first access) ── */}
+      {isFirstAccess && <WelcomeCard />}
+
+      {/* ── MULTI-LOCATION DISCOVERY ── */}
+      {locations.length === 1 && streak >= 3 && (
+        <button
+          onClick={() => navigate('/config')}
+          className="w-full rounded-2xl bg-card border border-border/60 p-3 flex items-center gap-3 shadow-card transition-transform active:scale-[0.99]"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+            <MapPin className="h-4 w-4 text-primary" />
+          </div>
+          <div className="text-left flex-1">
+            <p className="text-sm font-semibold text-foreground">Atende em mais de um local?</p>
+            <p className="text-[11px] text-muted-foreground">Adicione suas outras clínicas para uma visão consolidada</p>
+          </div>
+          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+        </button>
+      )}
+
       {/* ── CHECK-IN PROMPT or UPDATE PROMPT or IDEA SCORE ── */}
       {/* Consolidated mode: show X/Y check-in status */}
-      {!selectedLocationId && locations.length > 1 && todayScore == null && (
+      {!isFirstAccess && !selectedLocationId && locations.length > 1 && todayScore == null && (
         <button
           onClick={() => navigate('/checkin')}
           className="w-full rounded-2xl gradient-primary p-5 text-left shadow-premium transition-transform active:scale-[0.99]"
