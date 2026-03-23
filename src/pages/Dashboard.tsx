@@ -35,6 +35,7 @@ import LossRadarCard from '@/components/LossRadarCard';
 import EfficiencyBadgeModal from '@/components/EfficiencyBadgeModal';
 import { useCheckinRealtime } from '@/hooks/useCheckinRealtime';
 import WelcomeCard from '@/components/WelcomeCard';
+import DamaInsightCard from '@/components/DamaInsightCard';
 
 /** Helper to convert DB row to CheckinData */
 function toCheckinData(c: any): CheckinData {
