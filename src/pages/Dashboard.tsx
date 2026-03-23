@@ -280,6 +280,8 @@ export default function Dashboard() {
   const criticalAction = pendingActions[0] ?? null;
   const nextActions = pendingActions.slice(1, 3);
 
+  // First access: no checkin today, no streak, no consolidated data
+  const isFirstAccess = !todayCheckin && streak === 0 && !consolidated;
   return (
     <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
       <EfficiencyBadgeModal />
