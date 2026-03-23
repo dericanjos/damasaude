@@ -312,11 +312,20 @@ export default function CheckinPage() {
     let submitData = { ...form };
 
     if (quickMode) {
+      const quickNoshows = quickHasNoShow ? ((lastCheckin as any)?.noshows_private || (lastCheckin as any)?.no_show || 1) : 0;
+      const quickEmpty = quickHasBuracos ? ((lastCheckin as any)?.empty_slots || 1) : 0;
+      // Use dailyCapacity as fallback when appointments_scheduled is 0
+      const quickScheduled = form.appointments_scheduled > 0 ? form.appointments_scheduled : dailyCapacity;
+      const quickAttended = Math.max(0, quickScheduled - quickNoshows - quickEmpty);
+
       submitData = {
         ...form,
-        noshows_private: quickHasNoShow ? ((lastCheckin as any)?.noshows_private || (lastCheckin as any)?.no_show || 1) : 0,
+        appointments_scheduled: quickScheduled,
+        attended_private: paymentType === 'convenio' ? 0 : (paymentType === 'particular' ? quickAttended : Math.ceil(quickAttended / 2)),
+        attended_insurance: paymentType === 'particular' ? 0 : (paymentType === 'convenio' ? quickAttended : Math.floor(quickAttended / 2)),
+        noshows_private: quickNoshows,
         noshows_insurance: 0,
-        empty_slots: quickHasBuracos ? ((lastCheckin as any)?.empty_slots || 1) : 0,
+        empty_slots: quickEmpty,
         followup_done: quickFollowup,
       };
     }
