@@ -655,12 +655,12 @@ export default function CheckinPage() {
                   Médicos parceiros da DAMA reduzem no-shows e buracos com processos comerciais validados em 90+ consultórios.
                 </p>
                 <a
-                  href="https://wa.me/5521959214292?text=Ol%C3%A1!%20Vim%20pelo%20app%20DAMA%20Sa%C3%BAde%20e%20quero%20saber%20como%20reduzir%20os%20vazamentos%20da%20minha%20agenda."
+                  href="https://parceria.damasecretariadomedico.com.br/processo-seletivo"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-xs text-[#D4AF37] font-semibold mt-2 hover:text-[#e0c04a] transition-colors"
                 >
-                  Quero um diagnóstico gratuito →
+                  Aplicar para parceria DAMA →
                 </a>
               </div>
             </div>

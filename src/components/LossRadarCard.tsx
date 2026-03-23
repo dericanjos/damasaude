@@ -1,14 +1,31 @@
 import { useLossRadar } from '@/hooks/useLossRadar';
 import { formatBRL } from '@/lib/revenue';
 import { AlertTriangle, TrendingDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
+const aplicacaoUrl = 'https://parceria.damasecretariadomedico.com.br/processo-seletivo';
 
 export default function LossRadarCard() {
   const { data: radar } = useLossRadar();
 
   if (!radar) return null;
 
-  // If there's a negative trend (30%+ increase), show alert card instead
+  const ctaBlock = radar.revenueLost7d > 1000 && (
+    <div className="mt-3 pt-3 border-t border-border/40">
+      <a
+        href={aplicacaoUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs text-[#D4AF37] font-semibold hover:text-[#e0c04a] transition-colors"
+      >
+        Aplicar para parceria DAMA →
+      </a>
+      <p className="text-[10px] text-muted-foreground mt-0.5">
+        Operação completa para sua clínica
+      </p>
+    </div>
+  );
+
+  // Negative trend alert card
   if (radar.worstTrend) {
     const trend = radar.worstTrend;
     const pct = Math.round(trend.percentChange);
@@ -31,21 +48,7 @@ export default function LossRadarCard() {
             </p>
           </div>
         </div>
-        {radar.revenueLost7d > 1000 && (
-          <div className="mt-3 pt-3 border-t border-border/40">
-            <a
-              href="https://wa.me/5521959214292?text=Ol%C3%A1!%20Vim%20pelo%20app%20DAMA%20Sa%C3%BAde%20e%20quero%20saber%20como%20reduzir%20os%20vazamentos%20da%20minha%20agenda."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-[#D4AF37] font-semibold hover:text-[#e0c04a] transition-colors"
-            >
-              Agendar diagnóstico gratuito →
-            </a>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              30 min sem compromisso com a equipe DAMA
-            </p>
-          </div>
-        )}
+        {ctaBlock}
       </div>
     );
   }
@@ -67,21 +70,7 @@ export default function LossRadarCard() {
           </p>
         </div>
       </div>
-      {radar.revenueLost7d > 1000 && (
-        <div className="mt-3 pt-3 border-t border-border/40">
-          <a
-            href="https://wa.me/5521959214292?text=Ol%C3%A1!%20Vim%20pelo%20app%20DAMA%20Sa%C3%BAde%20e%20quero%20saber%20como%20reduzir%20os%20vazamentos%20da%20minha%20agenda."
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-[#D4AF37] font-semibold hover:text-[#e0c04a] transition-colors"
-          >
-            Agendar diagnóstico gratuito →
-          </a>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
-            30 min sem compromisso com a equipe DAMA
-          </p>
-        </div>
-      )}
+      {ctaBlock}
     </div>
   );
 }
