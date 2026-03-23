@@ -559,6 +559,15 @@ export default function CheckinPage() {
             </p>
           </div>
         )}
+
+        {/* Variable reward */}
+        <RewardSurprise
+          score={reward.score}
+          streak={newStreak}
+          lost={reward.lost}
+          yesterdayScore={null}
+        />
+
         <p className="text-xs text-muted-foreground text-center">
           Você acaba de transformar dados em inteligência. Consistência é a chave para a previsibilidade.
         </p>
