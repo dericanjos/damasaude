@@ -400,7 +400,7 @@ export default function Dashboard() {
       )}
 
       {/* Single location mode: original check-in prompt */}
-      {(selectedLocationId || locations.length <= 1) && todayScore == null && (
+      {!isFirstAccess && (selectedLocationId || locations.length <= 1) && todayScore == null && (
         <button
           onClick={() => navigate('/checkin')}
           className="w-full rounded-2xl gradient-primary p-5 text-left shadow-premium transition-transform active:scale-[0.99]"
