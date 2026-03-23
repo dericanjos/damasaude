@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { SubscriptionProvider, useSubscription } from "@/hooks/useSubscription";
 import { useOnboardingStatus } from "@/hooks/useOnboarding";
 import { LocationFilterProvider } from "@/hooks/useLocationFilter";
+import { useHasSeenVerseToday } from "@/hooks/useVerseSeen";
 import AppLayout from "@/components/AppLayout";
 import AuthPage from "@/pages/AuthPage";
 import Dashboard from "@/pages/Dashboard";
@@ -25,17 +26,12 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function hasSeenVerseToday(): boolean {
-  const seen = localStorage.getItem('verse_seen_date');
-  if (!seen) return false;
-  return seen === new Date().toISOString().slice(0, 10);
-}
-
 function ProtectedRoutes() {
   const { user, loading } = useAuth();
   const { data: onboardingCompleted, isLoading } = useOnboardingStatus();
+  const { hasSeen: verseSeenToday, isLoading: verseLoading } = useHasSeenVerseToday();
   
-  if (loading || isLoading) return null;
+  if (loading || isLoading || verseLoading) return null;
   
   if (!user) return <Navigate to="/auth" replace />;
   
@@ -43,8 +39,7 @@ function ProtectedRoutes() {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Redirect to verse if not seen today
-  if (!hasSeenVerseToday()) {
+  if (!verseSeenToday) {
     return <Navigate to="/versiculo" replace />;
   }
 

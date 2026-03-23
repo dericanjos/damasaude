@@ -28,8 +28,10 @@ export default function VersePage() {
     fetchVerse();
   }, []);
 
+  const markSeen = useMarkVerseSeen();
+
   const handleContinue = () => {
-    localStorage.setItem('verse_seen_date', new Date().toISOString().slice(0, 10));
+    markSeen.mutate();
     navigate('/', { replace: true });
   };
 

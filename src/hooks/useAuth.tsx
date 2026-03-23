@@ -34,17 +34,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Clear session on browser close if "keep logged in" is unchecked
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (localStorage.getItem('keep_logged_in') === 'false') {
-        supabase.auth.signOut();
-      }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
-
   const signUp = async (email: string, password: string, doctorName: string, clinicName: string, targetFillRate = 0.85, targetNoshowRate = 0.05) => {
     const { data, error } = await supabase.auth.signUp({
       email,

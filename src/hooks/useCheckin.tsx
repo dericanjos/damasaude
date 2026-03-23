@@ -212,6 +212,9 @@ export function useSaveCheckin() {
       insight_text?: string;
     }) => {
       if (!user || !clinic) throw new Error('Not authenticated');
+      if (!checkin.location_id) {
+        throw new Error('Location ID é obrigatório para salvar o check-in.');
+      }
       const today = format(new Date(), 'yyyy-MM-dd');
 
       const { data, error } = await supabase
