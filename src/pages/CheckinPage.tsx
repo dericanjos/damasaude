@@ -194,7 +194,7 @@ export default function CheckinPage() {
   }, [existingProtocols.length, existing?.id]);
 
   const paymentType = (clinic as any)?.payment_type ?? 'ambos';
-  const [quickMode, setQuickMode] = useState(false);
+  const [quickMode, setQuickMode] = useState(true);
   const [quickHasBuracos, setQuickHasBuracos] = useState(false);
   const [quickHasNoShow, setQuickHasNoShow] = useState(false);
   const [quickFollowup, setQuickFollowup] = useState(false);
@@ -1029,8 +1029,8 @@ export default function CheckinPage() {
         <div className="flex items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
           <div>
-            <p className="text-sm font-semibold text-foreground">Ativar modo ultra-rápido (10s)</p>
-            <p className="text-xs text-muted-foreground">Apenas 3 perguntas</p>
+            <p className="text-sm font-semibold text-foreground">Modo rápido</p>
+            <p className="text-xs text-muted-foreground">3 perguntas essenciais. Desative para modo detalhado.</p>
           </div>
         </div>
         <Switch checked={quickMode} onCheckedChange={setQuickMode} />
