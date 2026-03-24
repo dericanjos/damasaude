@@ -17,10 +17,10 @@ export default function LossRadarCard() {
         rel="noopener noreferrer"
         className="text-xs text-[#D4AF37] font-semibold hover:text-[#e0c04a] transition-colors"
       >
-        Aplicar para parceria DAMA →
+        Agendar diagnóstico gratuito →
       </a>
       <p className="text-[10px] text-muted-foreground mt-0.5">
-        Operação completa para sua clínica
+        30 min sem compromisso com a equipe DAMA
       </p>
     </div>
   );
