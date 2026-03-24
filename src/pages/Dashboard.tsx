@@ -120,9 +120,18 @@ export default function Dashboard() {
     return locations.filter(l => ids.has(l.id));
   }, [locations, allSchedules, todayWeekday]);
 
-  const totalLocationsToday = locationsWithScheduleToday.length > 0
-    ? locationsWithScheduleToday.length
-    : locations.length; // fallback: all active
+  const totalLocationsToday = useMemo(() => {
+    const scheduledIds = new Set(
+      allSchedules
+        .filter(s => s.weekday === todayWeekday && s.is_active)
+        .map(s => s.location_id)
+    );
+    const checkedIds = new Set(
+      allTodayCheckins.map((c: any) => c.location_id).filter(Boolean)
+    );
+    const unionIds = new Set([...scheduledIds, ...checkedIds]);
+    return Math.max(unionIds.size, locationsWithScheduleToday.length > 0 ? locationsWithScheduleToday.length : locations.length);
+  }, [allSchedules, todayWeekday, allTodayCheckins, locationsWithScheduleToday, locations]);
 
   const checkedInLocationIds = useMemo(() => {
     return new Set(allTodayCheckins.map((c: any) => c.location_id).filter(Boolean));

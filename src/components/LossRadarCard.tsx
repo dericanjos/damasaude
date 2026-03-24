@@ -2,7 +2,7 @@ import { useLossRadar } from '@/hooks/useLossRadar';
 import { formatBRL } from '@/lib/revenue';
 import { AlertTriangle, TrendingDown } from 'lucide-react';
 
-const aplicacaoUrl = 'https://parceria.damasecretariadomedico.com.br/processo-seletivo';
+const whatsappUrl = 'https://wa.me/5521959214292?text=Ol%C3%A1!%20Vim%20pelo%20app%20DAMA%20Sa%C3%BAde%20e%20quero%20saber%20como%20reduzir%20os%20vazamentos%20da%20minha%20agenda.';
 
 export default function LossRadarCard() {
   const { data: radar } = useLossRadar();
@@ -12,15 +12,15 @@ export default function LossRadarCard() {
   const ctaBlock = radar.revenueLost7d > 1000 && (
     <div className="mt-3 pt-3 border-t border-border/40">
       <a
-        href={aplicacaoUrl}
+        href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="text-xs text-[#D4AF37] font-semibold hover:text-[#e0c04a] transition-colors"
       >
-        Aplicar para parceria DAMA →
+        Agendar diagnóstico gratuito →
       </a>
       <p className="text-[10px] text-muted-foreground mt-0.5">
-        Operação completa para sua clínica
+        30 min sem compromisso com a equipe DAMA
       </p>
     </div>
   );
