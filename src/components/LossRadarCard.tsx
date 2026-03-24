@@ -2,7 +2,7 @@ import { useLossRadar } from '@/hooks/useLossRadar';
 import { formatBRL } from '@/lib/revenue';
 import { AlertTriangle, TrendingDown } from 'lucide-react';
 
-const aplicacaoUrl = 'https://parceria.damasecretariadomedico.com.br/processo-seletivo';
+const whatsappUrl = 'https://wa.me/5521959214292?text=Ol%C3%A1!%20Vim%20pelo%20app%20DAMA%20Sa%C3%BAde%20e%20quero%20saber%20como%20reduzir%20os%20vazamentos%20da%20minha%20agenda.';
 
 export default function LossRadarCard() {
   const { data: radar } = useLossRadar();
