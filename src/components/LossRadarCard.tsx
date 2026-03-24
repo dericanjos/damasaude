@@ -12,7 +12,7 @@ export default function LossRadarCard() {
   const ctaBlock = radar.revenueLost7d > 1000 && (
     <div className="mt-3 pt-3 border-t border-border/40">
       <a
-        href={aplicacaoUrl}
+        href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="text-xs text-[#D4AF37] font-semibold hover:text-[#e0c04a] transition-colors"
