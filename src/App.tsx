@@ -22,6 +22,7 @@ import OnboardingPage from "@/pages/OnboardingPage";
 import VersePage from "@/pages/VersePage";
 import MedicalNewsPage from "@/pages/MedicalNewsPage";
 import IdeaPage from "@/pages/IdeaPage";
+import CalculadoraPage from "@/pages/CalculadoraPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -108,6 +109,7 @@ const App = () => {
                 <Route path="/versiculo" element={<VerseRoute />} />
                 <Route path="/assinatura" element={<SubscriptionRoute />} />
                 <Route path="/institucional" element={<InstitucionalPage />} />
+                <Route path="/calculadora" element={<CalculadoraPage />} />
                 <Route path="/*" element={<ProtectedRoutes />} />
               </Routes>
               </LocationFilterProvider>

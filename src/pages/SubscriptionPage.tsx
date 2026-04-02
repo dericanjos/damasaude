@@ -85,7 +85,7 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
             {reasonInfo ? reasonInfo.title : 'Comece a transformar sua clínica'}
           </h1>
           <p className="text-white/70 text-sm">
-            {reasonInfo ? reasonInfo.description : 'Teste grátis por 15 dias. Sem compromisso.'}
+            {reasonInfo ? reasonInfo.description : 'Teste grátis por 21 dias. Sem compromisso.'}
           </p>
         </div>
 
@@ -112,7 +112,7 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
 
             <div className="rounded-xl bg-white/10 p-4 text-center">
               <div className="flex items-baseline justify-center gap-1">
-                <span className="text-3xl font-bold text-white">R$ 29,90</span>
+                <span className="text-3xl font-bold text-white">R$ 47,90</span>
                 <span className="text-sm text-white/60">/mês</span>
               </div>
             </div>
@@ -134,13 +134,13 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
                 size="lg"
               >
                 <Sparkles className="h-5 w-5 mr-2" />
-                {loading ? 'Redirecionando...' : 'Começar 15 dias grátis'}
+                {loading ? 'Redirecionando...' : 'Começar 21 dias grátis'}
               </Button>
             )}
 
             {!(reason === 'vencido' || reason === 'cancelado') && (
               <p className="text-center text-xs text-white/50 leading-relaxed">
-                Você terá 15 dias de acesso grátis. Depois, será cobrado R$ 29,90/mês.
+                Você terá 21 dias de acesso grátis. Depois, será cobrado R$ 47,90/mês.
                 Você pode cancelar a qualquer momento.
               </p>
             )}
