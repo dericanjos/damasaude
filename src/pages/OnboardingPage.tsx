@@ -164,6 +164,8 @@ export default function OnboardingPage() {
           email: user.email ?? null,
           onboarding_completed: true,
           display_name: doctorName,
+          source: source || null,
+          referral_code_used: referralCode.trim() || null,
         } as any,
         { onConflict: 'user_id' }
       );
