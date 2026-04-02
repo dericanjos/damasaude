@@ -112,7 +112,7 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
 
             <div className="rounded-xl bg-white/10 p-4 text-center">
               <div className="flex items-baseline justify-center gap-1">
-                <span className="text-3xl font-bold text-white">R$ 29,90</span>
+                <span className="text-3xl font-bold text-white">R$ 47,90</span>
                 <span className="text-sm text-white/60">/mês</span>
               </div>
             </div>
