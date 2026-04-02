@@ -134,7 +134,7 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
                 size="lg"
               >
                 <Sparkles className="h-5 w-5 mr-2" />
-                {loading ? 'Redirecionando...' : 'Começar 15 dias grátis'}
+                {loading ? 'Redirecionando...' : 'Começar 21 dias grátis'}
               </Button>
             )}
 
