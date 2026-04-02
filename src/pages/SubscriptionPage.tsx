@@ -140,7 +140,7 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
 
             {!(reason === 'vencido' || reason === 'cancelado') && (
               <p className="text-center text-xs text-white/50 leading-relaxed">
-                Você terá 15 dias de acesso grátis. Depois, será cobrado R$ 29,90/mês.
+                Você terá 21 dias de acesso grátis. Depois, será cobrado R$ 47,90/mês.
                 Você pode cancelar a qualquer momento.
               </p>
             )}

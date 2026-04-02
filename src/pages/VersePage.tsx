@@ -30,8 +30,12 @@ export default function VersePage() {
 
   const markSeen = useMarkVerseSeen();
 
-  const handleContinue = () => {
-    markSeen.mutate();
+  const handleContinue = async () => {
+    try {
+      await markSeen.mutateAsync();
+    } catch {
+      // Se falhar, continua mesmo assim para não travar o médico
+    }
     navigate('/', { replace: true });
   };
 
