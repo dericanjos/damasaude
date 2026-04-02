@@ -266,6 +266,31 @@ export default function OnboardingPage() {
               </div>
               <Switch checked={hasSecretary} onCheckedChange={setHasSecretary} />
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Como conheceu o DAMA?</Label>
+              <Select value={source} onValueChange={setSource}>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="instagram">Instagram</SelectItem>
+                  <SelectItem value="indicacao">Indicação de colega</SelectItem>
+                  <SelectItem value="influenciador">Influenciador</SelectItem>
+                  <SelectItem value="google">Google / App Store</SelectItem>
+                  <SelectItem value="evento">Evento / Congresso</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">Opcional. Nos ajuda a melhorar o produto.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Código de convite (opcional)</Label>
+              <Input
+                value={referralCode}
+                onChange={e => setReferralCode(e.target.value.toUpperCase())}
+                placeholder="Ex: DAMA-DRSILVA-A1B2"
+                className="rounded-xl"
+              />
+              <p className="text-[11px] text-muted-foreground">Se um colega te indicou, insira o código aqui.</p>
+            </div>
           </div>
         )}
 
