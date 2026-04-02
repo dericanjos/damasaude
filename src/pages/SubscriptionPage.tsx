@@ -85,7 +85,7 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
             {reasonInfo ? reasonInfo.title : 'Comece a transformar sua clínica'}
           </h1>
           <p className="text-white/70 text-sm">
-            {reasonInfo ? reasonInfo.description : 'Teste grátis por 15 dias. Sem compromisso.'}
+            {reasonInfo ? reasonInfo.description : 'Teste grátis por 21 dias. Sem compromisso.'}
           </p>
         </div>
 
