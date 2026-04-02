@@ -47,6 +47,8 @@ export default function OnboardingPage() {
   const [specialty, setSpecialty] = useState('');
   const [paymentType, setPaymentType] = useState('ambos');
   const [hasSecretary, setHasSecretary] = useState(false);
+  const [source, setSource] = useState('');
+  const [referralCode, setReferralCode] = useState('');
 
   // Step 2
   const [clinicName, setClinicName] = useState('');
