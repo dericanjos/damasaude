@@ -2,14 +2,20 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useMarkVerseSeen } from '@/hooks/useVerseSeen';
+import { useAuth } from '@/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
 import logoDama from '@/assets/logo-dama.png';
+import { format } from 'date-fns';
 
 export default function VersePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const today = format(new Date(), 'yyyy-MM-dd');
   const [verse, setVerse] = useState<{ verse_text: string; verse_reference: string } | null>(null);
   const [error, setError] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -36,6 +42,7 @@ export default function VersePage() {
     } catch {
       // Se falhar, continua mesmo assim para não travar o médico
     }
+    queryClient.setQueryData(['verse-seen', user?.id, today], true);
     navigate('/', { replace: true });
   };
 

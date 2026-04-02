@@ -32,13 +32,15 @@ function ProtectedRoutes() {
   const { data: onboardingCompleted, isLoading } = useOnboardingStatus();
   const { hasSeen: verseSeenToday, isLoading: verseLoading } = useHasSeenVerseToday();
   
-  if (loading || isLoading || verseLoading) return null;
+  if (loading || isLoading) return null;
   
   if (!user) return <Navigate to="/auth" replace />;
   
   if (onboardingCompleted === false) {
     return <Navigate to="/onboarding" replace />;
   }
+
+  if (verseLoading) return null;
 
   if (!verseSeenToday) {
     return <Navigate to="/versiculo" replace />;
