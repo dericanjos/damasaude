@@ -1,0 +1,2 @@
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS source TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS referral_code_used TEXT;

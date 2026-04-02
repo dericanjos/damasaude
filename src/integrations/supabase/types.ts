@@ -673,6 +673,8 @@ export type Database = {
           email: string | null
           has_efficiency_badge: boolean
           onboarding_completed: boolean
+          referral_code_used: string | null
+          source: string | null
           stripe_customer_id: string | null
           subscription_status: string
           user_id: string
@@ -687,6 +689,8 @@ export type Database = {
           email?: string | null
           has_efficiency_badge?: boolean
           onboarding_completed?: boolean
+          referral_code_used?: string | null
+          source?: string | null
           stripe_customer_id?: string | null
           subscription_status?: string
           user_id: string
@@ -701,6 +705,8 @@ export type Database = {
           email?: string | null
           has_efficiency_badge?: boolean
           onboarding_completed?: boolean
+          referral_code_used?: string | null
+          source?: string | null
           stripe_customer_id?: string | null
           subscription_status?: string
           user_id?: string
