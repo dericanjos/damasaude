@@ -109,6 +109,7 @@ const App = () => {
                 <Route path="/versiculo" element={<VerseRoute />} />
                 <Route path="/assinatura" element={<SubscriptionRoute />} />
                 <Route path="/institucional" element={<InstitucionalPage />} />
+                <Route path="/calculadora" element={<CalculadoraPage />} />
                 <Route path="/*" element={<ProtectedRoutes />} />
               </Routes>
               </LocationFilterProvider>
