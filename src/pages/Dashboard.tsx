@@ -39,7 +39,10 @@ import WelcomeCard from '@/components/WelcomeCard';
 import DamaInsightCard from '@/components/DamaInsightCard';
 import UpsellCard from '@/components/UpsellCard';
 import NPSModal from '@/components/NPSModal';
+import FeedbackModal from '@/components/FeedbackModal';
+import FounderBadge from '@/components/FounderBadge';
 import { useQuery } from '@tanstack/react-query';
+import { MessageCircle } from 'lucide-react';
 
 /** Helper to convert DB row to CheckinData */
 function toCheckinData(c: any): CheckinData {
