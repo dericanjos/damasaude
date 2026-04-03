@@ -57,6 +57,7 @@ function ProtectedRoutes() {
         <Route path="/motivos" element={<LossReasonsPage />} />
         <Route path="/relatorio" element={<WeeklyReportPage />} />
         <Route path="/insights" element={<InsightsPage />} />
+        <Route path="/indicar" element={<ReferralPage />} />
         <Route path="/config" element={<SettingsPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
