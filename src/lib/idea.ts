@@ -269,8 +269,6 @@ export function generateActions(
   const sec = hasSecretary;
   const lossMap = calculateLossMap(data, ticketPrivate, ticketInsurance, ticketAvg);
   const noshows = totalNoshows(data);
-  const isCritical = ideaScore < 70;
-  const cta = isCritical ? CTA_DAMA : '';
 
   const candidates: (ActionRule & { lossValue: number; priority: number })[] = [];
 
