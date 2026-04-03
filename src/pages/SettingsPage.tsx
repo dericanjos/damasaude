@@ -273,6 +273,19 @@ export default function SettingsPage() {
   const { data: locations = [], refetch: refetchLocations } = useLocations();
   const updateLocation = useUpdateLocation();
   const [portalLoading, setPortalLoading] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  // Profile tier
+  const { data: profileData } = useQuery({
+    queryKey: ['profile-tier', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase.from('profiles').select('tier').eq('user_id', user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+  const tier = (profileData as any)?.tier || 'standard';
 
   // Profile fields
   const [doctorName, setDoctorName] = useState('');
