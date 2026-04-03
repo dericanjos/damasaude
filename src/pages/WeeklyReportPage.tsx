@@ -170,7 +170,7 @@ export default function WeeklyReportPage() {
   }, [isConsolidated, locations, allSchedules, allCheckins, locationWorkingDaysCount, workingDays.length]);
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
+    <div className="mx-auto max-w-lg px-4 py-5 space-y-4 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl gradient-primary shadow-premium">

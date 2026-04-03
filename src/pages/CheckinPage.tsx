@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import RewardSurprise from '@/components/RewardSurprise';
+// fade-in applied in container
 
 type FormData = {
   appointments_scheduled: number;

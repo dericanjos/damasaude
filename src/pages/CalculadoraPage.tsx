@@ -41,7 +41,7 @@ export default function CalculadoraPage() {
         </button>
       </div>
 
-      <div className="mx-auto max-w-lg px-5 pb-16">
+      <div className="mx-auto max-w-lg px-5 pb-16 animate-fade-in">
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <img src={logoDama} alt="DAMA" className="h-10 object-contain" />

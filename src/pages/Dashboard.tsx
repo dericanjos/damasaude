@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ChevronDown, Info, MapPin } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -65,8 +66,8 @@ export default function Dashboard() {
   const { data: clinic } = useClinic();
   const { selectedLocationId } = useLocationFilter();
   const locations = useActiveLocations();
-  const { data: todayCheckin } = useTodayCheckin(selectedLocationId || undefined);
-  const { data: allTodayCheckins = [] } = useTodayCheckins();
+  const { data: todayCheckin, isLoading: checkinLoading } = useTodayCheckin(selectedLocationId || undefined);
+  const { data: allTodayCheckins = [], isLoading: allCheckinsLoading } = useTodayCheckins();
   const { data: yesterdayCheckin } = useYesterdayCheckin(selectedLocationId || undefined);
   const { data: actions = [] } = useTodayActions(selectedLocationId);
   const completeAction = useCompleteAction();
@@ -343,7 +344,7 @@ export default function Dashboard() {
     if (shouldShowNPS && !showNPS) setShowNPS(true);
   }, [shouldShowNPS]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
+    <div className="mx-auto max-w-lg px-4 py-5 space-y-4 animate-fade-in">
       <EfficiencyBadgeModal />
       {/* Header */}
       <div className="flex items-center justify-between pt-1">
@@ -353,8 +354,10 @@ export default function Dashboard() {
             {(profile as any)?.tier === 'founder' && <FounderBadge size="sm" />}
            </h1>
           <p className="text-sm text-muted-foreground">Visão do dia</p>
-          <p className="text-xs text-muted-foreground/70 capitalize">
-            {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+          <p className="text-xs text-muted-foreground/70">
+            {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })
+              .replace(/^./, c => c.toUpperCase())
+              .replace(/-\w/g, m => m.toLowerCase())}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -663,6 +666,35 @@ export default function Dashboard() {
             <p className="text-[10px] text-muted-foreground/70">Índice DAMA de Eficiência do Atendimento</p>
           </button>
         </div>
+      )}
+      {/* Loading skeletons for metric cards */}
+      {!isFirstAccess && !displayRevenue && (checkinLoading || allCheckinsLoading) && (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+            <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-2">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-8 w-14" />
+              <Skeleton className="h-1.5 w-full rounded-full" />
+            </div>
+            <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-2">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-8 w-14" />
+              <Skeleton className="h-1.5 w-full rounded-full" />
+            </div>
+          </div>
+        </>
       )}
       {displayRevenue && (
         <div className="grid grid-cols-2 gap-3">
