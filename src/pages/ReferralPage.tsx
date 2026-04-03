@@ -62,6 +62,22 @@ export default function ReferralPage() {
           completed: allRefs.filter((r: any) => r.status === 'completed').length,
         });
       }
+
+      // Check founder status
+      const { data: profileRow } = await supabase
+        .from('profiles')
+        .select('tier')
+        .eq('user_id', user.id)
+        .maybeSingle() as any;
+      setIsFounder((profileRow as any)?.tier === 'founder');
+
+      // Count total founders
+      const { count } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('tier', 'founder') as any;
+      setFounderCount(count || 0);
+
       setLoading(false);
     })();
   }, [user, clinic]);
