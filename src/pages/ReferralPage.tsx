@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Copy, MessageCircle, ArrowLeft, Users, UserCheck } from 'lucide-react';
+import { Copy, MessageCircle, ArrowLeft, Users, UserCheck, Crown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useClinic } from '@/hooks/useClinic';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import logoDama from '@/assets/logo-dama.png';
+import FounderBadge from '@/components/FounderBadge';
 
 function generateCode(doctorName: string): string {
   const clean = (doctorName || 'MEDICO').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5);
