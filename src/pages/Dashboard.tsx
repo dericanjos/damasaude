@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ChevronDown, Info, MapPin } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
