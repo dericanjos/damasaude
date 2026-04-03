@@ -268,6 +268,7 @@ function LocationEditDialog({
 
 
 export default function SettingsPage() {
+  const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { data: clinic } = useClinic();
   const updateClinic = useUpdateClinic();
