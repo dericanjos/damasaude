@@ -107,12 +107,12 @@ export default function CalculadoraPage() {
                 className="w-full h-12 rounded-xl bg-primary text-white font-semibold text-base"
                 size="lg"
               >
-                Comece grátis por 21 dias →
+                Comece a monitorar sua clínica →
               </Button>
               <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
                 <Button variant="outline" className="w-full h-11 rounded-xl border-white/20 text-white/80 hover:text-white" size="lg">
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  Falar com a equipe DAMA pelo WhatsApp
+                  Falar com um especialista
                 </Button>
               </a>
             </div>

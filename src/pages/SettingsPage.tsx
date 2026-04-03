@@ -619,6 +619,20 @@ export default function SettingsPage() {
 
       <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
 
+      {/* About DAMA */}
+      <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
+        <button
+          onClick={() => navigate('/institucional')}
+          className="flex items-center gap-3 w-full text-left"
+        >
+          <Building className="h-4 w-4 text-muted-foreground" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">Sobre a DAMA</p>
+            <p className="text-xs text-muted-foreground">Conheça nossos serviços</p>
+          </div>
+        </button>
+      </div>
+
       <Button
         variant="outline"
         className="w-full rounded-xl border-destructive/30 text-destructive hover:bg-destructive/5"
