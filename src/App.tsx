@@ -23,6 +23,7 @@ import VersePage from "@/pages/VersePage";
 import MedicalNewsPage from "@/pages/MedicalNewsPage";
 import IdeaPage from "@/pages/IdeaPage";
 import CalculadoraPage from "@/pages/CalculadoraPage";
+import ReferralPage from "@/pages/ReferralPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ function ProtectedRoutes() {
         <Route path="/motivos" element={<LossReasonsPage />} />
         <Route path="/relatorio" element={<WeeklyReportPage />} />
         <Route path="/insights" element={<InsightsPage />} />
+        <Route path="/indicar" element={<ReferralPage />} />
         <Route path="/config" element={<SettingsPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

@@ -171,6 +171,23 @@ export default function OnboardingPage() {
       );
       if (profileError) throw profileError;
 
+      // M8: Link referral code if provided
+      if (referralCode.trim()) {
+        const { data: referral } = await supabase
+          .from('referrals')
+          .select('id')
+          .eq('code', referralCode.trim().toUpperCase())
+          .eq('status', 'pending')
+          .single() as any;
+
+        if (referral) {
+          await supabase
+            .from('referrals')
+            .update({ referred_id: user.id, status: 'completed' } as any)
+            .eq('id', referral.id);
+        }
+      }
+
       queryClient.setQueryData(['onboarding-status', user.id], true);
       await queryClient.invalidateQueries({ queryKey: ['onboarding-status', user.id] });
       setShowCompletion(true);

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ChevronDown, Info, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { useLatestMedicalNews, useMedicalNewsCount } from '@/hooks/useMedicalNews';
 import { useLatestNews } from '@/hooks/useNews';
 import { useEfficiencyBadge } from '@/hooks/useEfficiencyBadge';
@@ -36,6 +37,9 @@ import EfficiencyBadgeModal from '@/components/EfficiencyBadgeModal';
 import { useCheckinRealtime } from '@/hooks/useCheckinRealtime';
 import WelcomeCard from '@/components/WelcomeCard';
 import DamaInsightCard from '@/components/DamaInsightCard';
+import UpsellCard from '@/components/UpsellCard';
+import NPSModal from '@/components/NPSModal';
+import { useQuery } from '@tanstack/react-query';
 
 /** Helper to convert DB row to CheckinData */
 function toCheckinData(c: any): CheckinData {
@@ -79,6 +83,22 @@ export default function Dashboard() {
   const { data: protocolRevenue = 0 } = useTodayProtocolRevenue(todayCheckinIds);
 
   const [checkinCollapsed, setCheckinCollapsed] = useState(true);
+  const [showNPS, setShowNPS] = useState(false);
+
+  // Profile data for upsell/NPS
+  const { data: profile } = useQuery({
+    queryKey: ['profile-growth', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('upsell_dismissed_at, nps_prompted')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
 
   const doctorName = (clinic as any)?.doctor_name || user?.user_metadata?.doctor_name || '';
   const doctorGender = (clinic as any)?.doctor_gender || 'masculino';
@@ -292,6 +312,32 @@ export default function Dashboard() {
 
   // First access: no checkin today, no streak, no consolidated data
   const isFirstAccess = !todayCheckin && streak === 0 && !consolidated;
+
+  // M9: Upsell logic
+  const shouldShowUpsell = useMemo(() => {
+    if (profile?.upsell_dismissed_at) {
+      const dismissed = new Date(profile.upsell_dismissed_at as string);
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      if (dismissed > sevenDaysAgo) return false;
+    }
+    const lossTotal = displayRevenue?.lost || 0;
+    const noShowRate = displayRevenue?.noShowRate || 0;
+    return (
+      (todayScore != null && todayScore < 40) ||
+      lossTotal * 4 > 10000 ||
+      noShowRate > 0.20 ||
+      streak >= 14
+    );
+  }, [profile, displayRevenue, todayScore, streak]);
+
+  // M10: NPS trigger
+  const shouldShowNPS = streak >= 7 && profile?.nps_prompted === false;
+
+  // Auto-show NPS once
+  useEffect(() => {
+    if (shouldShowNPS && !showNPS) setShowNPS(true);
+  }, [shouldShowNPS]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
       <EfficiencyBadgeModal />
@@ -338,6 +384,9 @@ export default function Dashboard() {
           <p className="text-[11px] text-muted-foreground">Toque para ler e compartilhar</p>
         </div>
       </button>
+
+      {/* ── UPSELL CARD (conditional) ── */}
+      {shouldShowUpsell && todayScore != null && <UpsellCard />}
 
       {/* ── SUCCESS CHECKLIST (always first action) ── */}
       <SuccessChecklistCard />
@@ -812,6 +861,17 @@ export default function Dashboard() {
           </div>
         </button>
       )}
+
+      {/* ── REFERRAL LINK ── */}
+      <button
+        onClick={() => navigate('/indicar')}
+        className="w-full text-center py-2 text-sm text-[#D4AF37] hover:text-[#D4AF37]/80 transition-colors"
+      >
+        🎁 Indique colegas e ganhe destaque →
+      </button>
+
+      {/* ── NPS MODAL ── */}
+      <NPSModal open={showNPS} onClose={() => setShowNPS(false)} />
     </div>
   );
 }

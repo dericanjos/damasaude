@@ -662,6 +662,30 @@ export type Database = {
         }
         Relationships: []
       }
+      nps_responses: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          score: number
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           badge_lost_seen: boolean
@@ -672,11 +696,13 @@ export type Database = {
           display_name: string | null
           email: string | null
           has_efficiency_badge: boolean
+          nps_prompted: boolean | null
           onboarding_completed: boolean
           referral_code_used: string | null
           source: string | null
           stripe_customer_id: string | null
           subscription_status: string
+          upsell_dismissed_at: string | null
           user_id: string
         }
         Insert: {
@@ -688,11 +714,13 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           has_efficiency_badge?: boolean
+          nps_prompted?: boolean | null
           onboarding_completed?: boolean
           referral_code_used?: string | null
           source?: string | null
           stripe_customer_id?: string | null
           subscription_status?: string
+          upsell_dismissed_at?: string | null
           user_id: string
         }
         Update: {
@@ -704,11 +732,13 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           has_efficiency_badge?: boolean
+          nps_prompted?: boolean | null
           onboarding_completed?: boolean
           referral_code_used?: string | null
           source?: string | null
           stripe_customer_id?: string | null
           subscription_status?: string
+          upsell_dismissed_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -740,6 +770,33 @@ export type Database = {
           is_active?: boolean
           name?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          referred_id: string | null
+          referrer_id: string
+          status: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          referred_id?: string | null
+          referrer_id: string
+          status?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          referred_id?: string | null
+          referrer_id?: string
+          status?: string | null
         }
         Relationships: []
       }
