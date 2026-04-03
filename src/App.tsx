@@ -23,6 +23,7 @@ import VersePage from "@/pages/VersePage";
 import MedicalNewsPage from "@/pages/MedicalNewsPage";
 import IdeaPage from "@/pages/IdeaPage";
 import CalculadoraPage from "@/pages/CalculadoraPage";
+import ReferralPage from "@/pages/ReferralPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
