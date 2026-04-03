@@ -39,10 +39,10 @@ export default function UpsellCard({ onDismiss }: UpsellCardProps) {
         <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Parceria Premium</p>
       </div>
       <p className="text-sm font-semibold text-foreground">
-        Sua clínica precisa de mais do que métricas.
+        Seus números indicam oportunidade de crescimento
       </p>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        O IDEA Score mostra que seu comercial tem oportunidades que só um time dedicado resolve.
+        Clínicas com perfil semelhante ao seu costumam recuperar até 47% mais receita com acompanhamento especializado.
       </p>
       <div className="flex flex-col gap-2 pt-1">
         <Button
