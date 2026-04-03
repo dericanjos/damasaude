@@ -87,6 +87,7 @@ export default function Dashboard() {
 
   const [checkinCollapsed, setCheckinCollapsed] = useState(true);
   const [showNPS, setShowNPS] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   // Profile data for upsell/NPS
   const { data: profile } = useQuery({
