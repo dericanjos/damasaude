@@ -197,22 +197,22 @@ const NOSHOW_VARIANTS = [
 ];
 
 const CANCEL_VARIANTS = [
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Reagendar cancelamentos de hoje',
     description: sec
-      ? `${impacto} Uma prática comum: secretária oferece 2 datas alternativas por ligação. Se não reagendar, registre o motivo e acione lista de espera. ⏱ 10 min. ${cta}`
+      ? `${impacto} Uma prática comum: secretária oferece 2 datas alternativas por ligação. Se não reagendar, registre o motivo e acione lista de espera. ⏱ 10 min.`
       : `${impacto} Se fizer sentido: mande mensagem oferecendo 2 datas próximas. Quem não reagendar, registre o motivo para análise futura. ⏱ 5 min.`,
   }),
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Criar janela de reposição rápida',
     description: sec
-      ? `${impacto} Exemplo (adapte): secretária mantém bloco de 30 min no fim do expediente para encaixar reagendamentos do dia. Reduz perda sem comprometer a grade. ⏱ 5 min. ${cta}`
+      ? `${impacto} Exemplo (adapte): secretária mantém bloco de 30 min no fim do expediente para encaixar reagendamentos do dia. Reduz perda sem comprometer a grade. ⏱ 5 min.`
       : `${impacto} Opção simples: reserve 1-2 slots flexíveis na semana para absorver cancelamentos de última hora. Isso reduz buracos sem mexer na grade fixa. ⏱ 5 min.`,
   }),
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Mapear motivos de cancelamento',
     description: sec
-      ? `${impacto} Peça à secretária para registrar o motivo de cada cancelamento (custo, horário, urgência). Em 2 semanas você terá dados para ajustar. ⏱ 5 min. ${cta}`
+      ? `${impacto} Peça à secretária para registrar o motivo de cada cancelamento (custo, horário, urgência). Em 2 semanas você terá dados para ajustar. ⏱ 5 min.`
       : `${impacto} Anote o motivo de cada cancelamento — depois de alguns dias, padrões aparecem (ex.: horários, distância, custo). Isso direciona ajustes reais. ⏱ 3 min.`,
   }),
 ];
