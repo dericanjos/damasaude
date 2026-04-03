@@ -170,28 +170,28 @@ function dayVariant(): number {
 
 // ── Rotation pools ──
 const NOSHOW_VARIANTS = [
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Reforçar confirmações para amanhã',
     description: sec
-      ? `${impacto} Uma prática comum: secretária envia confirmação D-1 e, se não houver resposta em 2h, liga. Quem não confirmar = lista de espera. ⏱ 15 min. ${cta}`
+      ? `${impacto} Uma prática comum: secretária envia confirmação D-1 e, se não houver resposta em 2h, liga. Quem não confirmar = lista de espera. ⏱ 15 min.`
       : `${impacto} Se fizer sentido no seu fluxo: envie confirmação D-1 por mensagem. Sem resposta em 2h → "Posso liberar seu horário?". Sem OK → encaixe. ⏱ 10 min.`,
   }),
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Ativar lista de espera preventiva',
     description: sec
-      ? `${impacto} Exemplo (adapte): secretária monta lista de espera com 3-5 pacientes flexíveis e aciona assim que abrir vaga. Reduz perda sem esforço extra. ⏱ 10 min. ${cta}`
+      ? `${impacto} Exemplo (adapte): secretária monta lista de espera com 3-5 pacientes flexíveis e aciona assim que abrir vaga. Reduz perda sem esforço extra. ⏱ 10 min.`
       : `${impacto} Opção simples: mantenha 3-5 pacientes flexíveis em lista de espera. Quando alguém faltar, uma mensagem rápida já preenche. ⏱ 5 min.`,
   }),
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Revisar perfil de quem faltou',
     description: sec
-      ? `${impacto} Peça para a secretária anotar o perfil de quem faltou (horário, tipo de consulta). Em 1-2 semanas, você identifica padrões e pode ajustar a grade. ⏱ 5 min. ${cta}`
+      ? `${impacto} Peça para a secretária anotar o perfil de quem faltou (horário, tipo de consulta). Em 1-2 semanas, você identifica padrões e pode ajustar a grade. ⏱ 5 min.`
       : `${impacto} Anote rapidamente: quem faltou, horário, se era primeira vez. Padrões aparecem em poucos dias e permitem ajustes na agenda. ⏱ 5 min.`,
   }),
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Testar confirmação em etapas',
     description: sec
-      ? `${impacto} Se fizer sentido: secretária confirma D-2 por mensagem, D-1 por ligação curta. Dois pontos de contato reduzem faltas sem parecer insistente. ⏱ 15 min. ${cta}`
+      ? `${impacto} Se fizer sentido: secretária confirma D-2 por mensagem, D-1 por ligação curta. Dois pontos de contato reduzem faltas sem parecer insistente. ⏱ 15 min.`
       : `${impacto} Exemplo (adapte): D-2 envie lembrete automático; D-1, mensagem personalizada. Dois toques discretos reduzem faltas. ⏱ 10 min.`,
   }),
 ];
