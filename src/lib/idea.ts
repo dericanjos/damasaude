@@ -285,7 +285,7 @@ export function generateActions(
 
   if (data.cancellations > 0) {
     const impacto = `${data.cancellations} cancelamento${data.cancellations > 1 ? 's' : ''} = R$${lossMap.cancel} perdidos.`;
-    const v = pickVariant(CANCEL_VARIANTS)(sec, impacto, cta);
+    const v = pickVariant(CANCEL_VARIANTS)(sec, impacto);
     candidates.push({
       action_type: 'review_cancellations',
       ...v,
