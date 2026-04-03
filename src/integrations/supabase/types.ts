@@ -388,6 +388,33 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          page: string | null
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          page?: string | null
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          page?: string | null
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       location_financials: {
         Row: {
           id: string
@@ -702,6 +729,7 @@ export type Database = {
           source: string | null
           stripe_customer_id: string | null
           subscription_status: string
+          tier: string | null
           upsell_dismissed_at: string | null
           user_id: string
         }
@@ -720,6 +748,7 @@ export type Database = {
           source?: string | null
           stripe_customer_id?: string | null
           subscription_status?: string
+          tier?: string | null
           upsell_dismissed_at?: string | null
           user_id: string
         }
@@ -738,6 +767,7 @@ export type Database = {
           source?: string | null
           stripe_customer_id?: string | null
           subscription_status?: string
+          tier?: string | null
           upsell_dismissed_at?: string | null
           user_id?: string
         }
