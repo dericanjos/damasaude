@@ -17,6 +17,7 @@ import FeedbackModal from '@/components/FeedbackModal';
 import FounderBadge from '@/components/FounderBadge';
 import ProtocolManager from '@/components/ProtocolManager';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 import { DAY_KEYS, DAY_LABELS, DAY_SHORT_LABELS, parseDailyCapacities, type DailyCapacities } from '@/lib/days';
 
 const statusLabels: Record<string, string> = {
