@@ -218,22 +218,22 @@ const CANCEL_VARIANTS = [
 ];
 
 const SLOTS_VARIANTS = [
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Preencher buracos na agenda',
     description: sec
-      ? `${impacto} Uma prática comum: secretária aciona lista de espera agora e faz segunda rodada às 14h. Se sobrar vaga, antecipe retornos. ⏱ 20 min total. ${cta}`
+      ? `${impacto} Uma prática comum: secretária aciona lista de espera agora e faz segunda rodada às 14h. Se sobrar vaga, antecipe retornos. ⏱ 20 min total.`
       : `${impacto} Se fizer sentido: acione lista de espera agora. Segunda tentativa às 14h. Antecipe retornos se possível. ⏱ 10 min.`,
   }),
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Redistribuir horários ociosos',
     description: sec
-      ? `${impacto} Exemplo (adapte): secretária verifica se há pacientes de outros dias que podem antecipar. Redistribuir é mais eficiente que esperar encaixes. ⏱ 15 min. ${cta}`
+      ? `${impacto} Exemplo (adapte): secretária verifica se há pacientes de outros dias que podem antecipar. Redistribuir é mais eficiente que esperar encaixes. ⏱ 15 min.`
       : `${impacto} Opção: veja se algum paciente da semana pode antecipar para hoje. Às vezes o preenchimento mais fácil já está na sua própria agenda. ⏱ 10 min.`,
   }),
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Ajustar grade para evitar buracos',
     description: sec
-      ? `${impacto} Revise com a secretária: os buracos caem sempre no mesmo horário? Se sim, considere concentrar agenda ou oferecer esses slots para encaixe prioritário. ⏱ 10 min. ${cta}`
+      ? `${impacto} Revise com a secretária: os buracos caem sempre no mesmo horário? Se sim, considere concentrar agenda ou oferecer esses slots para encaixe prioritário. ⏱ 10 min.`
       : `${impacto} Observe: os buracos repetem no mesmo horário? Se sim, concentrar a agenda nesses períodos ou oferecer para encaixes pode resolver. ⏱ 5 min.`,
   }),
 ];
