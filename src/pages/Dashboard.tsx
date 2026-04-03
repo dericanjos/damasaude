@@ -39,7 +39,10 @@ import WelcomeCard from '@/components/WelcomeCard';
 import DamaInsightCard from '@/components/DamaInsightCard';
 import UpsellCard from '@/components/UpsellCard';
 import NPSModal from '@/components/NPSModal';
+import FeedbackModal from '@/components/FeedbackModal';
+import FounderBadge from '@/components/FounderBadge';
 import { useQuery } from '@tanstack/react-query';
+import { MessageCircle } from 'lucide-react';
 
 /** Helper to convert DB row to CheckinData */
 function toCheckinData(c: any): CheckinData {
@@ -84,6 +87,7 @@ export default function Dashboard() {
 
   const [checkinCollapsed, setCheckinCollapsed] = useState(true);
   const [showNPS, setShowNPS] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   // Profile data for upsell/NPS
   const { data: profile } = useQuery({
@@ -92,7 +96,7 @@ export default function Dashboard() {
       if (!user) return null;
       const { data } = await supabase
         .from('profiles')
-        .select('upsell_dismissed_at, nps_prompted')
+        .select('upsell_dismissed_at, nps_prompted, tier')
         .eq('user_id', user.id)
         .maybeSingle();
       return data;
@@ -344,8 +348,9 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between pt-1">
         <div>
-          <h1 className="text-xl font-bold text-foreground">
-            Olá, {nameAlreadyHasPrefix ? '' : `${prefix} `}{firstName} {hasBadge && <span title="Selo de Clínica Eficiente">🏅</span>} 👋
+          <h1 className="text-xl font-bold text-foreground flex items-center gap-2 flex-wrap">
+            <span>Olá, {nameAlreadyHasPrefix ? '' : `${prefix} `}{firstName} {hasBadge && <span title="Selo de Clínica Eficiente">🏅</span>} 👋</span>
+            {(profile as any)?.tier === 'founder' && <FounderBadge size="sm" />}
            </h1>
           <p className="text-sm text-muted-foreground">Visão do dia</p>
           <p className="text-xs text-muted-foreground/70 capitalize">
@@ -872,6 +877,20 @@ export default function Dashboard() {
 
       {/* ── NPS MODAL ── */}
       <NPSModal open={showNPS} onClose={() => setShowNPS(false)} />
+
+      {/* ── FEEDBACK MODAL ── */}
+      <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+
+      {/* ── FLOATING FEEDBACK BUTTON (after 3+ check-ins) ── */}
+      {streak >= 3 && (
+        <button
+          onClick={() => setFeedbackOpen(true)}
+          className="fixed bottom-20 right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border/60 shadow-elevated opacity-60 hover:opacity-100 transition-opacity"
+          title="Enviar feedback"
+        >
+          <MessageCircle className="h-4 w-4 text-muted-foreground" />
+        </button>
+      )}
     </div>
   );
 }

@@ -12,9 +12,12 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Settings, LogOut, CreditCard, ExternalLink, Percent, MapPin, Plus, Pencil, Bell } from 'lucide-react';
+import { Settings, LogOut, CreditCard, ExternalLink, Percent, MapPin, Plus, Pencil, Bell, MessageSquare, Crown } from 'lucide-react';
+import FeedbackModal from '@/components/FeedbackModal';
+import FounderBadge from '@/components/FounderBadge';
 import ProtocolManager from '@/components/ProtocolManager';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 import { DAY_KEYS, DAY_LABELS, DAY_SHORT_LABELS, parseDailyCapacities, type DailyCapacities } from '@/lib/days';
 
 const statusLabels: Record<string, string> = {
@@ -264,13 +267,26 @@ function LocationEditDialog({
 
 
 export default function SettingsPage() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const { data: clinic } = useClinic();
   const updateClinic = useUpdateClinic();
   const { subscriptionStatus, subscriptionEnd } = useSubscription();
   const { data: locations = [], refetch: refetchLocations } = useLocations();
   const updateLocation = useUpdateLocation();
   const [portalLoading, setPortalLoading] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  // Profile tier
+  const { data: profileData } = useQuery({
+    queryKey: ['profile-tier', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase.from('profiles').select('tier').eq('user_id', user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+  const tier = (profileData as any)?.tier || 'standard';
 
   // Profile fields
   const [doctorName, setDoctorName] = useState('');
@@ -374,13 +390,13 @@ export default function SettingsPage() {
         <h1 className="text-lg font-bold text-foreground">Configurações</h1>
       </div>
 
-      {/* Subscription */}
+      {/* Meu Plano */}
       <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
         <div className="px-4 pt-4 pb-3 border-b border-border/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm font-bold text-foreground">Plano</p>
+              <Crown className="h-4 w-4 text-[#D4AF37]" />
+              <p className="text-sm font-bold text-foreground">Meu Plano</p>
             </div>
             <Badge variant={statusVariants[subscriptionStatus] || 'outline'} className="text-[10px]">
               {statusLabels[subscriptionStatus] || subscriptionStatus}
@@ -388,6 +404,18 @@ export default function SettingsPage() {
           </div>
         </div>
         <div className="px-4 py-3 space-y-3">
+          {tier === 'founder' && (
+            <div className="flex items-center gap-2">
+              <FounderBadge />
+              <span className="text-sm text-muted-foreground">Acesso vitalício gratuito 👑</span>
+            </div>
+          )}
+          {tier === 'early' && (
+            <p className="text-sm text-muted-foreground">Early Adopter — R$19,90/mês (preço especial permanente)</p>
+          )}
+          {tier === 'standard' && (
+            <p className="text-sm text-muted-foreground">DAMA Saúde — R$47,90/mês</p>
+          )}
           {subscriptionEnd && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Fim do período</span>
@@ -575,6 +603,21 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Feedback */}
+      <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
+        <button
+          onClick={() => setFeedbackOpen(true)}
+          className="flex items-center gap-3 w-full text-left"
+        >
+          <MessageSquare className="h-4 w-4 text-primary" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">Reportar problema ou sugestão</p>
+            <p className="text-xs text-muted-foreground">Seu feedback nos ajuda a melhorar</p>
+          </div>
+        </button>
+      </div>
+
+      <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
 
       <Button
         variant="outline"

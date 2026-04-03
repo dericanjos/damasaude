@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Rocket } from 'lucide-react';
+import { Rocket, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 import logoDama from '@/assets/logo-dama.png';
 
@@ -199,16 +199,36 @@ export default function OnboardingPage() {
   };
 
   if (showCompletion) {
+    // All new users are founders for now
+    const isFounder = true;
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-background">
         <div className="animate-in fade-in zoom-in duration-500 flex flex-col items-center gap-4 text-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-            <Rocket className="h-10 w-10 text-primary" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">Tudo pronto!</h1>
-          <p className="text-muted-foreground max-w-xs">
-            Seu copiloto está pronto. Faça seu primeiro check-in!
-          </p>
+          {isFounder ? (
+            <>
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30">
+                <Crown className="h-10 w-10 text-[#D4AF37]" />
+              </div>
+              <h1 className="text-2xl font-bold text-foreground">Bem-vindo, Founder DAMA! 👑</h1>
+              <p className="text-muted-foreground max-w-xs">
+                Você é um dos 200 primeiros médicos a usar o DAMA Saúde. Seu acesso é gratuito — para sempre.
+              </p>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                Em troca, só pedimos sua opinião honesta e, se puder, indique colegas.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                <Rocket className="h-10 w-10 text-primary" />
+              </div>
+              <h1 className="text-2xl font-bold text-foreground">Tudo pronto!</h1>
+              <p className="text-muted-foreground max-w-xs">
+                Seu copiloto está pronto. Faça seu primeiro check-in!
+              </p>
+            </>
+          )}
           <p className="text-sm text-muted-foreground mt-3">
             Atende em mais de um local?{' '}
             <button onClick={() => navigate('/config')} className="text-primary font-semibold underline underline-offset-2">
@@ -216,7 +236,7 @@ export default function OnboardingPage() {
             </button>
           </p>
           <Button onClick={() => navigate('/', { replace: true })} className="mt-4 rounded-xl">
-            Ir para o Dashboard →
+            {isFounder ? 'Começar meu primeiro check-in →' : 'Ir para o Dashboard →'}
           </Button>
         </div>
       </div>

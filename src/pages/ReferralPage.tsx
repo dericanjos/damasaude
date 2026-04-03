@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Copy, MessageCircle, ArrowLeft, Users, UserCheck } from 'lucide-react';
+import { Copy, MessageCircle, ArrowLeft, Users, UserCheck, Crown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useClinic } from '@/hooks/useClinic';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import logoDama from '@/assets/logo-dama.png';
+import FounderBadge from '@/components/FounderBadge';
 
 function generateCode(doctorName: string): string {
   const clean = (doctorName || 'MEDICO').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5);
@@ -23,6 +24,8 @@ export default function ReferralPage() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, completed: 0 });
+  const [founderCount, setFounderCount] = useState(0);
+  const [isFounder, setIsFounder] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -59,6 +62,22 @@ export default function ReferralPage() {
           completed: allRefs.filter((r: any) => r.status === 'completed').length,
         });
       }
+
+      // Check founder status
+      const { data: profileRow } = await supabase
+        .from('profiles')
+        .select('tier')
+        .eq('user_id', user.id)
+        .maybeSingle() as any;
+      setIsFounder((profileRow as any)?.tier === 'founder');
+
+      // Count total founders
+      const { count } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('tier', 'founder') as any;
+      setFounderCount(count || 0);
+
       setLoading(false);
     })();
   }, [user, clinic]);
@@ -100,6 +119,23 @@ export default function ReferralPage() {
             Compartilhe o DAMA Saúde com médicos que precisam recuperar receita.
           </p>
         </div>
+
+        {/* Founder card */}
+        {isFounder && (
+          <div className="rounded-2xl bg-gradient-to-br from-[hsl(220,40%,12%)] to-[hsl(40,50%,15%)] border border-[#D4AF37]/30 p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-[#D4AF37]" />
+              <p className="text-base font-bold text-foreground">Você é Founder DAMA 👑</p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Como founder, você tem acesso vitalício gratuito ao DAMA Saúde.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Ajude a DAMA a crescer: indique colegas médicos.
+            </p>
+            <p className="text-xs text-[#D4AF37]/70">Vagas founder restantes: {Math.max(0, 200 - founderCount)}/200</p>
+          </div>
+        )}
 
         {/* Code card */}
         <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-6 text-center space-y-3">
