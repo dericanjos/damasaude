@@ -348,8 +348,9 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between pt-1">
         <div>
-          <h1 className="text-xl font-bold text-foreground">
-            Olá, {nameAlreadyHasPrefix ? '' : `${prefix} `}{firstName} {hasBadge && <span title="Selo de Clínica Eficiente">🏅</span>} 👋
+          <h1 className="text-xl font-bold text-foreground flex items-center gap-2 flex-wrap">
+            <span>Olá, {nameAlreadyHasPrefix ? '' : `${prefix} `}{firstName} {hasBadge && <span title="Selo de Clínica Eficiente">🏅</span>} 👋</span>
+            {(profile as any)?.tier === 'founder' && <FounderBadge size="sm" />}
            </h1>
           <p className="text-sm text-muted-foreground">Visão do dia</p>
           <p className="text-xs text-muted-foreground/70 capitalize">
