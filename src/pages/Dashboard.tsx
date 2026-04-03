@@ -334,10 +334,10 @@ export default function Dashboard() {
   // M10: NPS trigger
   const shouldShowNPS = streak >= 7 && profile?.nps_prompted === false;
 
-  // Auto-show NPS
-  useState(() => {
-    if (shouldShowNPS) setShowNPS(true);
-  });
+  // Auto-show NPS once
+  useEffect(() => {
+    if (shouldShowNPS && !showNPS) setShowNPS(true);
+  }, [shouldShowNPS]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
       <EfficiencyBadgeModal />
