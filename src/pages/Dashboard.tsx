@@ -36,6 +36,9 @@ import EfficiencyBadgeModal from '@/components/EfficiencyBadgeModal';
 import { useCheckinRealtime } from '@/hooks/useCheckinRealtime';
 import WelcomeCard from '@/components/WelcomeCard';
 import DamaInsightCard from '@/components/DamaInsightCard';
+import UpsellCard from '@/components/UpsellCard';
+import NPSModal from '@/components/NPSModal';
+import { useQuery } from '@tanstack/react-query';
 
 /** Helper to convert DB row to CheckinData */
 function toCheckinData(c: any): CheckinData {
