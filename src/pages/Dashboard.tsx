@@ -312,6 +312,32 @@ export default function Dashboard() {
 
   // First access: no checkin today, no streak, no consolidated data
   const isFirstAccess = !todayCheckin && streak === 0 && !consolidated;
+
+  // M9: Upsell logic
+  const shouldShowUpsell = useMemo(() => {
+    if (profile?.upsell_dismissed_at) {
+      const dismissed = new Date(profile.upsell_dismissed_at as string);
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      if (dismissed > sevenDaysAgo) return false;
+    }
+    const lossTotal = displayRevenue?.lost || 0;
+    const noShowRate = displayRevenue?.noShowRate || 0;
+    return (
+      (todayScore != null && todayScore < 40) ||
+      lossTotal * 4 > 10000 ||
+      noShowRate > 0.20 ||
+      streak >= 14
+    );
+  }, [profile, displayRevenue, todayScore, streak]);
+
+  // M10: NPS trigger
+  const shouldShowNPS = streak >= 7 && profile?.nps_prompted === false;
+
+  // Auto-show NPS
+  useState(() => {
+    if (shouldShowNPS) setShowNPS(true);
+  });
   return (
     <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
       <EfficiencyBadgeModal />
