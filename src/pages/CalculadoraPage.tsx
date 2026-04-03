@@ -7,7 +7,7 @@ import { ArrowLeft, Calculator, TrendingDown, MessageCircle } from 'lucide-react
 import logoDama from '@/assets/logo-dama.png';
 
 const WHATSAPP_URL =
-  'https://wa.me/5521959214292?text=Ol%C3%A1!%20Vim%20pela%20calculadora%20do%20app%20DAMA%20Sa%C3%BAde%20e%20quero%20saber%20como%20reduzir%20os%20vazamentos%20da%20minha%20agenda.';
+  'https://wa.me/5521959214292?text=Oi!%20Fiz%20um%20diagn%C3%B3stico%20no%20App%20DAMA%20Sa%C3%BAde%20e%20gostaria%20de%20entender%20melhor%20como%20otimizar%20minha%20cl%C3%ADnica.';
 
 export default function CalculadoraPage() {
   const navigate = useNavigate();
