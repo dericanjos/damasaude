@@ -877,6 +877,20 @@ export default function Dashboard() {
 
       {/* ── NPS MODAL ── */}
       <NPSModal open={showNPS} onClose={() => setShowNPS(false)} />
+
+      {/* ── FEEDBACK MODAL ── */}
+      <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+
+      {/* ── FLOATING FEEDBACK BUTTON (after 3+ check-ins) ── */}
+      {streak >= 3 && (
+        <button
+          onClick={() => setFeedbackOpen(true)}
+          className="fixed bottom-20 right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border/60 shadow-elevated opacity-60 hover:opacity-100 transition-opacity"
+          title="Enviar feedback"
+        >
+          <MessageCircle className="h-4 w-4 text-muted-foreground" />
+        </button>
+      )}
     </div>
   );
 }
