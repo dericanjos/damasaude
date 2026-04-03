@@ -274,7 +274,7 @@ export function generateActions(
 
   if (noshows > 0) {
     const impacto = `${noshows} falta${noshows > 1 ? 's' : ''} = R$${lossMap.noshow} perdidos.`;
-    const v = pickVariant(NOSHOW_VARIANTS)(sec, impacto, cta);
+    const v = pickVariant(NOSHOW_VARIANTS)(sec, impacto);
     candidates.push({
       action_type: 'map_noshow',
       ...v,
