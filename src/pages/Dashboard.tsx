@@ -353,8 +353,10 @@ export default function Dashboard() {
             {(profile as any)?.tier === 'founder' && <FounderBadge size="sm" />}
            </h1>
           <p className="text-sm text-muted-foreground">Visão do dia</p>
-          <p className="text-xs text-muted-foreground/70 capitalize">
-            {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+          <p className="text-xs text-muted-foreground/70">
+            {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })
+              .replace(/^./, c => c.toUpperCase())
+              .replace(/-\w/g, m => m.toLowerCase())}
           </p>
         </div>
         <div className="flex items-center gap-2">
