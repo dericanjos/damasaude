@@ -131,7 +131,7 @@ export default function ReferralPage() {
               Como founder, você tem acesso vitalício gratuito ao DAMA Saúde.
             </p>
             <p className="text-sm text-muted-foreground">
-              Ajude a DAMA a crescer: indique colegas médicos.
+              Ajude outros médicos a descobrirem essa ferramenta.
             </p>
             <p className="text-xs text-[#D4AF37]/70">Vagas founder restantes: {Math.max(0, 200 - founderCount)}/200</p>
           </div>

@@ -161,7 +161,7 @@ export function calculateLossMap(
   return { noshow, cancel, buracos, total, biggest };
 }
 
-const CTA_DAMA = 'Se quiser, a DAMA te entrega isso pronto com secretária e rotina montada.';
+// CTA removed — actions are 100% practical, no brand mentions
 
 /** Day-of-week index (0=Sun) used to rotate recommendation variants */
 function dayVariant(): number {
@@ -170,70 +170,70 @@ function dayVariant(): number {
 
 // ── Rotation pools ──
 const NOSHOW_VARIANTS = [
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Reforçar confirmações para amanhã',
     description: sec
-      ? `${impacto} Uma prática comum: secretária envia confirmação D-1 e, se não houver resposta em 2h, liga. Quem não confirmar = lista de espera. ⏱ 15 min. ${cta}`
+      ? `${impacto} Uma prática comum: secretária envia confirmação D-1 e, se não houver resposta em 2h, liga. Quem não confirmar = lista de espera. ⏱ 15 min.`
       : `${impacto} Se fizer sentido no seu fluxo: envie confirmação D-1 por mensagem. Sem resposta em 2h → "Posso liberar seu horário?". Sem OK → encaixe. ⏱ 10 min.`,
   }),
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Ativar lista de espera preventiva',
     description: sec
-      ? `${impacto} Exemplo (adapte): secretária monta lista de espera com 3-5 pacientes flexíveis e aciona assim que abrir vaga. Reduz perda sem esforço extra. ⏱ 10 min. ${cta}`
+      ? `${impacto} Exemplo (adapte): secretária monta lista de espera com 3-5 pacientes flexíveis e aciona assim que abrir vaga. Reduz perda sem esforço extra. ⏱ 10 min.`
       : `${impacto} Opção simples: mantenha 3-5 pacientes flexíveis em lista de espera. Quando alguém faltar, uma mensagem rápida já preenche. ⏱ 5 min.`,
   }),
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Revisar perfil de quem faltou',
     description: sec
-      ? `${impacto} Peça para a secretária anotar o perfil de quem faltou (horário, tipo de consulta). Em 1-2 semanas, você identifica padrões e pode ajustar a grade. ⏱ 5 min. ${cta}`
+      ? `${impacto} Peça para a secretária anotar o perfil de quem faltou (horário, tipo de consulta). Em 1-2 semanas, você identifica padrões e pode ajustar a grade. ⏱ 5 min.`
       : `${impacto} Anote rapidamente: quem faltou, horário, se era primeira vez. Padrões aparecem em poucos dias e permitem ajustes na agenda. ⏱ 5 min.`,
   }),
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Testar confirmação em etapas',
     description: sec
-      ? `${impacto} Se fizer sentido: secretária confirma D-2 por mensagem, D-1 por ligação curta. Dois pontos de contato reduzem faltas sem parecer insistente. ⏱ 15 min. ${cta}`
+      ? `${impacto} Se fizer sentido: secretária confirma D-2 por mensagem, D-1 por ligação curta. Dois pontos de contato reduzem faltas sem parecer insistente. ⏱ 15 min.`
       : `${impacto} Exemplo (adapte): D-2 envie lembrete automático; D-1, mensagem personalizada. Dois toques discretos reduzem faltas. ⏱ 10 min.`,
   }),
 ];
 
 const CANCEL_VARIANTS = [
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Reagendar cancelamentos de hoje',
     description: sec
-      ? `${impacto} Uma prática comum: secretária oferece 2 datas alternativas por ligação. Se não reagendar, registre o motivo e acione lista de espera. ⏱ 10 min. ${cta}`
+      ? `${impacto} Uma prática comum: secretária oferece 2 datas alternativas por ligação. Se não reagendar, registre o motivo e acione lista de espera. ⏱ 10 min.`
       : `${impacto} Se fizer sentido: mande mensagem oferecendo 2 datas próximas. Quem não reagendar, registre o motivo para análise futura. ⏱ 5 min.`,
   }),
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Criar janela de reposição rápida',
     description: sec
-      ? `${impacto} Exemplo (adapte): secretária mantém bloco de 30 min no fim do expediente para encaixar reagendamentos do dia. Reduz perda sem comprometer a grade. ⏱ 5 min. ${cta}`
+      ? `${impacto} Exemplo (adapte): secretária mantém bloco de 30 min no fim do expediente para encaixar reagendamentos do dia. Reduz perda sem comprometer a grade. ⏱ 5 min.`
       : `${impacto} Opção simples: reserve 1-2 slots flexíveis na semana para absorver cancelamentos de última hora. Isso reduz buracos sem mexer na grade fixa. ⏱ 5 min.`,
   }),
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Mapear motivos de cancelamento',
     description: sec
-      ? `${impacto} Peça à secretária para registrar o motivo de cada cancelamento (custo, horário, urgência). Em 2 semanas você terá dados para ajustar. ⏱ 5 min. ${cta}`
+      ? `${impacto} Peça à secretária para registrar o motivo de cada cancelamento (custo, horário, urgência). Em 2 semanas você terá dados para ajustar. ⏱ 5 min.`
       : `${impacto} Anote o motivo de cada cancelamento — depois de alguns dias, padrões aparecem (ex.: horários, distância, custo). Isso direciona ajustes reais. ⏱ 3 min.`,
   }),
 ];
 
 const SLOTS_VARIANTS = [
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Preencher buracos na agenda',
     description: sec
-      ? `${impacto} Uma prática comum: secretária aciona lista de espera agora e faz segunda rodada às 14h. Se sobrar vaga, antecipe retornos. ⏱ 20 min total. ${cta}`
+      ? `${impacto} Uma prática comum: secretária aciona lista de espera agora e faz segunda rodada às 14h. Se sobrar vaga, antecipe retornos. ⏱ 20 min total.`
       : `${impacto} Se fizer sentido: acione lista de espera agora. Segunda tentativa às 14h. Antecipe retornos se possível. ⏱ 10 min.`,
   }),
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Redistribuir horários ociosos',
     description: sec
-      ? `${impacto} Exemplo (adapte): secretária verifica se há pacientes de outros dias que podem antecipar. Redistribuir é mais eficiente que esperar encaixes. ⏱ 15 min. ${cta}`
+      ? `${impacto} Exemplo (adapte): secretária verifica se há pacientes de outros dias que podem antecipar. Redistribuir é mais eficiente que esperar encaixes. ⏱ 15 min.`
       : `${impacto} Opção: veja se algum paciente da semana pode antecipar para hoje. Às vezes o preenchimento mais fácil já está na sua própria agenda. ⏱ 10 min.`,
   }),
-  (sec: boolean, impacto: string, cta: string) => ({
+  (sec: boolean, impacto: string) => ({
     title: 'Ajustar grade para evitar buracos',
     description: sec
-      ? `${impacto} Revise com a secretária: os buracos caem sempre no mesmo horário? Se sim, considere concentrar agenda ou oferecer esses slots para encaixe prioritário. ⏱ 10 min. ${cta}`
+      ? `${impacto} Revise com a secretária: os buracos caem sempre no mesmo horário? Se sim, considere concentrar agenda ou oferecer esses slots para encaixe prioritário. ⏱ 10 min.`
       : `${impacto} Observe: os buracos repetem no mesmo horário? Se sim, concentrar a agenda nesses períodos ou oferecer para encaixes pode resolver. ⏱ 5 min.`,
   }),
 ];
@@ -269,14 +269,12 @@ export function generateActions(
   const sec = hasSecretary;
   const lossMap = calculateLossMap(data, ticketPrivate, ticketInsurance, ticketAvg);
   const noshows = totalNoshows(data);
-  const isCritical = ideaScore < 70;
-  const cta = isCritical ? CTA_DAMA : '';
 
   const candidates: (ActionRule & { lossValue: number; priority: number })[] = [];
 
   if (noshows > 0) {
     const impacto = `${noshows} falta${noshows > 1 ? 's' : ''} = R$${lossMap.noshow} perdidos.`;
-    const v = pickVariant(NOSHOW_VARIANTS)(sec, impacto, cta);
+    const v = pickVariant(NOSHOW_VARIANTS)(sec, impacto);
     candidates.push({
       action_type: 'map_noshow',
       ...v,
@@ -287,7 +285,7 @@ export function generateActions(
 
   if (data.cancellations > 0) {
     const impacto = `${data.cancellations} cancelamento${data.cancellations > 1 ? 's' : ''} = R$${lossMap.cancel} perdidos.`;
-    const v = pickVariant(CANCEL_VARIANTS)(sec, impacto, cta);
+    const v = pickVariant(CANCEL_VARIANTS)(sec, impacto);
     candidates.push({
       action_type: 'review_cancellations',
       ...v,
@@ -298,7 +296,7 @@ export function generateActions(
 
   if (data.empty_slots >= 2) {
     const impacto = `${data.empty_slots} buracos = R$${lossMap.buracos} perdidos.`;
-    const v = pickVariant(SLOTS_VARIANTS)(sec, impacto, cta);
+    const v = pickVariant(SLOTS_VARIANTS)(sec, impacto);
     candidates.push({
       action_type: 'fill_slots_2x',
       ...v,

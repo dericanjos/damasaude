@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useClinic, useUpdateClinic } from '@/hooks/useClinic';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -12,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Settings, LogOut, CreditCard, ExternalLink, Percent, MapPin, Plus, Pencil, Bell, MessageSquare, Crown } from 'lucide-react';
+import { Settings, LogOut, CreditCard, ExternalLink, Percent, MapPin, Plus, Pencil, Bell, MessageSquare, Crown, Building } from 'lucide-react';
 import FeedbackModal from '@/components/FeedbackModal';
 import FounderBadge from '@/components/FounderBadge';
 import ProtocolManager from '@/components/ProtocolManager';
@@ -267,6 +268,7 @@ function LocationEditDialog({
 
 
 export default function SettingsPage() {
+  const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { data: clinic } = useClinic();
   const updateClinic = useUpdateClinic();
@@ -618,6 +620,20 @@ export default function SettingsPage() {
       </div>
 
       <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+
+      {/* About DAMA */}
+      <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
+        <button
+          onClick={() => navigate('/institucional')}
+          className="flex items-center gap-3 w-full text-left"
+        >
+          <Building className="h-4 w-4 text-muted-foreground" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">Sobre a DAMA</p>
+            <p className="text-xs text-muted-foreground">Conheça nossos serviços</p>
+          </div>
+        </button>
+      </div>
 
       <Button
         variant="outline"

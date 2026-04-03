@@ -25,7 +25,7 @@ export default function UpsellCard({ onDismiss }: UpsellCardProps) {
 
   const handleContact = () => {
     window.open(
-      'https://wa.me/5521959214292?text=Oi!%20Uso%20o%20App%20DAMA%20Sa%C3%BAde%20e%20gostaria%20de%20saber%20mais%20sobre%20a%20parceria%20completa%20para%20minha%20cl%C3%ADnica.',
+      'https://wa.me/5521959214292?text=Oi!%20Uso%20o%20App%20DAMA%20Sa%C3%BAde%20e%20meus%20n%C3%BAmeros%20indicam%20oportunidades%20de%20melhoria.%20Gostaria%20de%20entender%20como%20posso%20otimizar%20minha%20cl%C3%ADnica.',
       '_blank'
     );
   };
@@ -39,10 +39,10 @@ export default function UpsellCard({ onDismiss }: UpsellCardProps) {
         <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Parceria Premium</p>
       </div>
       <p className="text-sm font-semibold text-foreground">
-        Sua clínica precisa de mais do que métricas.
+        Seus números indicam oportunidade de crescimento
       </p>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        O IDEA Score mostra que seu comercial tem oportunidades que só um time dedicado resolve.
+        Clínicas com perfil semelhante ao seu costumam recuperar até 47% mais receita com acompanhamento especializado.
       </p>
       <div className="flex flex-col gap-2 pt-1">
         <Button
@@ -50,7 +50,7 @@ export default function UpsellCard({ onDismiss }: UpsellCardProps) {
           className="w-full h-10 rounded-xl font-semibold text-sm"
           style={{ background: 'linear-gradient(135deg, #D4AF37, #B8962E)', color: '#1a1a2e' }}
         >
-          Conhecer a Parceria DAMA
+          Falar com um especialista
         </Button>
         <Button
           variant="ghost"
