@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Rocket } from 'lucide-react';
+import { Rocket, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 import logoDama from '@/assets/logo-dama.png';
 
