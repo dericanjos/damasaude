@@ -24,6 +24,8 @@ export default function ReferralPage() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, completed: 0 });
+  const [founderCount, setFounderCount] = useState(0);
+  const [isFounder, setIsFounder] = useState(false);
 
   useEffect(() => {
     if (!user) return;
