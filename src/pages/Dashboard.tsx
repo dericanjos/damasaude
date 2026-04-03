@@ -96,7 +96,7 @@ export default function Dashboard() {
       if (!user) return null;
       const { data } = await supabase
         .from('profiles')
-        .select('upsell_dismissed_at, nps_prompted')
+        .select('upsell_dismissed_at, nps_prompted, tier')
         .eq('user_id', user.id)
         .maybeSingle();
       return data;

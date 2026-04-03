@@ -603,6 +603,21 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Feedback */}
+      <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
+        <button
+          onClick={() => setFeedbackOpen(true)}
+          className="flex items-center gap-3 w-full text-left"
+        >
+          <MessageSquare className="h-4 w-4 text-primary" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">Reportar problema ou sugestão</p>
+            <p className="text-xs text-muted-foreground">Seu feedback nos ajuda a melhorar</p>
+          </div>
+        </button>
+      </div>
+
+      <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
 
       <Button
         variant="outline"
