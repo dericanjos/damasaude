@@ -861,6 +861,17 @@ export default function Dashboard() {
           </div>
         </button>
       )}
+
+      {/* ── REFERRAL LINK ── */}
+      <button
+        onClick={() => navigate('/indicar')}
+        className="w-full text-center py-2 text-sm text-[#D4AF37] hover:text-[#D4AF37]/80 transition-colors"
+      >
+        🎁 Indique colegas e ganhe destaque →
+      </button>
+
+      {/* ── NPS MODAL ── */}
+      <NPSModal open={showNPS} onClose={() => setShowNPS(false)} />
     </div>
   );
 }
