@@ -120,6 +120,23 @@ export default function ReferralPage() {
           </p>
         </div>
 
+        {/* Founder card */}
+        {isFounder && (
+          <div className="rounded-2xl bg-gradient-to-br from-[hsl(220,40%,12%)] to-[hsl(40,50%,15%)] border border-[#D4AF37]/30 p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-[#D4AF37]" />
+              <p className="text-base font-bold text-foreground">Você é Founder DAMA 👑</p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Como founder, você tem acesso vitalício gratuito ao DAMA Saúde.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Ajude a DAMA a crescer: indique colegas médicos.
+            </p>
+            <p className="text-xs text-[#D4AF37]/70">Vagas founder restantes: {Math.max(0, 200 - founderCount)}/200</p>
+          </div>
+        )}
+
         {/* Code card */}
         <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-6 text-center space-y-3">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Seu código exclusivo</p>
