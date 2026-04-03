@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Settings, LogOut, CreditCard, ExternalLink, Percent, MapPin, Plus, Pencil, Bell, MessageSquare, Crown } from 'lucide-react';
+import { Settings, LogOut, CreditCard, ExternalLink, Percent, MapPin, Plus, Pencil, Bell, MessageSquare, Crown, Building } from 'lucide-react';
 import FeedbackModal from '@/components/FeedbackModal';
 import FounderBadge from '@/components/FounderBadge';
 import ProtocolManager from '@/components/ProtocolManager';
