@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { useLatestMedicalNews, useMedicalNewsCount } from '@/hooks/useMedicalNews';
 import { useLatestNews } from '@/hooks/useNews';
 import { useEfficiencyBadge } from '@/hooks/useEfficiencyBadge';
