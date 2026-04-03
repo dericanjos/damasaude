@@ -82,6 +82,22 @@ export default function Dashboard() {
   const { data: protocolRevenue = 0 } = useTodayProtocolRevenue(todayCheckinIds);
 
   const [checkinCollapsed, setCheckinCollapsed] = useState(true);
+  const [showNPS, setShowNPS] = useState(false);
+
+  // Profile data for upsell/NPS
+  const { data: profile } = useQuery({
+    queryKey: ['profile-growth', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('upsell_dismissed_at, nps_prompted')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
 
   const doctorName = (clinic as any)?.doctor_name || user?.user_metadata?.doctor_name || '';
   const doctorGender = (clinic as any)?.doctor_gender || 'masculino';
