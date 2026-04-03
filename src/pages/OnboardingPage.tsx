@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Rocket, Crown } from 'lucide-react';
+import { Rocket, Crown, TrendingDown } from 'lucide-react';
 import { toast } from 'sonner';
 import logoDama from '@/assets/logo-dama.png';
 
@@ -31,6 +31,10 @@ function detectTimezone(): string {
   } catch {
     return 'America/Sao_Paulo';
   }
+}
+
+function formatCurrency(v: number): string {
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 export default function OnboardingPage() {
@@ -56,6 +60,11 @@ export default function OnboardingPage() {
   const [ticketPrivate, setTicketPrivate] = useState<number | ''>(250);
   const [ticketInsurance, setTicketInsurance] = useState<number | ''>(100);
 
+  // Step 3 — Diagnostic
+  const [weeklyNoshows, setWeeklyNoshows] = useState<number | ''>(3);
+  const [weeklyCancellations, setWeeklyCancellations] = useState<number | ''>(2);
+  const [weeklyEmptySlots, setWeeklyEmptySlots] = useState<number | ''>(3);
+
   const canAdvance = () => {
     switch (step) {
       case 1:
@@ -71,17 +80,34 @@ export default function OnboardingPage() {
         }
         return true;
       }
+      case 3:
+        return true; // always valid, has defaults
       default: return true;
     }
   };
+
+  // Step 3 calculations
+  const tp = (typeof ticketPrivate === 'number' ? ticketPrivate : 250);
+  const ti = (typeof ticketInsurance === 'number' ? ticketInsurance : 100);
+  const ticketMedio = paymentType === 'particular'
+    ? tp
+    : paymentType === 'convenio'
+      ? ti
+      : Math.round((tp + ti) / 2);
+
+  const faltas = Number(weeklyNoshows) || 0;
+  const cancelamentos = Number(weeklyCancellations) || 0;
+  const vazios = Number(weeklyEmptySlots) || 0;
+  const perdaSemanal = (faltas + cancelamentos + vazios) * ticketMedio;
+  const perdaMensal = perdaSemanal * 4;
+  const perdaAnual = perdaMensal * 12;
+  const consultasPerdidas = (faltas + cancelamentos + vazios) * 4;
 
   const handleFinish = async () => {
     if (!user) return;
     setSaving(true);
     try {
       const timezone = detectTimezone();
-      const tp = (ticketPrivate || 0) as number;
-      const ti = (ticketInsurance || 0) as number;
       const cap = (dailyCapacity || 16) as number;
       const defaultWorkingDays = ['seg', 'ter', 'qua', 'qui', 'sex'];
       const defaultCaps: Record<string, number> = { dom: 0, seg: cap, ter: cap, qua: cap, qui: cap, sex: cap, sab: 0 };
@@ -119,19 +145,16 @@ export default function OnboardingPage() {
 
       const { data: clinicRow } = await supabase.from('clinics').select('id').eq('user_id', user.id).maybeSingle();
       if (clinicRow) {
-        // Clean up existing location data
         await supabase.from('location_schedules').delete().eq('user_id', user.id);
         await supabase.from('location_financials').delete().eq('user_id', user.id);
         await supabase.from('locations').delete().eq('user_id', user.id);
 
-        // Create single location
         const { data: newLoc, error: locError } = await supabase.from('locations').insert({
           user_id: user.id, clinic_id: clinicRow.id, name: clinicName.trim(), address: '', timezone,
           num_doctors: 1,
         } as any).select().single();
         if (locError) throw locError;
 
-        // Create financials
         const ticketAvg = paymentType === 'ambos' ? Math.round((tp + ti) / 2) : (paymentType === 'particular' ? tp : ti);
         await supabase.from('location_financials').insert({
           user_id: user.id, location_id: newLoc.id, ticket_avg: ticketAvg,
@@ -139,7 +162,6 @@ export default function OnboardingPage() {
           ticket_insurance: paymentType === 'particular' ? 0 : ti,
         } as any);
 
-        // Create schedules for Mon-Fri with uniform capacity
         const scheduleRows = defaultWorkingDays.map(d => ({
           user_id: user.id,
           location_id: newLoc.id,
@@ -151,13 +173,11 @@ export default function OnboardingPage() {
         await supabase.from('location_schedules').insert(scheduleRows as any);
       }
 
-      // Update auth user metadata
       const { error: authUpdateError } = await supabase.auth.updateUser({
         data: { doctor_name: doctorName },
       });
       if (authUpdateError) throw authUpdateError;
 
-      // Mark onboarding complete
       const { error: profileError } = await supabase.from('profiles').upsert(
         {
           user_id: user.id,
@@ -171,7 +191,6 @@ export default function OnboardingPage() {
       );
       if (profileError) throw profileError;
 
-      // M8: Link referral code if provided
       if (referralCode.trim()) {
         const { data: referral } = await supabase
           .from('referrals')
@@ -199,7 +218,6 @@ export default function OnboardingPage() {
   };
 
   if (showCompletion) {
-    // All new users are founders for now
     const isFounder = true;
 
     return (
@@ -215,7 +233,7 @@ export default function OnboardingPage() {
                 Você é um dos 200 primeiros médicos a usar o DAMA Saúde. Seu acesso é gratuito — para sempre.
               </p>
               <p className="text-sm text-muted-foreground max-w-xs">
-                Em troca, só pedimos sua opinião honesta e, se puder, indique colegas.
+                Sua opinião vai nos ajudar a construir a melhor ferramenta de gestão comercial para médicos.
               </p>
             </>
           ) : (
@@ -236,7 +254,7 @@ export default function OnboardingPage() {
             </button>
           </p>
           <Button onClick={() => navigate('/', { replace: true })} className="mt-4 rounded-xl">
-            {isFounder ? 'Começar meu primeiro check-in →' : 'Ir para o Dashboard →'}
+            Comece a monitorar sua clínica →
           </Button>
         </div>
       </div>
@@ -248,8 +266,8 @@ export default function OnboardingPage() {
       {/* Header */}
       <div className="px-6 pt-6 pb-2">
         <img src={logoDama} alt="DAMA" className="h-8 mb-4" />
-        <Progress value={(step / 2) * 100} className="h-1.5 mb-2" />
-        <p className="text-xs text-muted-foreground">Passo {step} de 2</p>
+        <Progress value={(step / 3) * 100} className="h-1.5 mb-2" />
+        <p className="text-xs text-muted-foreground">Passo {step} de 3</p>
       </div>
 
       <div className="flex-1 px-6 pb-6 overflow-y-auto">
@@ -383,11 +401,76 @@ export default function OnboardingPage() {
             )}
           </div>
         )}
+
+        {/* ── Step 3: Diagnóstico ── */}
+        {step === 3 && (
+          <div className="space-y-5 mt-4">
+            <div>
+              <h2 className="text-xl font-bold text-foreground">Vamos fazer um diagnóstico rápido</h2>
+              <p className="text-sm text-muted-foreground mt-1">Com base nos dados que você informou</p>
+            </div>
+
+            <div className="space-y-4 rounded-2xl bg-white/[0.06] border border-white/10 p-5">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quantos pacientes faltam por semana em média?</Label>
+                <Input
+                  type="number" min={0} max={50}
+                  value={weeklyNoshows}
+                  onChange={e => setWeeklyNoshows(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
+                  className="rounded-xl"
+                  placeholder="3"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quantos cancelam por semana?</Label>
+                <Input
+                  type="number" min={0} max={50}
+                  value={weeklyCancellations}
+                  onChange={e => setWeeklyCancellations(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
+                  className="rounded-xl"
+                  placeholder="2"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quantos horários ficam vazios por semana?</Label>
+                <Input
+                  type="number" min={0} max={50}
+                  value={weeklyEmptySlots}
+                  onChange={e => setWeeklyEmptySlots(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
+                  className="rounded-xl"
+                  placeholder="3"
+                />
+              </div>
+            </div>
+
+            {/* Real-time diagnostic result */}
+            {perdaMensal > 0 && (
+              <div className="rounded-2xl bg-red-500/10 border border-red-500/20 p-5 space-y-3 animate-in fade-in duration-300">
+                <div className="flex items-center gap-2 mb-1">
+                  <TrendingDown className="h-5 w-5 text-red-400" />
+                  <p className="text-xs font-semibold text-red-400 uppercase tracking-wider">Sua perda estimada</p>
+                </div>
+                <p className="text-3xl font-extrabold text-red-400">{formatCurrency(perdaMensal)}/mês</p>
+                <p className="text-sm text-red-300/80">
+                  {formatCurrency(perdaAnual)}/ano em receita não realizada
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {consultasPerdidas} consultas desperdiçadas por mês
+                </p>
+                <div className="pt-2 border-t border-red-500/10">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    A maioria dos médicos não monitora esses números. O primeiro passo para recuperar é medir.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Footer */}
       <div className="px-6 pb-6 pt-2">
-        {step < 2 ? (
+        {step < 3 ? (
           <Button onClick={() => setStep(s => s + 1)} className="w-full rounded-xl" disabled={!canAdvance()}>
             Avançar →
           </Button>

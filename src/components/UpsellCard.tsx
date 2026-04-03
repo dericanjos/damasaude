@@ -50,7 +50,7 @@ export default function UpsellCard({ onDismiss }: UpsellCardProps) {
           className="w-full h-10 rounded-xl font-semibold text-sm"
           style={{ background: 'linear-gradient(135deg, #D4AF37, #B8962E)', color: '#1a1a2e' }}
         >
-          Conhecer a Parceria DAMA
+          Falar com um especialista
         </Button>
         <Button
           variant="ghost"

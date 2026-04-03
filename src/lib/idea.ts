@@ -161,7 +161,7 @@ export function calculateLossMap(
   return { noshow, cancel, buracos, total, biggest };
 }
 
-const CTA_DAMA = 'Se quiser, a DAMA te entrega isso pronto com secretária e rotina montada.';
+// CTA removed — actions are 100% practical, no brand mentions
 
 /** Day-of-week index (0=Sun) used to rotate recommendation variants */
 function dayVariant(): number {
