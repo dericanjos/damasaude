@@ -296,7 +296,7 @@ export function generateActions(
 
   if (data.empty_slots >= 2) {
     const impacto = `${data.empty_slots} buracos = R$${lossMap.buracos} perdidos.`;
-    const v = pickVariant(SLOTS_VARIANTS)(sec, impacto, cta);
+    const v = pickVariant(SLOTS_VARIANTS)(sec, impacto);
     candidates.push({
       action_type: 'fill_slots_2x',
       ...v,
