@@ -66,8 +66,8 @@ export default function Dashboard() {
   const { data: clinic } = useClinic();
   const { selectedLocationId } = useLocationFilter();
   const locations = useActiveLocations();
-  const { data: todayCheckin } = useTodayCheckin(selectedLocationId || undefined);
-  const { data: allTodayCheckins = [] } = useTodayCheckins();
+  const { data: todayCheckin, isLoading: checkinLoading } = useTodayCheckin(selectedLocationId || undefined);
+  const { data: allTodayCheckins = [], isLoading: allCheckinsLoading } = useTodayCheckins();
   const { data: yesterdayCheckin } = useYesterdayCheckin(selectedLocationId || undefined);
   const { data: actions = [] } = useTodayActions(selectedLocationId);
   const completeAction = useCompleteAction();
