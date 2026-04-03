@@ -385,6 +385,9 @@ export default function Dashboard() {
         </div>
       </button>
 
+      {/* ── UPSELL CARD (conditional) ── */}
+      {shouldShowUpsell && todayScore != null && <UpsellCard />}
+
       {/* ── SUCCESS CHECKLIST (always first action) ── */}
       <SuccessChecklistCard />
 
