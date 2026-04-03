@@ -104,7 +104,7 @@ export default function SuccessChecklistCard() {
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold text-primary uppercase tracking-widest">
+            <p className="text-[10px] font-bold text-primary tracking-widest">
               ✅ Checklist de Sucesso
             </p>
             <p className="text-sm font-semibold text-foreground mt-0.5">

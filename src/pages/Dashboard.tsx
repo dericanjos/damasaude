@@ -343,7 +343,7 @@ export default function Dashboard() {
     if (shouldShowNPS && !showNPS) setShowNPS(true);
   }, [shouldShowNPS]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
+    <div className="mx-auto max-w-lg px-4 py-5 space-y-4 animate-fade-in">
       <EfficiencyBadgeModal />
       {/* Header */}
       <div className="flex items-center justify-between pt-1">
