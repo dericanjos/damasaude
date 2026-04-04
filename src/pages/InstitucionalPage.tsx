@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, TrendingUp } from 'lucide-react';
-import logoDamaTagline from '@/assets/logo-dama-tagline.png';
+import { ArrowLeft, Phone, TrendingUp, Target } from 'lucide-react';
 
 const parceiraUrl = 'https://parceria.damasecretariadomedico.com.br';
 
@@ -9,7 +8,7 @@ export default function InstitucionalPage() {
 
   return (
     <div className="min-h-screen bg-[hsl(220,30%,7%)]">
-      {/* Back button */}
+      {/* Back */}
       <div className="sticky top-0 z-50 px-4 py-3">
         <button
           onClick={() => navigate('/')}
@@ -20,78 +19,126 @@ export default function InstitucionalPage() {
         </button>
       </div>
 
-      <div className="mx-auto max-w-lg px-5 pb-12">
-        {/* Hero */}
-        <div className="flex flex-col items-center text-center pt-4 pb-10">
-          <img src={logoDamaTagline} alt="DAMA" className="h-14 w-auto mb-8 opacity-90" />
-          <h1 className="text-2xl font-bold text-white leading-snug mb-3">
-            Pare de perder receita com uma agenda reativa.
-          </h1>
-          <p className="text-sm text-white/60 leading-relaxed max-w-sm">
-            A DAMA é o time comercial estratégico que cuida da sua agenda, seus pacientes e seu faturamento. Presente em 16+ estados com 90+ médicos parceiros.
-          </p>
-        </div>
-
-        {/* Service cards — 4 frentes */}
-        <div className="space-y-3 mb-10">
-          <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D4AF37]/20">
-                <Users className="h-[18px] w-[18px] text-[#D4AF37]" />
-              </div>
-              <p className="text-sm font-bold text-white">Operação comercial completa</p>
-            </div>
-            <p className="text-[13px] text-white/55 leading-relaxed">
-              Secretariado estratégico, atendimento humanizado e time comercial que converte — tudo integrado e rodando pelo seu consultório.
+      <div className="mx-auto max-w-lg px-6 pb-16">
+        {/* ── ABERTURA — storytelling ── */}
+        <section className="pt-8 pb-14 space-y-6 text-center">
+          {[
+            'Você passou anos estudando pra salvar vidas.',
+            'Mas ninguém te ensinou a lotar sua agenda.',
+            'Ninguém te ensinou a parar de perder pacientes.',
+            'Ninguém te ensinou que seu consultório é um negócio — e que sem uma operação comercial, ele sangra em silêncio.',
+          ].map((line, i) => (
+            <p
+              key={i}
+              className="text-[15px] leading-relaxed text-white/80 font-light tracking-wide"
+            >
+              {line}
             </p>
-          </div>
+          ))}
 
-          <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D4AF37]/20">
-                <TrendingUp className="h-[18px] w-[18px] text-[#D4AF37]" />
-              </div>
-              <p className="text-sm font-bold text-white">Growth e marketing 360</p>
-            </div>
-            <p className="text-[13px] text-white/55 leading-relaxed">
-              Gestão de tráfego, presença digital e reputação online que colocam sua clínica na frente de quem já está procurando o que você oferece.
+          <div className="h-px w-12 mx-auto bg-white/10 my-2" />
+
+          {[
+            'Enquanto você está em consulta, pacientes ligam e ninguém atende direito.',
+            'Leads chegam e ninguém converte.',
+            'Sua agenda tem buracos que custam milhares por mês.',
+          ].map((line, i) => (
+            <p
+              key={i}
+              className="text-[15px] leading-relaxed text-white/60 font-light"
+            >
+              {line}
             </p>
-          </div>
-        </div>
+          ))}
 
-        {/* Social proof — 3 columns */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-white">+25.000</p>
-            <p className="text-[11px] text-white/50">Consultas Agendadas</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-white">+90</p>
-            <p className="text-[11px] text-white/50">Médicos Parceiros</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-white">16+</p>
-            <p className="text-[11px] text-white/50">Estados Atendidos</p>
-          </div>
-        </div>
+          <div className="h-px w-12 mx-auto bg-white/10 my-2" />
 
-        {/* CTA */}
-        <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-6 text-center mb-4">
-          <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-widest mb-2">PARCERIA SOB APLICAÇÃO</p>
-          <h2 className="text-lg font-bold text-white mb-2">Sua clínica tem potencial que ainda não está sendo aproveitado.</h2>
-          <p className="text-[13px] text-white/55 leading-relaxed mb-5">
-            Em menos de 3 minutos você preenche sua aplicação. Nosso time avalia o fit e entra em contato apenas com os candidatos prontos para crescer de verdade.
+          <p className="text-[15px] leading-relaxed text-white/80 font-medium">
+            Você sabe disso. O DAMA Saúde acabou de te mostrar os números.
           </p>
+          <p className="text-base text-white font-semibold pt-2">
+            A pergunta é: você vai continuar resolvendo isso sozinho?
+          </p>
+        </section>
+
+        {/* ── TRANSIÇÃO ── */}
+        <section className="py-10 text-center">
+          <p className="text-lg font-bold text-[#D4AF37] leading-snug tracking-tight">
+            A DAMA existe pra que você nunca mais precise se preocupar com isso.
+          </p>
+        </section>
+
+        {/* ── 3 PILARES ── */}
+        <section className="space-y-4 pb-12">
+          {[
+            {
+              icon: Phone,
+              title: 'Secretariado Estratégico',
+              text: 'Seu paciente é atendido com excelência antes mesmo de te conhecer.',
+            },
+            {
+              icon: TrendingUp,
+              title: 'Time Comercial Humanizado',
+              text: 'Cada lead vira uma oportunidade real. Cada oportunidade vira consulta.',
+            },
+            {
+              icon: Target,
+              title: 'Growth e Marketing 360',
+              text: 'Sua clínica na frente de quem precisa de você. Todos os dias.',
+            },
+          ].map(({ icon: Icon, title, text }) => (
+            <div
+              key={title}
+              className="rounded-2xl bg-white/[0.05] border border-white/10 p-5"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#D4AF37]/20">
+                  <Icon className="h-[18px] w-[18px] text-[#D4AF37]" />
+                </div>
+                <p className="text-sm font-bold text-[#D4AF37]">{title}</p>
+              </div>
+              <p className="text-[13px] text-white/55 leading-relaxed pl-12">
+                {text}
+              </p>
+            </div>
+          ))}
+        </section>
+
+        {/* ── PROVA SOCIAL ── */}
+        <section className="grid grid-cols-3 gap-3 pb-12">
+          {[
+            { value: '+25.000', label: 'Consultas Agendadas' },
+            { value: '+90', label: 'Médicos Parceiros' },
+            { value: '16+', label: 'Estados Atendidos' },
+          ].map(({ value, label }) => (
+            <div key={label} className="text-center">
+              <p className="text-2xl font-bold text-white">{value}</p>
+              <p className="text-[11px] text-white/50">{label}</p>
+            </div>
+          ))}
+        </section>
+
+        {/* ── FECHAMENTO + CTA ── */}
+        <section className="rounded-2xl bg-white/[0.04] border border-white/10 p-6 text-center">
+          <p className="text-[15px] text-white/80 font-medium leading-relaxed mb-6">
+            Você cuida do paciente.
+            <br />
+            A gente cuida do seu crescimento.
+          </p>
+
           <a
             href={parceiraUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-idea-stable text-white font-semibold text-sm h-12 shadow-premium transition-opacity hover:opacity-90 active:scale-[0.99]"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#D4AF37] text-[hsl(220,30%,7%)] font-bold text-sm h-14 shadow-lg transition-opacity hover:opacity-90 active:scale-[0.99]"
           >
-            Quero aplicar para uma parceria
+            Quero aplicar para a parceria →
           </a>
-          <p className="text-[10px] text-white/40 mt-3">📌 Vagas limitadas por mês</p>
-        </div>
+
+          <p className="text-[11px] text-white/40 mt-4 leading-relaxed">
+            Vagas limitadas. Atendemos apenas médicos com perfil alinhado à nossa metodologia.
+          </p>
+        </section>
       </div>
     </div>
   );
