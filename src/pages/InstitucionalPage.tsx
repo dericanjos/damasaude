@@ -21,12 +21,13 @@ export default function InstitucionalPage() {
 
       <div className="mx-auto max-w-lg px-6 pb-16">
         {/* ── ABERTURA — storytelling ── */}
-        <section className="pt-8 pb-14 space-y-6 text-center">
+        {/* ── ABERTURA — storytelling ── */}
+        <section className="pt-8 pb-10 space-y-6 text-center">
           {[
             'Você passou anos estudando pra salvar vidas.',
             'Mas ninguém te ensinou a lotar sua agenda.',
             'Ninguém te ensinou a parar de perder pacientes.',
-            'Ninguém te ensinou que seu consultório é um negócio — e que sem uma operação comercial, ele sangra em silêncio.',
+            'Ninguém te ensinou que seu consultório é um negócio — e que sem uma operação comercial, ele perde receita todos os dias sem que você perceba.',
           ].map((line, i) => (
             <p
               key={i}
@@ -36,7 +37,7 @@ export default function InstitucionalPage() {
             </p>
           ))}
 
-          <div className="h-px w-12 mx-auto bg-white/10 my-2" />
+          <div className="h-px w-12 mx-auto bg-white/10" />
 
           {[
             'Enquanto você está em consulta, pacientes ligam e ninguém atende direito.',
@@ -51,7 +52,7 @@ export default function InstitucionalPage() {
             </p>
           ))}
 
-          <div className="h-px w-12 mx-auto bg-white/10 my-2" />
+          <div className="h-px w-12 mx-auto bg-white/10" />
 
           <p className="text-[15px] leading-relaxed text-white/80 font-medium">
             Você sabe disso. O DAMA Saúde acabou de te mostrar os números.
@@ -62,14 +63,14 @@ export default function InstitucionalPage() {
         </section>
 
         {/* ── TRANSIÇÃO ── */}
-        <section className="py-10 text-center">
+        <section className="py-8 text-center">
           <p className="text-lg font-bold text-[#D4AF37] leading-snug tracking-tight">
             A DAMA existe pra que você nunca mais precise se preocupar com isso.
           </p>
         </section>
 
         {/* ── 3 PILARES ── */}
-        <section className="space-y-4 pb-12">
+        <section className="space-y-4 pb-10">
           {[
             {
               icon: Phone,
@@ -105,7 +106,7 @@ export default function InstitucionalPage() {
         </section>
 
         {/* ── PROVA SOCIAL ── */}
-        <section className="grid grid-cols-3 gap-3 pb-12">
+        <section className="grid grid-cols-3 gap-3 pb-10">
           {[
             { value: '+25.000', label: 'Consultas Agendadas' },
             { value: '+90', label: 'Médicos Parceiros' },
