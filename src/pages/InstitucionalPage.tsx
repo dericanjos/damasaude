@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Target, GraduationCap, Share2 } from 'lucide-react';
+import { ArrowLeft, Users, TrendingUp } from 'lucide-react';
 import logoDamaTagline from '@/assets/logo-dama-tagline.png';
 
-const whatsappUrl = 'https://wa.me/5521959214292?text=Ol%C3%A1!%20Vim%20pelo%20app%20DAMA%20Sa%C3%BAde%20e%20quero%20saber%20como%20reduzir%20os%20vazamentos%20da%20minha%20agenda.';
+const parceiraUrl = 'https://parceria.damasecretariadomedico.com.br';
 
 export default function InstitucionalPage() {
   const navigate = useNavigate();
