@@ -62,7 +62,6 @@ export default function AuthPage() {
         } else {
           toast.success('Conta criada com sucesso!');
         }
-        }
       } else {
         const { error } = await signIn(email, password);
         if (error) {
