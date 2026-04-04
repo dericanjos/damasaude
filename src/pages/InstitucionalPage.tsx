@@ -39,46 +39,22 @@ export default function InstitucionalPage() {
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D4AF37]/20">
                 <Users className="h-[18px] w-[18px] text-[#D4AF37]" />
               </div>
-              <p className="text-sm font-bold text-white">Time comercial dedicado</p>
+              <p className="text-sm font-bold text-white">Operação comercial completa</p>
             </div>
             <p className="text-[13px] text-white/55 leading-relaxed">
-              Equipe treinada em vendas médicas que converte leads em pacientes particulares. Atendimento humanizado e estratégico.
+              Secretariado estratégico, atendimento humanizado e time comercial que converte — tudo integrado e rodando pelo seu consultório.
             </p>
           </div>
 
           <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-5">
             <div className="flex items-center gap-3 mb-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D4AF37]/20">
-                <Target className="h-[18px] w-[18px] text-[#D4AF37]" />
+                <TrendingUp className="h-[18px] w-[18px] text-[#D4AF37]" />
               </div>
-              <p className="text-sm font-bold text-white">Captação de pacientes</p>
+              <p className="text-sm font-bold text-white">Growth e marketing 360</p>
             </div>
             <p className="text-[13px] text-white/55 leading-relaxed">
-              Campanhas estratégicas para atrair pacientes qualificados e gerar agendamentos previsíveis para seu consultório.
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D4AF37]/20">
-                <GraduationCap className="h-[18px] w-[18px] text-[#D4AF37]" />
-              </div>
-              <p className="text-sm font-bold text-white">Treinamento da sua equipe</p>
-            </div>
-            <p className="text-[13px] text-white/55 leading-relaxed">
-              Transformamos secretárias em multiplicadoras de receita com técnicas de conversão e atendimento via WhatsApp.
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D4AF37]/20">
-                <Share2 className="h-[18px] w-[18px] text-[#D4AF37]" />
-              </div>
-              <p className="text-sm font-bold text-white">Presença estratégica nas redes</p>
-            </div>
-            <p className="text-[13px] text-white/55 leading-relaxed">
-              Atrair, nutrir e converter pacientes de forma orgânica, conectando sua autoridade médica com o desejo do público.
+              Gestão de tráfego, presença digital e reputação online que colocam sua clínica na frente de quem já está procurando o que você oferece.
             </p>
           </div>
         </div>
@@ -86,35 +62,35 @@ export default function InstitucionalPage() {
         {/* Social proof — 3 columns */}
         <div className="grid grid-cols-3 gap-3 mb-8">
           <div className="text-center">
-            <p className="text-2xl font-bold text-white">90+</p>
-            <p className="text-[11px] text-white/50">médicos parceiros</p>
+            <p className="text-2xl font-bold text-white">+25.000</p>
+            <p className="text-[11px] text-white/50">Consultas Agendadas</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-white">+90</p>
+            <p className="text-[11px] text-white/50">Médicos Parceiros</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-white">16+</p>
-            <p className="text-[11px] text-white/50">estados atendidos</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-white">25k+</p>
-            <p className="text-[11px] text-white/50">consultas agendadas</p>
+            <p className="text-[11px] text-white/50">Estados Atendidos</p>
           </div>
         </div>
 
         {/* CTA */}
         <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-6 text-center mb-4">
-          <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-widest mb-2">PRÓXIMO PASSO</p>
-          <h2 className="text-lg font-bold text-white mb-2">Nosso Diagnóstico Estratégico é o Ponto de Partida.</h2>
+          <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-widest mb-2">PARCERIA SOB APLICAÇÃO</p>
+          <h2 className="text-lg font-bold text-white mb-2">Sua clínica tem potencial que ainda não está sendo aproveitado.</h2>
           <p className="text-[13px] text-white/55 leading-relaxed mb-5">
-            Em 30 minutos, mapeamos os gargalos da sua operação e mostramos exatamente onde você está perdendo receita — e como resolver.
+            Em menos de 3 minutos você preenche sua aplicação. Nosso time avalia o fit e entra em contato apenas com os candidatos prontos para crescer de verdade.
           </p>
           <a
-            href={whatsappUrl}
+            href={parceiraUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-idea-stable text-white font-semibold text-sm h-12 shadow-premium transition-opacity hover:opacity-90 active:scale-[0.99]"
           >
-            Pedir meu Diagnóstico Gratuito
+            Quero aplicar para uma parceria
           </a>
-          <p className="text-[10px] text-white/40 mt-3">Implantação em até 24 horas</p>
+          <p className="text-[10px] text-white/40 mt-3">📌 Vagas limitadas por mês</p>
         </div>
       </div>
     </div>
