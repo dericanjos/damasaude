@@ -35,6 +35,14 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [doctorName, setDoctorName] = useState('');
   const [clinicName, setClinicName] = useState('');
+  const [phone, setPhone] = useState('');
+
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,11 +50,17 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
-        const { error } = await signUp(email, password, doctorName, clinicName);
+        const phoneDigits = phone.replace(/\D/g, '');
+        if (phoneDigits.length < 10) {
+          toast.error('Informe um telefone válido com DDD');
+          setLoading(false);
+          return;
+        }
+        const { error } = await signUp(email, password, doctorName, clinicName, 0.85, 0.05, phone);
         if (error) {
           toast.error(error.message || 'Erro ao criar conta');
         } else {
-          toast.success('Conta criada! Verifique seu e-mail para confirmar.');
+          toast.success('Conta criada com sucesso!');
         }
       } else {
         const { error } = await signIn(email, password);
@@ -124,6 +138,20 @@ export default function AuthPage() {
                   required
                 />
               </div>
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-white/90">Telefone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(formatPhone(e.target.value))}
+                    placeholder="(21) 99999-9999"
+                    className="border-white/20 bg-white/10 text-white placeholder:text-white/40"
+                    required
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-white/90">Senha</Label>
                 <Input

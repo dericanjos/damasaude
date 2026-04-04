@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, doctorName: string, clinicName: string, targetFillRate?: number, targetNoshowRate?: number) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, doctorName: string, clinicName: string, targetFillRate?: number, targetNoshowRate?: number, phone?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
@@ -34,7 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             meta.doctor_name,
             meta.clinic_name,
             meta.target_fill_rate ?? 0.85,
-            meta.target_noshow_rate ?? 0.05
+            meta.target_noshow_rate ?? 0.05,
+            meta.phone ?? ''
           );
         }
       }
@@ -49,19 +50,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, doctorName: string, clinicName: string, targetFillRate = 0.85, targetNoshowRate = 0.05) => {
+  const signUp = async (email: string, password: string, doctorName: string, clinicName: string, targetFillRate = 0.85, targetNoshowRate = 0.05, phone = '') => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { doctor_name: doctorName, clinic_name: clinicName, target_fill_rate: targetFillRate, target_noshow_rate: targetNoshowRate },
+        data: { doctor_name: doctorName, clinic_name: clinicName, target_fill_rate: targetFillRate, target_noshow_rate: targetNoshowRate, phone },
         emailRedirectTo: window.location.origin,
       },
     });
 
     if (!error && data.user && data.session) {
       // Session exists (auto-confirm or immediate login) — create profile & clinic now
-      await ensureProfileAndClinic(data.user.id, data.user.email ?? email, doctorName, clinicName, targetFillRate, targetNoshowRate);
+      await ensureProfileAndClinic(data.user.id, data.user.email ?? email, doctorName, clinicName, targetFillRate, targetNoshowRate, phone);
     }
     // If no session (email confirmation required), the trigger creates the basic profile.
     // Profile & clinic will be completed on first login via onAuthStateChange.
@@ -69,12 +70,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const ensureProfileAndClinic = async (userId: string, email: string, doctorName: string, clinicName: string, targetFillRate: number, targetNoshowRate: number) => {
+  const ensureProfileAndClinic = async (userId: string, email: string, doctorName: string, clinicName: string, targetFillRate: number, targetNoshowRate: number, phone: string) => {
     await supabase.from('profiles').upsert(
       {
         user_id: userId,
         email,
         display_name: doctorName,
+        phone,
         onboarding_completed: false,
       } as any,
       { onConflict: 'user_id' }
