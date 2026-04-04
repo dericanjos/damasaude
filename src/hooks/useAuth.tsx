@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!error && data.user && data.session) {
       // Session exists (auto-confirm or immediate login) — create profile & clinic now
-      await ensureProfileAndClinic(data.user.id, data.user.email ?? email, doctorName, clinicName, targetFillRate, targetNoshowRate);
+      await ensureProfileAndClinic(data.user.id, data.user.email ?? email, doctorName, clinicName, targetFillRate, targetNoshowRate, phone);
     }
     // If no session (email confirmation required), the trigger creates the basic profile.
     // Profile & clinic will be completed on first login via onAuthStateChange.
