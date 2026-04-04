@@ -49,12 +49,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, doctorName: string, clinicName: string, targetFillRate = 0.85, targetNoshowRate = 0.05) => {
+  const signUp = async (email: string, password: string, doctorName: string, clinicName: string, targetFillRate = 0.85, targetNoshowRate = 0.05, phone = '') => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { doctor_name: doctorName, clinic_name: clinicName, target_fill_rate: targetFillRate, target_noshow_rate: targetNoshowRate },
+        data: { doctor_name: doctorName, clinic_name: clinicName, target_fill_rate: targetFillRate, target_noshow_rate: targetNoshowRate, phone },
         emailRedirectTo: window.location.origin,
       },
     });
