@@ -19,10 +19,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // On first sign-in after email confirmation, complete profile & clinic setup
+      if (_event === 'SIGNED_IN' && session?.user) {
+        const meta = session.user.user_metadata;
+        if (meta?.doctor_name && meta?.clinic_name) {
+          await ensureProfileAndClinic(
+            session.user.id,
+            session.user.email ?? '',
+            meta.doctor_name,
+            meta.clinic_name,
+            meta.target_fill_rate ?? 0.85,
+            meta.target_noshow_rate ?? 0.05
+          );
+        }
+      }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
