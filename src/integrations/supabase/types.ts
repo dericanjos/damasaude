@@ -725,6 +725,7 @@ export type Database = {
           has_efficiency_badge: boolean
           nps_prompted: boolean | null
           onboarding_completed: boolean
+          phone: string | null
           referral_code_used: string | null
           source: string | null
           stripe_customer_id: string | null
@@ -744,6 +745,7 @@ export type Database = {
           has_efficiency_badge?: boolean
           nps_prompted?: boolean | null
           onboarding_completed?: boolean
+          phone?: string | null
           referral_code_used?: string | null
           source?: string | null
           stripe_customer_id?: string | null
@@ -763,6 +765,7 @@ export type Database = {
           has_efficiency_badge?: boolean
           nps_prompted?: boolean | null
           onboarding_completed?: boolean
+          phone?: string | null
           referral_code_used?: string | null
           source?: string | null
           stripe_customer_id?: string | null
