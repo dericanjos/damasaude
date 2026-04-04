@@ -34,7 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             meta.doctor_name,
             meta.clinic_name,
             meta.target_fill_rate ?? 0.85,
-            meta.target_noshow_rate ?? 0.05
+            meta.target_noshow_rate ?? 0.05,
+            meta.phone ?? ''
           );
         }
       }
