@@ -19,10 +19,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // On first sign-in after email confirmation, complete profile & clinic setup
+      if (_event === 'SIGNED_IN' && session?.user) {
+        const meta = session.user.user_metadata;
+        if (meta?.doctor_name && meta?.clinic_name) {
+          await ensureProfileAndClinic(
+            session.user.id,
+            session.user.email ?? '',
+            meta.doctor_name,
+            meta.clinic_name,
+            meta.target_fill_rate ?? 0.85,
+            meta.target_noshow_rate ?? 0.05
+          );
+        }
+      }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -39,34 +54,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       options: {
-        data: { doctor_name: doctorName },
+        data: { doctor_name: doctorName, clinic_name: clinicName, target_fill_rate: targetFillRate, target_noshow_rate: targetNoshowRate },
         emailRedirectTo: window.location.origin,
       },
     });
 
-    if (!error && data.user) {
-      const { error: profileError } = await supabase.from('profiles').upsert(
-        {
-          user_id: data.user.id,
-          email: data.user.email ?? email,
-          display_name: doctorName,
-          onboarding_completed: false,
-        } as any,
-        { onConflict: 'user_id' }
-      );
-      if (profileError) return { error: profileError };
+    if (!error && data.user && data.session) {
+      // Session exists (auto-confirm or immediate login) — create profile & clinic now
+      await ensureProfileAndClinic(data.user.id, data.user.email ?? email, doctorName, clinicName, targetFillRate, targetNoshowRate);
+    }
+    // If no session (email confirmation required), the trigger creates the basic profile.
+    // Profile & clinic will be completed on first login via onAuthStateChange.
 
-      // Create clinic for the user
-      const { error: clinicError } = await supabase.from('clinics').insert({
-        user_id: data.user.id,
+    return { error };
+  };
+
+  const ensureProfileAndClinic = async (userId: string, email: string, doctorName: string, clinicName: string, targetFillRate: number, targetNoshowRate: number) => {
+    await supabase.from('profiles').upsert(
+      {
+        user_id: userId,
+        email,
+        display_name: doctorName,
+        onboarding_completed: false,
+      } as any,
+      { onConflict: 'user_id' }
+    );
+
+    const { data: existingClinic } = await supabase
+      .from('clinics')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!existingClinic) {
+      await supabase.from('clinics').insert({
+        user_id: userId,
         name: clinicName,
         target_fill_rate: targetFillRate,
         target_noshow_rate: targetNoshowRate,
       });
-      if (clinicError) return { error: clinicError };
     }
-
-    return { error };
   };
 
   const signIn = async (email: string, password: string) => {
