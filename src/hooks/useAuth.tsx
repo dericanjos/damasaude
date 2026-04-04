@@ -70,12 +70,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const ensureProfileAndClinic = async (userId: string, email: string, doctorName: string, clinicName: string, targetFillRate: number, targetNoshowRate: number) => {
+  const ensureProfileAndClinic = async (userId: string, email: string, doctorName: string, clinicName: string, targetFillRate: number, targetNoshowRate: number, phone: string) => {
     await supabase.from('profiles').upsert(
       {
         user_id: userId,
         email,
         display_name: doctorName,
+        phone,
         onboarding_completed: false,
       } as any,
       { onConflict: 'user_id' }
