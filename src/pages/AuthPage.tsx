@@ -215,7 +215,7 @@ export default function AuthPage() {
                     className="border-white/20 bg-white/10 text-white placeholder:text-white/40"
                   />
                 </div>
-              )
+              )}
 
               {!isSignUp && (
                 <div className="flex items-center justify-between">
