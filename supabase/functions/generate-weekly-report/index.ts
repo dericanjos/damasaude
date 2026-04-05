@@ -76,7 +76,7 @@ serve(async (req) => {
     // Fetch clinic info
     const { data: clinic } = await supabase
       .from("clinics")
-      .select("ticket_private, ticket_insurance, daily_capacity, target_fill_rate, target_noshow_rate, working_days, has_secretary")
+      .select("ticket_private, ticket_insurance, daily_capacity, target_fill_rate, target_noshow_rate, working_days, has_secretary, monthly_revenue_target")
       .eq("id", clinic_id)
       .single();
 
