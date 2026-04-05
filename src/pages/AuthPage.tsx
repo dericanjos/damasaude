@@ -31,6 +31,7 @@ const handleSocialSignIn = async (provider: 'google' | 'apple') => {
 
 export default function AuthPage() {
   const { signIn, signUp } = useAuth();
+  const [searchParams] = useSearchParams();
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -40,6 +41,15 @@ export default function AuthPage() {
   const [phone, setPhone] = useState('');
   const [phoneConfirm, setPhoneConfirm] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
+  const [referralCode, setReferralCode] = useState('');
+
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      setReferralCode(ref.toUpperCase());
+      setIsSignUp(true);
+    }
+  }, [searchParams]);
 
   const phoneMismatch = isSignUp && phone !== '' && phoneConfirm !== '' && phone !== phoneConfirm;
 
