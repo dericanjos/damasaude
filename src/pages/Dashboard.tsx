@@ -175,6 +175,24 @@ export default function Dashboard() {
     return Math.round(sparklineData.reduce((s, p) => s + p.score, 0) / sparklineData.length);
   }, [sparklineData]);
 
+  // Benchmark data (cached 24h)
+  const { data: benchmarkData } = useQuery({
+    queryKey: ['benchmarks', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      const res = await supabase.functions.invoke('calculate-benchmarks', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.error || res.data?.error) return null;
+      return res.data as { specialty: string; peerCount: number; avgOccupancy: number; avgNoshowRate: number; avgIdeaScore: number };
+    },
+    enabled: !!user && !!(clinic as any)?.specialty,
+    staleTime: 24 * 60 * 60 * 1000, // 24h
+    refetchOnWindowFocus: false,
+  });
+
   useCheckinRealtime();
 
   // Protocol revenue for today
