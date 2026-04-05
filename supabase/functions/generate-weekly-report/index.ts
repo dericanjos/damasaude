@@ -302,6 +302,8 @@ Analise os dados da última semana e gere um relatório estratégico conciso em 
 2. **⚠️ Pontos de atenção:** Identifique o maior problema da semana com impacto em R$.
 3. **🎯 Plano de Ação (3 tarefas):** Ações práticas, adaptáveis e variadas. Para cada ação: o que fazer, tempo estimado e impacto esperado em R$.
 
+Se há meta de receita mensal (meta_receita_mensal), mencione brevemente o progresso semanal em relação à meta.
+
 ${rotationContext}
 
 ${isPartial ? "IMPORTANTE: Este é um relatório PARCIAL (" + checkins.length + " de " + workingDaysCount + " dias). Module afirmações — evite conclusões absolutas com dados incompletos. Sinalize a parcialidade no topo." : ""}

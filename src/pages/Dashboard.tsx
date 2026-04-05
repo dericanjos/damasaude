@@ -319,15 +319,21 @@ export default function Dashboard() {
   // Single priority alert (1 per day, most relevant)
   type Alert = { type: 'warn' | 'ok'; label: string; message: string; action?: string };
   const alert: Alert = useMemo(() => {
-    // For consolidated mode, use consolidated metrics
     const rev = displayRevenue;
     const cd = checkinData;
 
     if (!rev) return { type: 'ok' as const, label: 'STATUS', message: 'Faça o check-in para ver seus alertas.' };
 
-    // Priority order: lost revenue > no-show > occupancy > follow-up
+    // Priority order: lost revenue > monthly target > no-show > occupancy > follow-up
     if (rev.lost > 500)
       return { type: 'warn' as const, label: 'ALERTA FINANCEIRO', message: `Vazamento de ${formatBRL(rev.lost)} hoje entre faltas, cancelamentos e buracos na agenda.` };
+
+    // Monthly revenue target alert: day >= 15 and accumulated < 50% of target
+    if (monthlyRevenueTarget && monthlyRevenueTarget > 0 && currentMonth.day >= 15 && monthlyAccumulatedRevenue < monthlyRevenueTarget * 0.5) {
+      const pct = Math.round((monthlyAccumulatedRevenue / monthlyRevenueTarget) * 100);
+      return { type: 'warn' as const, label: 'ALERTA DE META MENSAL', message: `Dia ${currentMonth.day} e receita acumulada em ${pct}% da meta mensal. Ritmo abaixo do esperado.` };
+    }
+
     if (rev.noShowRate > targetNoShowRate)
       return { type: 'warn' as const, label: 'ALERTA DE AGENDA', message: `Taxa de no-show (${safePercent(rev.noShowRate)}) acima da meta (${formatPercent(targetNoShowRate)}).` };
     if (rev.occupancyRate != null && rev.occupancyRate < targetFillRate)
@@ -336,7 +342,7 @@ export default function Dashboard() {
       return { type: 'warn' as const, label: 'ALERTA DE PROCESSO', message: 'Follow-up não executado hoje. Risco de perder oportunidades de reagendamento.' };
 
     return { type: 'ok' as const, label: 'AGENDA DENTRO DAS METAS', message: 'Sua operação está alinhada com as metas. Ótimo trabalho.' };
-  }, [displayRevenue, checkinData, targetNoShowRate, targetFillRate]);
+  }, [displayRevenue, checkinData, targetNoShowRate, targetFillRate, monthlyRevenueTarget, monthlyAccumulatedRevenue, currentMonth.day]);
 
   const handleComplete = (id: string) => {
     completeAction.mutate(id, {
