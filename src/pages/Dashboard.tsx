@@ -732,6 +732,19 @@ export default function Dashboard() {
             </div>
             <p className="text-2xl font-bold text-foreground">{formatBRL(displayRevenue.estimated)}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{displayRevenue.totalAttended} consultas</p>
+            {monthlyRevenueTarget != null && monthlyRevenueTarget > 0 && (() => {
+              const pct = Math.min(100, Math.round((monthlyAccumulatedRevenue / monthlyRevenueTarget) * 100));
+              return (
+                <div className="mt-2.5">
+                  <div className="h-1 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {formatBRL(monthlyAccumulatedRevenue)} de {formatBRL(monthlyRevenueTarget)} ({pct}%)
+                  </p>
+                </div>
+              );
+            })()}
           </div>
           <div className="rounded-2xl bg-card border border-revenue-loss/40 p-4 shadow-card">
             <div className="flex items-center gap-1.5 mb-2">
