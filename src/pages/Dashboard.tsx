@@ -104,14 +104,16 @@ export default function Dashboard() {
 
   const monthlyAccumulatedRevenue = useMemo(() => {
     if (!monthlyRevenueTarget || monthlyCheckins.length === 0) return 0;
+    const tp = (clinic as any)?.ticket_private ?? DEFAULT_TICKET_PRIVATE;
+    const ti = (clinic as any)?.ticket_insurance ?? DEFAULT_TICKET_INSURANCE;
     return monthlyCheckins.reduce((sum: number, c: any) => {
       const locId = c.location_id;
       const fin = allFinancials.find((f: any) => f.location_id === locId);
-      const tp = fin ? (fin as any).ticket_private : ticketPrivate;
-      const ti = fin ? (fin as any).ticket_insurance : ticketInsurance;
-      return sum + ((c.attended_private ?? 0) * tp) + ((c.attended_insurance ?? 0) * ti);
+      const locTp = fin ? (fin as any).ticket_private : tp;
+      const locTi = fin ? (fin as any).ticket_insurance : ti;
+      return sum + ((c.attended_private ?? 0) * locTp) + ((c.attended_insurance ?? 0) * locTi);
     }, 0);
-  }, [monthlyCheckins, allFinancials, ticketPrivate, ticketInsurance, monthlyRevenueTarget]);
+  }, [monthlyCheckins, allFinancials, clinic, monthlyRevenueTarget]);
 
   useCheckinRealtime();
 
