@@ -46,6 +46,18 @@ export default function WeeklyReportPage() {
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
   const workingDays: string[] = Array.isArray((clinic as any)?.working_days) ? (clinic as any).working_days : ['seg', 'ter', 'qua', 'qui', 'sex'];
 
+  const targetFillRate = clinic?.target_fill_rate ?? 0.85;
+  const targetNoShowRate = clinic?.target_noshow_rate ?? 0.05;
+
+  const weekStart = useMemo(() => {
+    const base = startOfWeek(new Date(), { weekStartsOn: 1 });
+    return weekOffset < 0 ? subWeeks(base, Math.abs(weekOffset)) : addWeeks(base, weekOffset);
+  }, [weekOffset]);
+
+  const { data: checkins = [] } = useWeekCheckins(weekStart, selectedLocationId);
+  const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+  const weekLabel = format(weekStart, "'Semana de' dd 'de' MMMM", { locale: ptBR });
+
   // Compute which JS weekdays (0-6) fall in the selected week (Mon-Sun)
   const weekWeekdays = useMemo(() => {
     const days: number[] = [];
@@ -88,18 +100,6 @@ export default function WeeklyReportPage() {
     }
     return Object.values(locationWeekActual).reduce((a, b) => a + b, 0);
   }, [selectedLocationId, locationWeekActual]);
-
-  const targetFillRate = clinic?.target_fill_rate ?? 0.85;
-  const targetNoShowRate = clinic?.target_noshow_rate ?? 0.05;
-
-  const weekStart = useMemo(() => {
-    const base = startOfWeek(new Date(), { weekStartsOn: 1 });
-    return weekOffset < 0 ? subWeeks(base, Math.abs(weekOffset)) : addWeeks(base, weekOffset);
-  }, [weekOffset]);
-
-  const { data: checkins = [] } = useWeekCheckins(weekStart, selectedLocationId);
-  const weekStartStr = format(weekStart, 'yyyy-MM-dd');
-  const weekLabel = format(weekStart, "'Semana de' dd 'de' MMMM", { locale: ptBR });
 
   // AI Report state
   const [aiReport, setAiReport] = useState<string | null>(null);
