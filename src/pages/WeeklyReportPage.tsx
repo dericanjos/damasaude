@@ -10,7 +10,7 @@ import LocationSelector from '@/components/LocationSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
 import { Button } from '@/components/ui/button';
-import { startOfWeek, subWeeks, addWeeks, format, getDay, parseISO } from 'date-fns';
+import { startOfWeek, subWeeks, addWeeks, addDays, format, getDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, BarChart3, TrendingUp, TrendingDown, Loader2, Sparkles, Mail, Info, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
