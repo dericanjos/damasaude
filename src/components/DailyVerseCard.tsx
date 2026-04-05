@@ -110,7 +110,7 @@ export default function DailyVerseCard() {
           {/* DAMA branding */}
           <div className="flex flex-col mt-4 pt-3 border-t border-border/30">
             <p className="text-[9px] text-muted-foreground/60 font-medium tracking-wider">DAMA • Gestão Inteligente</p>
-            <p className="text-[8px] text-white/50 uppercase tracking-widest mt-0.5">Solução completa para médicos</p>
+            <p className="text-[8px] text-white/50 uppercase tracking-widest mt-0.5">Gestão inteligente para médicos</p>
           </div>
         </div>
       </div>

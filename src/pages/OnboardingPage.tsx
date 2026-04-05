@@ -254,7 +254,7 @@ export default function OnboardingPage() {
               </div>
               <h1 className="text-2xl font-bold text-foreground">Tudo pronto!</h1>
               <p className="text-muted-foreground max-w-xs">
-                Seu copiloto está pronto. Faça seu primeiro check-in!
+                Sua gestão está pronta. Faça seu primeiro check-in!
               </p>
             </>
           )}
