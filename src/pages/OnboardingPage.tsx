@@ -241,7 +241,7 @@ export default function OnboardingPage() {
               </div>
               <h1 className="text-2xl font-bold text-foreground">Bem-vindo, Founder DAMA! 👑</h1>
               <p className="text-muted-foreground max-w-xs">
-                Você é um dos 200 primeiros médicos a usar o DAMA Saúde. Seu acesso é gratuito — para sempre.
+                Você é um dos 200 primeiros médicos a usar o DAMA Clínica. Seu acesso é gratuito — para sempre.
               </p>
               <p className="text-sm text-muted-foreground max-w-xs">
                 Sua opinião vai nos ajudar a construir a melhor ferramenta de gestão comercial para médicos.
