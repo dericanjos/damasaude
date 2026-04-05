@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { startOfWeek, subWeeks, subDays, format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO } from 'date-fns';
+import { startOfWeek, subWeeks, subDays, format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO, getDay, getDaysInMonth, isWeekend } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Sparkles, TrendingDown, Zap, ArrowUpRight, ArrowDownRight,
@@ -176,6 +176,71 @@ export default function InsightsPage() {
     const ticketGain = currentMonthlyRevenue * (simTicket / 100);
     return noShowSaving + ticketGain;
   }, [tw, simNoShow, simTicket, TICKET_PRIVATE, TICKET_INSURANCE, thisWeek.length]);
+
+  // ── FINANCEIRO: Projeção Mensal ──
+  const workingDays: string[] = Array.isArray((clinic as any)?.working_days) ? (clinic as any).working_days : ['seg', 'ter', 'qua', 'qui', 'sex'];
+  const WEEKDAY_PT: Record<number, string> = { 0: 'dom', 1: 'seg', 2: 'ter', 3: 'qua', 4: 'qui', 5: 'sex', 6: 'sab' };
+
+  const currentMonthStart = useMemo(() => format(startOfMonth(new Date()), 'yyyy-MM-dd'), []);
+  const currentMonthEnd = useMemo(() => format(endOfMonth(new Date()), 'yyyy-MM-dd'), []);
+  const { data: currentMonthCheckins = [] } = useCheckinRange(currentMonthStart, currentMonthEnd, selectedLocationId);
+
+  const projection = useMemo(() => {
+    if (currentMonthCheckins.length === 0) return null;
+
+    // Revenue accumulated this month
+    const revenueAccum = currentMonthCheckins.reduce((s, c) => {
+      const attP = (c as any).attended_private ?? (c as any).appointments_done ?? 0;
+      const attI = (c as any).attended_insurance ?? 0;
+      return s + (attP * TICKET_PRIVATE) + (attI * TICKET_INSURANCE);
+    }, 0);
+
+    const daysWithCheckin = currentMonthCheckins.length;
+    const avgDaily = revenueAccum / daysWithCheckin;
+
+    // Count total working days in current month
+    const now = new Date();
+    const monthDays = eachDayOfInterval({ start: startOfMonth(now), end: endOfMonth(now) });
+    const totalWorkingDays = monthDays.filter(d => workingDays.includes(WEEKDAY_PT[getDay(d)])).length;
+
+    const projected = avgDaily * totalWorkingDays;
+    const monthlyTarget = (clinic as any)?.monthly_revenue_target ?? 0;
+
+    // Noshow rate this month for "E se" simulator
+    const totalNoshowsMonth = currentMonthCheckins.reduce((s, c) => {
+      return s + ((c as any).noshows_private ?? (c as any).no_show ?? 0) + ((c as any).noshows_insurance ?? 0);
+    }, 0);
+    const totalScheduledMonth = currentMonthCheckins.reduce((s, c) => s + c.appointments_scheduled, 0);
+    const noshowRateMonth = totalScheduledMonth > 0 ? totalNoshowsMonth / totalScheduledMonth : 0;
+
+    return {
+      revenueAccum,
+      projected,
+      monthlyTarget,
+      avgDaily,
+      totalWorkingDays,
+      daysWithCheckin,
+      noshowRateMonth,
+    };
+  }, [currentMonthCheckins, TICKET_PRIVATE, TICKET_INSURANCE, workingDays, clinic]);
+
+  // "E se" sliders for projection
+  const [projSimNoShow, setProjSimNoShow] = useState(30);
+  const [projSimTicket, setProjSimTicket] = useState(10);
+
+  const projPotential = useMemo(() => {
+    if (!projection) return 0;
+    // If reduce noshows by X%, recover that fraction of lost revenue
+    const noshowLossMonth = currentMonthCheckins.reduce((s, c) => {
+      const nsP = (c as any).noshows_private ?? (c as any).no_show ?? 0;
+      const nsI = (c as any).noshows_insurance ?? 0;
+      return s + (nsP * TICKET_PRIVATE) + (nsI * TICKET_INSURANCE);
+    }, 0);
+    const projectedNoshowLoss = (noshowLossMonth / projection.daysWithCheckin) * projection.totalWorkingDays;
+    const noshowSaving = projectedNoshowLoss * (projSimNoShow / 100);
+    const ticketGain = projection.projected * (projSimTicket / 100);
+    return projection.projected + noshowSaving + ticketGain;
+  }, [projection, projSimNoShow, projSimTicket, currentMonthCheckins, TICKET_PRIVATE, TICKET_INSURANCE]);
 
   // ── PACIENTES: Funnel ──
   const funnelData = useMemo(() => {
@@ -422,6 +487,81 @@ export default function InsightsPage() {
 
           {/* ── ABA 2: ANÁLISE FINANCEIRA ── */}
           <TabsContent value="financeiro" className="space-y-4 mt-4">
+
+            {/* Projeção do Mês */}
+            {projection && projection.daysWithCheckin >= 2 && (
+              <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+                <div className="px-4 pt-4 pb-2 flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Projeção do mês</p>
+                </div>
+                <div className="px-4 pb-4 space-y-3">
+                  {/* Acumulado + Projeção */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-muted/40 p-3 text-center">
+                      <p className="text-[10px] text-muted-foreground">Acumulado</p>
+                      <p className="text-lg font-extrabold text-foreground mt-0.5">{formatBRL(projection.revenueAccum)}</p>
+                      <p className="text-[10px] text-muted-foreground">{projection.daysWithCheckin} dias</p>
+                    </div>
+                    <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 text-center">
+                      <p className="text-[10px] text-muted-foreground">Projeção</p>
+                      <p className="text-lg font-extrabold text-primary mt-0.5">{formatBRL(projection.projected)}</p>
+                      <p className="text-[10px] text-muted-foreground">{projection.totalWorkingDays} dias úteis</p>
+                    </div>
+                  </div>
+
+                  {/* Meta progress */}
+                  {projection.monthlyTarget > 0 && (() => {
+                    const pct = Math.min(Math.round((projection.projected / projection.monthlyTarget) * 100), 150);
+                    const onTrack = projection.projected >= projection.monthlyTarget;
+                    return (
+                      <div className="space-y-1.5">
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className={cn('h-full rounded-full transition-all', onTrack ? 'bg-revenue-gain' : 'bg-idea-attention')}
+                            style={{ width: `${Math.min(pct, 100)}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <p className={cn('text-[11px] font-semibold', onTrack ? 'text-revenue-gain' : 'text-idea-attention')}>
+                            {onTrack ? '✓ No ritmo para bater a meta' : '⚠ Ritmo abaixo da meta'}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Projetado: <span className="font-bold">{pct}%</span> da meta
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Mini "E se" simulator */}
+                  <div className="pt-2 border-t border-border/40 space-y-3">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">E se...</p>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-foreground">Reduzir no-show em</span>
+                        <span className="text-xs font-bold text-primary">{projSimNoShow}%</span>
+                      </div>
+                      <Slider value={[projSimNoShow]} onValueChange={(v) => setProjSimNoShow(v[0])} min={0} max={80} step={10} />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-foreground">Aumentar ticket em</span>
+                        <span className="text-xs font-bold text-primary">{projSimTicket}%</span>
+                      </div>
+                      <Slider value={[projSimTicket]} onValueChange={(v) => setProjSimTicket(v[0])} min={0} max={50} step={5} />
+                    </div>
+                    {(projSimNoShow > 0 || projSimTicket > 0) && (
+                      <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 text-center">
+                        <p className="text-[10px] text-muted-foreground">Potencial mensal</p>
+                        <p className="text-xl font-extrabold text-primary mt-0.5">{formatBRL(projPotential)}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Donut: Origem da Perda */}
             <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
               <div className="px-4 pt-4 pb-2">
