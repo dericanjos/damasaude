@@ -299,9 +299,7 @@ export default function CheckinPage() {
   }, [autoEmptySlots, quickMode]);
   const hasValidationError = !quickMode && effectiveCapacity > 0 && (
     totalAttendedNow > effectiveCapacity ||
-    attendedMismatch ||
-    totalLossesPrivate > form.attended_private ||
-    totalLossesInsurance > form.attended_insurance
+    attendedMismatch
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
