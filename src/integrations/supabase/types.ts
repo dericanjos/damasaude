@@ -727,6 +727,7 @@ export type Database = {
           onboarding_completed: boolean
           phone: string | null
           referral_code_used: string | null
+          referral_credits: number
           source: string | null
           stripe_customer_id: string | null
           subscription_status: string
@@ -747,6 +748,7 @@ export type Database = {
           onboarding_completed?: boolean
           phone?: string | null
           referral_code_used?: string | null
+          referral_credits?: number
           source?: string | null
           stripe_customer_id?: string | null
           subscription_status?: string
@@ -767,6 +769,7 @@ export type Database = {
           onboarding_completed?: boolean
           phone?: string | null
           referral_code_used?: string | null
+          referral_credits?: number
           source?: string | null
           stripe_customer_id?: string | null
           subscription_status?: string
@@ -812,7 +815,11 @@ export type Database = {
           created_at: string | null
           id: string
           referred_id: string | null
+          referred_subscription_status: string
+          referred_user_id: string | null
           referrer_id: string
+          reward_granted: boolean
+          reward_granted_at: string | null
           status: string | null
         }
         Insert: {
@@ -820,7 +827,11 @@ export type Database = {
           created_at?: string | null
           id?: string
           referred_id?: string | null
+          referred_subscription_status?: string
+          referred_user_id?: string | null
           referrer_id: string
+          reward_granted?: boolean
+          reward_granted_at?: string | null
           status?: string | null
         }
         Update: {
@@ -828,7 +839,11 @@ export type Database = {
           created_at?: string | null
           id?: string
           referred_id?: string | null
+          referred_subscription_status?: string
+          referred_user_id?: string | null
           referrer_id?: string
+          reward_granted?: boolean
+          reward_granted_at?: string | null
           status?: string | null
         }
         Relationships: []
