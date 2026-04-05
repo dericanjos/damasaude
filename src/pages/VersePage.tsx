@@ -217,7 +217,7 @@ export default function VersePage() {
         </Button>
 
         <p className="text-[10px] text-muted-foreground/50 font-medium tracking-wider mt-2">
-          DAMA · Solução completa para médicos
+          DAMA · Gestão inteligente para médicos
         </p>
       </div>
     </div>
