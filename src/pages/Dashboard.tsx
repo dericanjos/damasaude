@@ -116,6 +116,65 @@ export default function Dashboard() {
     }, 0);
   }, [monthlyCheckins, allFinancials, clinic, monthlyRevenueTarget]);
 
+  // Last 7 days checkins for sparkline
+  const last7Start = useMemo(() => format(subDays(new Date(), 6), 'yyyy-MM-dd'), []);
+  const { data: last7Checkins = [] } = useQuery({
+    queryKey: ['last7-checkins', user?.id, last7Start, selectedLocationId],
+    queryFn: async () => {
+      if (!user) return [];
+      let q = supabase
+        .from('daily_checkins')
+        .select('date, appointments_scheduled, attended_private, attended_insurance, noshows_private, noshows_insurance, cancellations, empty_slots, followup_done, new_appointments, extra_appointments, location_id')
+        .eq('user_id', user.id)
+        .gte('date', last7Start)
+        .order('date');
+      if (selectedLocationId) q = q.eq('location_id', selectedLocationId);
+      const { data } = await q;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  const sparklineData = useMemo(() => {
+    if (last7Checkins.length < 2) return null;
+    // Group by date (for consolidated)
+    const byDate: Record<string, any[]> = {};
+    for (const c of last7Checkins) {
+      if (!byDate[c.date]) byDate[c.date] = [];
+      byDate[c.date].push(c);
+    }
+    const tp = (clinic as any)?.ticket_private ?? DEFAULT_TICKET_PRIVATE;
+    const ti = (clinic as any)?.ticket_insurance ?? DEFAULT_TICKET_INSURANCE;
+    const points = Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b)).map(([date, checkins]) => {
+      const totalAP = checkins.reduce((s, c) => s + (c.attended_private ?? 0), 0);
+      const totalAI = checkins.reduce((s, c) => s + (c.attended_insurance ?? 0), 0);
+      const totalNP = checkins.reduce((s, c) => s + (c.noshows_private ?? 0), 0);
+      const totalNI = checkins.reduce((s, c) => s + (c.noshows_insurance ?? 0), 0);
+      const totalCancel = checkins.reduce((s, c) => s + (c.cancellations ?? 0), 0);
+      const totalEmpty = checkins.reduce((s, c) => s + (c.empty_slots ?? 0), 0);
+      const totalSched = checkins.reduce((s, c) => s + (c.appointments_scheduled ?? 0), 0);
+      const totalExtra = checkins.reduce((s, c) => s + (c.extra_appointments ?? 0), 0);
+      const totalNew = checkins.reduce((s, c) => s + (c.new_appointments ?? 0), 0);
+      const followup = checkins.every(c => c.followup_done);
+      const cap = totalSched + totalExtra || 16;
+      const cd: CheckinData = {
+        appointments_scheduled: totalSched,
+        attended_private: totalAP, attended_insurance: totalAI,
+        noshows_private: totalNP, noshows_insurance: totalNI,
+        cancellations: totalCancel, empty_slots: totalEmpty,
+        new_appointments: totalNew, followup_done: followup,
+      };
+      return { date: format(new Date(date + 'T12:00:00'), 'dd/MM'), score: calculateIDEA(cd, cap, tp, ti) };
+    });
+    if (points.length < 2) return null;
+    return points;
+  }, [last7Checkins, clinic]);
+
+  const sparklineAvg = useMemo(() => {
+    if (!sparklineData) return 0;
+    return Math.round(sparklineData.reduce((s, p) => s + p.score, 0) / sparklineData.length);
+  }, [sparklineData]);
+
   useCheckinRealtime();
 
   // Protocol revenue for today
