@@ -112,8 +112,9 @@ export default function OnboardingPage() {
     try {
       const timezone = detectTimezone();
       const cap = (dailyCapacity || 16) as number;
-      const defaultWorkingDays = ['seg', 'ter', 'qua', 'qui', 'sex'];
-      const defaultCaps: Record<string, number> = { dom: 0, seg: cap, ter: cap, qua: cap, qui: cap, sex: cap, sab: 0 };
+      const selectedDays = workingDays.length > 0 ? workingDays : ['seg', 'ter', 'qua', 'qui', 'sex'];
+      const defaultCaps: Record<string, number> = { dom: 0, seg: 0, ter: 0, qua: 0, qui: 0, sex: 0, sab: 0 };
+      selectedDays.forEach(d => { defaultCaps[d] = cap; });
 
       const { data: existingClinic } = await supabase
         .from('clinics').select('id').eq('user_id', user.id).maybeSingle();
