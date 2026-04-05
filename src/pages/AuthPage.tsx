@@ -61,6 +61,11 @@ export default function AuthPage() {
           setLoading(false);
           return;
         }
+        if (phone !== phoneConfirm) {
+          toast.error('Os números de telefone não coincidem');
+          setLoading(false);
+          return;
+        }
         const { error } = await signUp(email, password, doctorName, clinicName, 0.85, 0.05, phone);
         if (error) {
           toast.error(error.message || 'Erro ao criar conta');
