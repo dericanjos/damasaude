@@ -1,11 +1,26 @@
+import { useEffect, useRef } from 'react';
 import { useLossRadar } from '@/hooks/useLossRadar';
 import { formatBRL } from '@/lib/revenue';
 import { AlertTriangle, TrendingDown } from 'lucide-react';
+import { scheduleTrendAlert, getNotificationsEnabled } from '@/hooks/useNotificationReminders';
 
 const whatsappUrl = 'https://wa.me/5521959214292?text=Ol%C3%A1!%20Vim%20pelo%20app%20DAMA%20Sa%C3%BAde%20e%20quero%20saber%20como%20reduzir%20os%20vazamentos%20da%20minha%20agenda.';
 
 export default function LossRadarCard() {
   const { data: radar } = useLossRadar();
+  const trendNotified = useRef(false);
+
+  // Schedule native push notification when trend is detected
+  useEffect(() => {
+    if (!radar?.worstTrend || trendNotified.current) return;
+    if (!getNotificationsEnabled()) return;
+    const trend = radar.worstTrend;
+    const pct = Math.round(trend.percentChange);
+    scheduleTrendAlert(
+      `Seus ${trend.label.toLowerCase()} aumentaram ${pct}% nas últimas 2 semanas. Confira seus insights no DAMA Clínica.`
+    );
+    trendNotified.current = true;
+  }, [radar?.worstTrend]);
 
   if (!radar) return null;
 
