@@ -166,7 +166,7 @@ export default function OnboardingPage() {
           ticket_insurance: paymentType === 'particular' ? 0 : ti,
         } as any);
 
-        const scheduleRows = defaultWorkingDays.map(d => ({
+        const scheduleRows = selectedDays.map(d => ({
           user_id: user.id,
           location_id: newLoc.id,
           weekday: DAY_MAP[d],
