@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useCheckinStreak } from '@/hooks/useChecklist';
 
 /**
@@ -32,30 +32,18 @@ const REMINDERS = [
 
 export function useNotificationReminders() {
   const { data: streak = 0 } = useCheckinStreak();
-  const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>(
-    typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'
-  );
 
   const requestPermission = useCallback(async () => {
-    if (!('Notification' in window)) {
-      setPermissionState('unsupported');
-      return false;
-    }
-    if (Notification.permission === 'granted') {
-      setPermissionState('granted');
-      return true;
-    }
-    if (Notification.permission === 'denied') {
-      setPermissionState('denied');
-      return false;
-    }
+    if (!('Notification' in window)) return false;
+    if (Notification.permission === 'granted') return true;
+    if (Notification.permission === 'denied') return false;
     const result = await Notification.requestPermission();
-    setPermissionState(result);
     return result === 'granted';
   }, []);
 
   useEffect(() => {
-    if (permissionState !== 'granted') return;
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
 
     const now = new Date();
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -75,12 +63,10 @@ export function useNotificationReminders() {
       }
     };
 
-    // Schedule the 3 fixed reminders
     REMINDERS.forEach(r => {
       scheduleNotification(makeTime(r.hour, r.minute), r.title, r.body, r.tag);
     });
 
-    // Streak risk at 17:00 if streak > 0
     if (streak > 0) {
       scheduleNotification(
         makeTime(17, 0),
@@ -93,7 +79,7 @@ export function useNotificationReminders() {
     return () => {
       timers.forEach(clearTimeout);
     };
-  }, [permissionState, streak]);
+  }, [streak]);
 
-  return { requestPermission, permissionState };
+  return { requestPermission };
 }
