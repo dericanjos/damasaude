@@ -17,6 +17,7 @@ import { Settings, LogOut, CreditCard, ExternalLink, Percent, MapPin, Plus, Penc
 import FeedbackModal from '@/components/FeedbackModal';
 import FounderBadge from '@/components/FounderBadge';
 import ProtocolManager from '@/components/ProtocolManager';
+import NotificationSettings from '@/components/NotificationSettings';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { DAY_KEYS, DAY_LABELS, DAY_SHORT_LABELS, parseDailyCapacities, type DailyCapacities } from '@/lib/days';
@@ -579,71 +580,7 @@ export default function SettingsPage() {
       </Button>
 
       {/* Notificações */}
-      <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Bell className="h-4 w-4 text-primary" />
-            <p className="text-sm font-semibold text-foreground">Lembretes de check-in</p>
-          </div>
-          <Button
-            variant={typeof Notification !== 'undefined' && Notification.permission === 'granted' ? 'default' : 'outline'}
-            size="sm"
-            className="text-xs"
-            onClick={async () => {
-              if (!('Notification' in window)) {
-                toast.error('Seu navegador não suporta notificações.');
-                return;
-              }
-              if (Notification.permission === 'granted') {
-                toast.info('Notificações já estão ativadas!');
-                return;
-              }
-              const result = await Notification.requestPermission();
-              if (result === 'granted') {
-                toast.success('Notificações ativadas! 🎉');
-              } else {
-                toast.error('Permissão negada. Ative nas configurações do navegador.');
-              }
-            }}
-          >
-            {typeof Notification !== 'undefined' && Notification.permission === 'granted' ? '✅ Ativado' : '🔔 Ativar'}
-          </Button>
-        </div>
-
-        <p className="text-xs text-muted-foreground">
-          Receba 3 lembretes diários para não esquecer seu check-in:
-        </p>
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
-            <span className="text-sm">☀️</span>
-            <div>
-              <p className="text-xs font-medium text-foreground">08:00 — Bom dia</p>
-              <p className="text-[11px] text-muted-foreground">Registre os agendamentos do dia</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
-            <span className="text-sm">📊</span>
-            <div>
-              <p className="text-xs font-medium text-foreground">12:30 — Meio do dia</p>
-              <p className="text-[11px] text-muted-foreground">Atualize atendimentos e encaixes</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
-            <span className="text-sm">🌙</span>
-            <div>
-              <p className="text-xs font-medium text-foreground">18:00 — Fim do dia</p>
-              <p className="text-[11px] text-muted-foreground">Finalize no-shows e cancelamentos</p>
-            </div>
-          </div>
-        </div>
-
-        {typeof Notification !== 'undefined' && Notification.permission === 'denied' && (
-          <p className="text-[11px] text-destructive">
-            ⚠️ Notificações bloqueadas. Vá nas configurações do navegador para desbloquear.
-          </p>
-        )}
-      </div>
+      <NotificationSettings />
 
       {/* Feedback */}
       <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
