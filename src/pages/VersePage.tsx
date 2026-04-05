@@ -134,7 +134,10 @@ export default function VersePage() {
           padding: '120px 80px',
         }}
       >
-        <img src={logoDama} alt="DAMA" style={{ height: '120px', objectFit: 'contain' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <img src={logoDama} alt="DAMA" style={{ height: '120px', objectFit: 'contain' }} />
+          <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '4px', marginTop: '8px' }}>Solução completa para médicos</p>
+        </div>
         <div
           style={{
             border: '1px solid rgba(212,175,55,0.3)',
