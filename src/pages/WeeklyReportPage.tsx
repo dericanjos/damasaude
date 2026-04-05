@@ -10,7 +10,7 @@ import LocationSelector from '@/components/LocationSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
 import { Button } from '@/components/ui/button';
-import { startOfWeek, subWeeks, addWeeks, format, getDay, parseISO } from 'date-fns';
+import { startOfWeek, subWeeks, addWeeks, addDays, format, getDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, BarChart3, TrendingUp, TrendingDown, Loader2, Sparkles, Mail, Info, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -46,15 +46,6 @@ export default function WeeklyReportPage() {
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
   const workingDays: string[] = Array.isArray((clinic as any)?.working_days) ? (clinic as any).working_days : ['seg', 'ter', 'qua', 'qui', 'sex'];
 
-  // Per-location working days count based on active schedules
-  const locationWorkingDaysCount = useMemo(() => {
-    if (selectedLocationId) {
-      const activeSchedules = allSchedules.filter(s => s.location_id === selectedLocationId && s.is_active);
-      return activeSchedules.length || workingDays.length;
-    }
-    return workingDays.length;
-  }, [selectedLocationId, allSchedules, workingDays.length]);
-
   const targetFillRate = clinic?.target_fill_rate ?? 0.85;
   const targetNoShowRate = clinic?.target_noshow_rate ?? 0.05;
 
@@ -66,6 +57,49 @@ export default function WeeklyReportPage() {
   const { data: checkins = [] } = useWeekCheckins(weekStart, selectedLocationId);
   const weekStartStr = format(weekStart, 'yyyy-MM-dd');
   const weekLabel = format(weekStart, "'Semana de' dd 'de' MMMM", { locale: ptBR });
+
+  // Compute which JS weekdays (0-6) fall in the selected week (Mon-Sun)
+  const weekWeekdays = useMemo(() => {
+    const days: number[] = [];
+    for (let i = 0; i < 7; i++) {
+      days.push(getDay(addDays(weekStart, i)));
+    }
+    return days;
+  }, [weekStart]);
+
+  // Per-location expected check-ins for THIS week based on schedules
+  const locationWeekExpected = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const loc of locations) {
+      const locSchedules = allSchedules.filter(s => s.location_id === loc.id && s.is_active);
+      const expected = locSchedules.filter(s => weekWeekdays.includes(s.weekday)).length;
+      map[loc.id] = expected || workingDays.length;
+    }
+    return map;
+  }, [locations, allSchedules, weekWeekdays, workingDays.length]);
+
+  // Per-location actual check-ins for THIS week
+  const locationWeekActual = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const loc of locations) {
+      map[loc.id] = checkins.filter(c => c.location_id === loc.id).length;
+    }
+    return map;
+  }, [locations, checkins]);
+
+  const totalExpected = useMemo(() => {
+    if (selectedLocationId) {
+      return locationWeekExpected[selectedLocationId] || workingDays.length;
+    }
+    return Object.values(locationWeekExpected).reduce((a, b) => a + b, 0) || workingDays.length;
+  }, [selectedLocationId, locationWeekExpected, workingDays.length]);
+
+  const totalActual = useMemo(() => {
+    if (selectedLocationId) {
+      return locationWeekActual[selectedLocationId] || 0;
+    }
+    return Object.values(locationWeekActual).reduce((a, b) => a + b, 0);
+  }, [selectedLocationId, locationWeekActual]);
 
   // AI Report state
   const [aiReport, setAiReport] = useState<string | null>(null);
@@ -158,16 +192,14 @@ export default function WeeklyReportPage() {
   // For consolidated view: require all locations to have enough data individually
   const hasEnoughData = useMemo(() => {
     if (isConsolidated && locations.length > 1) {
-      // Each location must have enough check-ins based on its own schedule
       return locations.every(loc => {
-        const locSchedules = allSchedules.filter(s => s.location_id === loc.id && s.is_active);
-        const locWorkingDays = locSchedules.length || workingDays.length;
-        const locCheckins = allCheckins.filter((c: any) => c.location_id === loc.id);
-        return locCheckins.length >= locWorkingDays;
+        const expected = locationWeekExpected[loc.id] || workingDays.length;
+        const actual = locationWeekActual[loc.id] || 0;
+        return actual >= expected;
       });
     }
-    return allCheckins.length >= locationWorkingDaysCount;
-  }, [isConsolidated, locations, allSchedules, allCheckins, locationWorkingDaysCount, workingDays.length]);
+    return totalActual >= totalExpected;
+  }, [isConsolidated, locations, locationWeekExpected, locationWeekActual, totalActual, totalExpected, workingDays.length]);
 
   return (
     <div className="mx-auto max-w-lg px-4 py-5 space-y-4 animate-fade-in">
@@ -209,27 +241,32 @@ export default function WeeklyReportPage() {
           <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
             {isConsolidated && locations.length > 1
               ? 'O relatório consolidado será gerado quando cada clínica tiver completado seus check-ins mínimos da semana.'
-              : `Seu primeiro relatório semanal será gerado após ${locationWorkingDaysCount} dias de dados. Continue fazendo seus check-ins diários!`}
+              : `Seu primeiro relatório semanal será gerado após ${totalExpected} dias de dados. Continue fazendo seus check-ins diários!`}
           </p>
-          <p className="text-xs text-muted-foreground mt-3">
+
+          <div className="mt-3 space-y-1">
             {isConsolidated && locations.length > 1 ? (
-              <span className="flex flex-col gap-1 items-center">
+              <>
                 {locations.map(loc => {
-                  const locSchedules = allSchedules.filter(s => s.location_id === loc.id && s.is_active);
-                  const locWorkingDays = locSchedules.length || workingDays.length;
-                  const locCheckins = allCheckins.filter((c: any) => c.location_id === loc.id);
-                  const done = locCheckins.length >= locWorkingDays;
+                  const expected = locationWeekExpected[loc.id] || workingDays.length;
+                  const actual = locationWeekActual[loc.id] || 0;
+                  const done = actual >= expected;
                   return (
-                    <span key={loc.id} className={cn('text-xs', done ? 'text-revenue-gain' : 'text-muted-foreground')}>
-                      {loc.name}: <span className="font-bold">{locCheckins.length}/{locWorkingDays}</span> {done ? '✓' : ''}
-                    </span>
+                    <p key={loc.id} className={cn('text-xs', done ? 'text-revenue-gain' : 'text-muted-foreground')}>
+                      {loc.name}: <span className="font-bold">{actual}/{expected}</span> {done ? '✅' : '⚠️'}
+                    </p>
                   );
                 })}
-              </span>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Total: <span className="font-bold text-foreground">{totalActual}/{totalExpected}</span>
+                </p>
+              </>
             ) : (
-              <>Check-ins realizados: <span className="font-bold text-foreground">{allCheckins.length}/{locationWorkingDaysCount}</span></>
+              <p className="text-xs text-muted-foreground">
+                Check-ins realizados: <span className="font-bold text-foreground">{totalActual}/{totalExpected}</span>
+              </p>
             )}
-          </p>
+          </div>
         </div>
       ) : checkins.length === 0 ? (
         <div className="rounded-2xl bg-card border border-border/60 shadow-card py-12 text-center">
