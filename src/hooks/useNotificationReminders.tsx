@@ -42,7 +42,8 @@ export function useNotificationReminders() {
   }, []);
 
   useEffect(() => {
-    if (permissionState !== 'granted') return;
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
 
     const now = new Date();
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -62,12 +63,10 @@ export function useNotificationReminders() {
       }
     };
 
-    // Schedule the 3 fixed reminders
     REMINDERS.forEach(r => {
       scheduleNotification(makeTime(r.hour, r.minute), r.title, r.body, r.tag);
     });
 
-    // Streak risk at 17:00 if streak > 0
     if (streak > 0) {
       scheduleNotification(
         makeTime(17, 0),
@@ -80,7 +79,7 @@ export function useNotificationReminders() {
     return () => {
       timers.forEach(clearTimeout);
     };
-  }, [permissionState, streak]);
+  }, [streak]);
 
-  return { requestPermission, permissionState };
+  return { requestPermission };
 }
