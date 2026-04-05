@@ -401,6 +401,36 @@ export default function OnboardingPage() {
                 <p className="text-[11px] text-muted-foreground">Valor médio recebido por consulta via convênio.</p>
               </div>
             )}
+            {/* Day selector */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dias de atendimento *</Label>
+              <div className="flex gap-2 justify-between">
+                {(['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'] as const).map((day) => {
+                  const labels: Record<string, string> = { dom: 'D', seg: 'S', ter: 'T', qua: 'Q', qui: 'Q', sex: 'S', sab: 'S' };
+                  const fullLabels: Record<string, string> = { dom: 'Dom', seg: 'Seg', ter: 'Ter', qua: 'Qua', qui: 'Qui', sex: 'Sex', sab: 'Sáb' };
+                  const checked = workingDays.includes(day);
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => setWorkingDays(prev => 
+                        prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+                      )}
+                      className={cn(
+                        'flex flex-col items-center justify-center w-10 h-12 rounded-lg border text-xs font-medium transition-colors',
+                        checked
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background text-muted-foreground border-border hover:border-primary/50'
+                      )}
+                    >
+                      <span className="text-[10px] opacity-70">{fullLabels[day]}</span>
+                      <span className="text-sm font-bold">{labels[day]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-muted-foreground">Selecione os dias em que você atende neste local.</p>
+            </div>
           </div>
         )}
 
