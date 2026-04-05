@@ -46,14 +46,48 @@ export default function WeeklyReportPage() {
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
   const workingDays: string[] = Array.isArray((clinic as any)?.working_days) ? (clinic as any).working_days : ['seg', 'ter', 'qua', 'qui', 'sex'];
 
-  // Per-location working days count based on active schedules
-  const locationWorkingDaysCount = useMemo(() => {
-    if (selectedLocationId) {
-      const activeSchedules = allSchedules.filter(s => s.location_id === selectedLocationId && s.is_active);
-      return activeSchedules.length || workingDays.length;
+  // Compute which JS weekdays (0-6) fall in the selected week (Mon-Sun)
+  const weekWeekdays = useMemo(() => {
+    const days: number[] = [];
+    for (let i = 0; i < 7; i++) {
+      days.push(getDay(addDays(weekStart, i)));
     }
-    return workingDays.length;
-  }, [selectedLocationId, allSchedules, workingDays.length]);
+    return days;
+  }, [weekStart]);
+
+  // Per-location expected check-ins for THIS week based on schedules
+  const locationWeekExpected = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const loc of locations) {
+      const locSchedules = allSchedules.filter(s => s.location_id === loc.id && s.is_active);
+      const expected = locSchedules.filter(s => weekWeekdays.includes(s.weekday)).length;
+      map[loc.id] = expected || workingDays.length;
+    }
+    return map;
+  }, [locations, allSchedules, weekWeekdays, workingDays.length]);
+
+  // Per-location actual check-ins for THIS week
+  const locationWeekActual = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const loc of locations) {
+      map[loc.id] = checkins.filter(c => c.location_id === loc.id).length;
+    }
+    return map;
+  }, [locations, checkins]);
+
+  const totalExpected = useMemo(() => {
+    if (selectedLocationId) {
+      return locationWeekExpected[selectedLocationId] || workingDays.length;
+    }
+    return Object.values(locationWeekExpected).reduce((a, b) => a + b, 0) || workingDays.length;
+  }, [selectedLocationId, locationWeekExpected, workingDays.length]);
+
+  const totalActual = useMemo(() => {
+    if (selectedLocationId) {
+      return locationWeekActual[selectedLocationId] || 0;
+    }
+    return Object.values(locationWeekActual).reduce((a, b) => a + b, 0);
+  }, [selectedLocationId, locationWeekActual]);
 
   const targetFillRate = clinic?.target_fill_rate ?? 0.85;
   const targetNoShowRate = clinic?.target_noshow_rate ?? 0.05;
