@@ -176,10 +176,10 @@ export default function VersePage() {
       {/* Verse content */}
       <div
         ref={cardRef}
-        className="flex flex-col items-center justify-center text-center max-w-sm rounded-2xl p-8"
+        className="flex flex-col items-center justify-center text-center max-w-sm rounded-2xl p-8 max-h-[300px] overflow-y-auto"
         style={{ border: '1px solid rgba(212,175,55,0.3)' }}
       >
-        <p className="text-xl font-medium text-foreground leading-relaxed italic">
+        <p className={`font-medium text-foreground leading-relaxed italic text-center ${verse.verse_text.length > 150 ? 'text-sm' : verse.verse_text.length > 100 ? 'text-base' : 'text-lg'}`}>
           <span style={{ fontFamily: 'Georgia, serif', fontSize: '64px', color: 'rgba(212,175,55,0.6)', lineHeight: '0.5', verticalAlign: '-0.15em' }}>{"\u201C"}</span>
           {verse.verse_text}
           <span style={{ fontFamily: 'Georgia, serif', fontSize: '64px', color: 'rgba(212,175,55,0.6)', lineHeight: '0.5', verticalAlign: '-0.4em' }}>{"\u201D"}</span>
