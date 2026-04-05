@@ -77,6 +77,9 @@ export default function AuthPage() {
           setLoading(false);
           return;
         }
+        if (referralCode.trim()) {
+          localStorage.setItem('dama_referral_code', referralCode.trim());
+        }
         const { error } = await signUp(email, password, doctorName, clinicName, 0.85, 0.05, phone);
         if (error) {
           toast.error(error.message || 'Erro ao criar conta');
