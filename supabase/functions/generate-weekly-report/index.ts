@@ -76,7 +76,7 @@ serve(async (req) => {
     // Fetch clinic info
     const { data: clinic } = await supabase
       .from("clinics")
-      .select("ticket_private, ticket_insurance, daily_capacity, target_fill_rate, target_noshow_rate, working_days, has_secretary")
+      .select("ticket_private, ticket_insurance, daily_capacity, target_fill_rate, target_noshow_rate, working_days, has_secretary, monthly_revenue_target")
       .eq("id", clinic_id)
       .single();
 
@@ -189,6 +189,8 @@ serve(async (req) => {
       comparisonBlock = `\n\n**Comparativo entre locais:**\n• Maior vazamento (R$): ${worstLeakerName} — R$${Math.round(worstLeakerLost)}\n• Maior no-show: ${worstNoshowName} — ${Math.round(worstNoshowRate * 100)}%\n• Melhor ocupação: ${bestOccName} — ${Math.round(bestOcc * 100)}%`;
     }
 
+    const monthlyTarget = (clinic as any)?.monthly_revenue_target ?? null;
+
     const summary = {
       dias_com_checkin: checkins.length,
       dias_de_atendimento: workingDaysCount,
@@ -208,6 +210,7 @@ serve(async (req) => {
       taxa_noshow: `${totalScheduled > 0 ? Math.round((totalNoShow / totalScheduled) * 100) : 0}%`,
       meta_ocupacao: `${Math.round((clinic?.target_fill_rate ?? 0.85) * 100)}%`,
       meta_noshow: `${Math.round((clinic?.target_noshow_rate ?? 0.05) * 100)}%`,
+      meta_receita_mensal: monthlyTarget ? `R$${Math.round(monthlyTarget)}` : null,
       multi_local: isMultiLocation,
       locais: isMultiLocation ? Object.entries(perLocation).map(([id, d]) => ({
         nome: locNameMap[id] || id,
@@ -298,6 +301,8 @@ Analise os dados da última semana e gere um relatório estratégico conciso em 
 1. **👍 O que foi bem:** Destaque 1 ou 2 pontos positivos com números.
 2. **⚠️ Pontos de atenção:** Identifique o maior problema da semana com impacto em R$.
 3. **🎯 Plano de Ação (3 tarefas):** Ações práticas, adaptáveis e variadas. Para cada ação: o que fazer, tempo estimado e impacto esperado em R$.
+
+Se há meta de receita mensal (meta_receita_mensal), mencione brevemente o progresso semanal em relação à meta.
 
 ${rotationContext}
 

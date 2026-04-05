@@ -80,6 +80,41 @@ export default function Dashboard() {
   const { data: allFinancials = [] } = useAllLocationFinancials();
   const { data: allSchedules = [] } = useAllLocationSchedules();
 
+  // Monthly accumulated revenue
+  const monthlyRevenueTarget = (clinic as any)?.monthly_revenue_target ?? null;
+  const currentMonth = useMemo(() => {
+    const now = new Date();
+    return { start: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`, day: now.getDate() };
+  }, []);
+
+  const { data: monthlyCheckins = [] } = useQuery({
+    queryKey: ['monthly-checkins', user?.id, currentMonth.start],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from('daily_checkins')
+        .select('attended_private, attended_insurance, location_id')
+        .eq('user_id', user.id)
+        .gte('date', currentMonth.start)
+        .order('date');
+      return data || [];
+    },
+    enabled: !!user && monthlyRevenueTarget != null && monthlyRevenueTarget > 0,
+  });
+
+  const monthlyAccumulatedRevenue = useMemo(() => {
+    if (!monthlyRevenueTarget || monthlyCheckins.length === 0) return 0;
+    const tp = (clinic as any)?.ticket_private ?? DEFAULT_TICKET_PRIVATE;
+    const ti = (clinic as any)?.ticket_insurance ?? DEFAULT_TICKET_INSURANCE;
+    return monthlyCheckins.reduce((sum: number, c: any) => {
+      const locId = c.location_id;
+      const fin = allFinancials.find((f: any) => f.location_id === locId);
+      const locTp = fin ? (fin as any).ticket_private : tp;
+      const locTi = fin ? (fin as any).ticket_insurance : ti;
+      return sum + ((c.attended_private ?? 0) * locTp) + ((c.attended_insurance ?? 0) * locTi);
+    }, 0);
+  }, [monthlyCheckins, allFinancials, clinic, monthlyRevenueTarget]);
+
   useCheckinRealtime();
 
   // Protocol revenue for today
@@ -286,15 +321,21 @@ export default function Dashboard() {
   // Single priority alert (1 per day, most relevant)
   type Alert = { type: 'warn' | 'ok'; label: string; message: string; action?: string };
   const alert: Alert = useMemo(() => {
-    // For consolidated mode, use consolidated metrics
     const rev = displayRevenue;
     const cd = checkinData;
 
     if (!rev) return { type: 'ok' as const, label: 'STATUS', message: 'Faça o check-in para ver seus alertas.' };
 
-    // Priority order: lost revenue > no-show > occupancy > follow-up
+    // Priority order: lost revenue > monthly target > no-show > occupancy > follow-up
     if (rev.lost > 500)
       return { type: 'warn' as const, label: 'ALERTA FINANCEIRO', message: `Vazamento de ${formatBRL(rev.lost)} hoje entre faltas, cancelamentos e buracos na agenda.` };
+
+    // Monthly revenue target alert: day >= 15 and accumulated < 50% of target
+    if (monthlyRevenueTarget && monthlyRevenueTarget > 0 && currentMonth.day >= 15 && monthlyAccumulatedRevenue < monthlyRevenueTarget * 0.5) {
+      const pct = Math.round((monthlyAccumulatedRevenue / monthlyRevenueTarget) * 100);
+      return { type: 'warn' as const, label: 'ALERTA DE META MENSAL', message: `Dia ${currentMonth.day} e receita acumulada em ${pct}% da meta mensal. Ritmo abaixo do esperado.` };
+    }
+
     if (rev.noShowRate > targetNoShowRate)
       return { type: 'warn' as const, label: 'ALERTA DE AGENDA', message: `Taxa de no-show (${safePercent(rev.noShowRate)}) acima da meta (${formatPercent(targetNoShowRate)}).` };
     if (rev.occupancyRate != null && rev.occupancyRate < targetFillRate)
@@ -303,7 +344,7 @@ export default function Dashboard() {
       return { type: 'warn' as const, label: 'ALERTA DE PROCESSO', message: 'Follow-up não executado hoje. Risco de perder oportunidades de reagendamento.' };
 
     return { type: 'ok' as const, label: 'AGENDA DENTRO DAS METAS', message: 'Sua operação está alinhada com as metas. Ótimo trabalho.' };
-  }, [displayRevenue, checkinData, targetNoShowRate, targetFillRate]);
+  }, [displayRevenue, checkinData, targetNoShowRate, targetFillRate, monthlyRevenueTarget, monthlyAccumulatedRevenue, currentMonth.day]);
 
   const handleComplete = (id: string) => {
     completeAction.mutate(id, {
@@ -699,6 +740,19 @@ export default function Dashboard() {
             </div>
             <p className="text-2xl font-bold text-foreground">{formatBRL(displayRevenue.estimated)}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{displayRevenue.totalAttended} consultas</p>
+            {monthlyRevenueTarget != null && monthlyRevenueTarget > 0 && (() => {
+              const pct = Math.min(100, Math.round((monthlyAccumulatedRevenue / monthlyRevenueTarget) * 100));
+              return (
+                <div className="mt-2.5">
+                  <div className="h-1 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {formatBRL(monthlyAccumulatedRevenue)} de {formatBRL(monthlyRevenueTarget)} ({pct}%)
+                  </p>
+                </div>
+              );
+            })()}
           </div>
           <div className="rounded-2xl bg-card border border-revenue-loss/40 p-4 shadow-card">
             <div className="flex items-center gap-1.5 mb-2">
