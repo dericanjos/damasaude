@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useCheckinStreak } from '@/hooks/useChecklist';
 
 /**
