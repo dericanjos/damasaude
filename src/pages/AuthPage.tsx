@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ const handleSocialSignIn = async (provider: 'google' | 'apple') => {
 
 export default function AuthPage() {
   const { signIn, signUp } = useAuth();
+  const [searchParams] = useSearchParams();
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -39,6 +41,15 @@ export default function AuthPage() {
   const [phone, setPhone] = useState('');
   const [phoneConfirm, setPhoneConfirm] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
+  const [referralCode, setReferralCode] = useState('');
+
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      setReferralCode(ref.toUpperCase());
+      setIsSignUp(true);
+    }
+  }, [searchParams]);
 
   const phoneMismatch = isSignUp && phone !== '' && phoneConfirm !== '' && phone !== phoneConfirm;
 
@@ -65,6 +76,9 @@ export default function AuthPage() {
           toast.error('Os números de telefone não coincidem');
           setLoading(false);
           return;
+        }
+        if (referralCode.trim()) {
+          localStorage.setItem('dama_referral_code', referralCode.trim());
         }
         const { error } = await signUp(email, password, doctorName, clinicName, 0.85, 0.05, phone);
         if (error) {
@@ -192,6 +206,19 @@ export default function AuthPage() {
                   required
                 />
               </div>
+
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="referralCode" className="text-white/90">Código de convite (opcional)</Label>
+                  <Input
+                    id="referralCode"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                    placeholder="Ex: DAMA-DRSILVA-A1B2"
+                    className="border-white/20 bg-white/10 text-white placeholder:text-white/40"
+                  />
+                </div>
+              )}
 
               {!isSignUp && (
                 <div className="flex items-center justify-between">

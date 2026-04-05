@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Copy, MessageCircle, ArrowLeft, Users, UserCheck, Crown } from 'lucide-react';
+import { Copy, MessageCircle, ArrowLeft, Users, UserCheck, Gift, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useClinic } from '@/hooks/useClinic';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import logoDama from '@/assets/logo-dama.png';
-import FounderBadge from '@/components/FounderBadge';
 
 function generateCode(doctorName: string): string {
   const clean = (doctorName || 'MEDICO').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5);
@@ -17,20 +16,29 @@ function generateCode(doctorName: string): string {
   return `DAMA-DR${clean}-${rand}`;
 }
 
+type ReferralRow = {
+  id: string;
+  code: string;
+  status: string;
+  referred_subscription_status: string;
+  reward_granted: boolean;
+  referred_id: string | null;
+  referred_user_id: string | null;
+};
+
 export default function ReferralPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: clinic } = useClinic();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, completed: 0 });
-  const [founderCount, setFounderCount] = useState(0);
-  const [isFounder, setIsFounder] = useState(false);
+  const [referrals, setReferrals] = useState<ReferralRow[]>([]);
+  const [credits, setCredits] = useState(0);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      // Check for existing code
+      // Get or create referral code
       const { data: existing } = await supabase
         .from('referrals')
         .select('code')
@@ -50,42 +58,31 @@ export default function ReferralPage() {
         setCode(newCode);
       }
 
-      // Fetch stats
+      // Fetch all referrals with new fields
       const { data: allRefs } = await supabase
         .from('referrals')
-        .select('status')
-        .eq('referrer_id', user.id) as any;
+        .select('id, code, status, referred_subscription_status, reward_granted, referred_id, referred_user_id')
+        .eq('referrer_id', user.id)
+        .order('created_at', { ascending: false }) as any;
 
       if (allRefs) {
-        setStats({
-          total: allRefs.length,
-          completed: allRefs.filter((r: any) => r.status === 'completed').length,
-        });
+        setReferrals(allRefs);
       }
 
-      // Check founder status
-      const { data: profileRow } = await supabase
+      // Fetch credits
+      const { data: profile } = await supabase
         .from('profiles')
-        .select('tier')
+        .select('referral_credits')
         .eq('user_id', user.id)
         .maybeSingle() as any;
-      setIsFounder((profileRow as any)?.tier === 'founder');
-
-      // Count total founders
-      const { count } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('tier', 'founder') as any;
-      setFounderCount(count || 0);
+      setCredits((profile as any)?.referral_credits || 0);
 
       setLoading(false);
     })();
   }, [user, clinic]);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code);
-    toast.success('Código copiado!');
-  };
+  const referredReferrals = referrals.filter(r => r.referred_id || r.referred_user_id);
+  const paidCount = referrals.filter(r => r.referred_subscription_status === 'paid').length;
 
   const handleCopyLink = () => {
     const link = `https://damasaude.com.br/auth?ref=${code}`;
@@ -94,10 +91,24 @@ export default function ReferralPage() {
   };
 
   const handleWhatsApp = () => {
+    const link = `https://damasaude.com.br/auth?ref=${code}`;
     const msg = encodeURIComponent(
-      `Oi! Estou usando o DAMA Saúde, um app que mostra quanto sua clínica perde por mês com faltas e cancelamentos. Me ajudou muito a entender onde estou perdendo dinheiro. Usa meu código ${code} pra entrar: https://damasaude.com.br/auth?ref=${code}`
+      `Estou usando o DAMA Saúde pra gerenciar minha clínica e tem me ajudado muito! Crie sua conta com meu link: ${link}`
     );
     window.open(`https://wa.me/?text=${msg}`, '_blank');
+  };
+
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return { label: 'Pagou ✅', icon: CheckCircle2, color: 'text-green-400' };
+      case 'trialing':
+        return { label: 'No trial', icon: Clock, color: 'text-yellow-400' };
+      case 'churned':
+        return { label: 'Cancelou', icon: XCircle, color: 'text-red-400' };
+      default:
+        return { label: 'Pendente', icon: Clock, color: 'text-muted-foreground' };
+    }
   };
 
   if (loading) return <div className="flex items-center justify-center min-h-screen"><p className="text-muted-foreground">Carregando...</p></div>;
@@ -113,83 +124,95 @@ export default function ReferralPage() {
           <img src={logoDama} alt="DAMA" className="h-7" />
         </div>
 
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold text-foreground">INDIQUE COLEGAS</h1>
+        {/* Hero card */}
+        <div className="rounded-2xl bg-gradient-to-br from-[hsl(220,40%,12%)] to-[hsl(40,50%,15%)] border border-[#D4AF37]/30 p-6 text-center space-y-3">
+          <Gift className="h-8 w-8 text-[#D4AF37] mx-auto" />
+          <h1 className="text-xl font-bold text-foreground">Indique e ganhe!</h1>
           <p className="text-sm text-muted-foreground">
-            Compartilhe o DAMA Saúde com médicos que precisam recuperar receita.
+            Para cada colega que assinar, você ganha <span className="text-[#D4AF37] font-semibold">1 mês grátis</span>. Sem limite!
           </p>
         </div>
 
-        {/* Founder card */}
-        {isFounder && (
-          <div className="rounded-2xl bg-gradient-to-br from-[hsl(220,40%,12%)] to-[hsl(40,50%,15%)] border border-[#D4AF37]/30 p-5 space-y-3">
-            <div className="flex items-center gap-2">
-              <Crown className="h-5 w-5 text-[#D4AF37]" />
-              <p className="text-base font-bold text-foreground">Você é Founder DAMA 👑</p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Como founder, você tem acesso vitalício gratuito ao DAMA Saúde.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Ajude outros médicos a descobrirem essa ferramenta.
-            </p>
-            <p className="text-xs text-[#D4AF37]/70">Vagas founder restantes: {Math.max(0, 200 - founderCount)}/200</p>
-          </div>
-        )}
-
-        {/* Code card */}
+        {/* Code */}
         <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-6 text-center space-y-3">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Seu código exclusivo</p>
-          <div className="flex items-center justify-center gap-3">
-            <p className="text-2xl font-mono font-bold text-[#D4AF37] tracking-wider">{code}</p>
-            <button onClick={handleCopy} className="text-muted-foreground hover:text-foreground transition-colors">
-              <Copy className="h-5 w-5" />
-            </button>
-          </div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Seu código de indicação</p>
+          <p className="text-2xl font-mono font-bold text-[#D4AF37] tracking-wider">{code}</p>
         </div>
 
-        {/* Actions */}
-        <div className="space-y-3">
-          <Button
-            onClick={handleWhatsApp}
-            className="w-full h-12 rounded-xl text-base font-semibold"
-            style={{ backgroundColor: '#25D366', color: 'white' }}
-          >
-            <MessageCircle className="h-5 w-5 mr-2" />
-            Compartilhar via WhatsApp
-          </Button>
+        {/* Action buttons side by side */}
+        <div className="grid grid-cols-2 gap-3">
           <Button
             onClick={handleCopyLink}
             variant="outline"
-            className="w-full h-12 rounded-xl text-base font-semibold"
+            className="h-12 rounded-xl text-sm font-semibold"
           >
             <Copy className="h-4 w-4 mr-2" />
             Copiar link
           </Button>
+          <Button
+            onClick={handleWhatsApp}
+            className="h-12 rounded-xl text-sm font-semibold"
+            style={{ backgroundColor: '#25D366', color: 'white' }}
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            WhatsApp
+          </Button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-4 text-center">
-            <Users className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
-            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-            <p className="text-xs text-muted-foreground">colegas indicados</p>
+        {/* Stats panel */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-3 text-center">
+            <Users className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
+            <p className="text-xl font-bold text-foreground">{referredReferrals.length}</p>
+            <p className="text-[10px] text-muted-foreground">indicações</p>
           </div>
-          <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-4 text-center">
-            <UserCheck className="h-5 w-5 text-[#D4AF37] mx-auto mb-2" />
-            <p className="text-2xl font-bold text-foreground">{stats.completed}</p>
-            <p className="text-xs text-muted-foreground">completaram cadastro</p>
+          <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-3 text-center">
+            <UserCheck className="h-4 w-4 text-green-400 mx-auto mb-1" />
+            <p className="text-xl font-bold text-foreground">{paidCount}</p>
+            <p className="text-[10px] text-muted-foreground">pagaram</p>
+          </div>
+          <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-3 text-center">
+            <Gift className="h-4 w-4 text-[#D4AF37] mx-auto mb-1" />
+            <p className="text-xl font-bold text-foreground">{credits}</p>
+            <p className="text-[10px] text-muted-foreground">meses grátis</p>
           </div>
         </div>
+
+        {/* Referral list */}
+        {referredReferrals.length > 0 && (
+          <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-5 space-y-3">
+            <p className="text-sm font-semibold text-foreground">Suas indicações</p>
+            <div className="space-y-2">
+              {referredReferrals.map((ref) => {
+                const info = getStatusInfo(ref.referred_subscription_status);
+                const StatusIcon = info.icon;
+                return (
+                  <div key={ref.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <span className="text-sm text-muted-foreground">Indicado</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 text-xs font-medium ${info.color}`}>
+                      <StatusIcon className="h-3.5 w-3.5" />
+                      {info.label}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* How it works */}
         <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-5 space-y-4">
           <p className="text-sm font-semibold text-foreground">Como funciona?</p>
           <div className="space-y-3">
             {[
-              { n: '1', text: 'Compartilhe seu código' },
-              { n: '2', text: 'Seu colega baixa o app e insere o código no cadastro' },
-              { n: '3', text: 'Vocês dois ganham destaque na comunidade DAMA' },
+              { n: '1', text: 'Compartilhe seu link com colegas médicos' },
+              { n: '2', text: 'Seu colega cria a conta e usa o app por 21 dias grátis' },
+              { n: '3', text: 'Quando ele pagar a 1ª mensalidade, você ganha 1 mês grátis' },
             ].map(({ n, text }) => (
               <div key={n} className="flex items-start gap-3">
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-xs font-bold">
@@ -200,6 +223,10 @@ export default function ReferralPage() {
             ))}
           </div>
         </div>
+
+        {/* // Implementar no webhook de pagamento (Apple IAP / Stripe):
+            // Quando a renovação mensal for processada, verificar referral_credits > 0.
+            // Se sim, pular a cobrança daquele mês e decrementar referral_credits em 1. */}
       </div>
     </div>
   );
