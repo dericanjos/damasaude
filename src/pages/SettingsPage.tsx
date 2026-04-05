@@ -622,10 +622,6 @@ export default function SettingsPage() {
 
       <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
 
-      {/* Update Verses - Founder only */}
-      {tier === 'founder' && (
-        <VerseUpdateButton />
-      )}
 
       {/* About DAMA */}
       <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
