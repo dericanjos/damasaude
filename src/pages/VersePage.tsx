@@ -163,7 +163,7 @@ export default function VersePage() {
           </p>
         </div>
         <p style={{ fontSize: '22px', color: 'rgba(148,163,184,0.5)', fontWeight: 500, letterSpacing: '3px' }}>
-          DAMA · Solução completa para médicos
+          DAMA · Gestão inteligente para médicos
         </p>
       </div>
 
