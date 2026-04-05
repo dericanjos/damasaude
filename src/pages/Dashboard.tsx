@@ -80,6 +80,39 @@ export default function Dashboard() {
   const { data: allFinancials = [] } = useAllLocationFinancials();
   const { data: allSchedules = [] } = useAllLocationSchedules();
 
+  // Monthly accumulated revenue
+  const monthlyRevenueTarget = (clinic as any)?.monthly_revenue_target ?? null;
+  const currentMonth = useMemo(() => {
+    const now = new Date();
+    return { start: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`, day: now.getDate() };
+  }, []);
+
+  const { data: monthlyCheckins = [] } = useQuery({
+    queryKey: ['monthly-checkins', user?.id, currentMonth.start],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from('daily_checkins')
+        .select('attended_private, attended_insurance, location_id')
+        .eq('user_id', user.id)
+        .gte('date', currentMonth.start)
+        .order('date');
+      return data || [];
+    },
+    enabled: !!user && monthlyRevenueTarget != null && monthlyRevenueTarget > 0,
+  });
+
+  const monthlyAccumulatedRevenue = useMemo(() => {
+    if (!monthlyRevenueTarget || monthlyCheckins.length === 0) return 0;
+    return monthlyCheckins.reduce((sum: number, c: any) => {
+      const locId = c.location_id;
+      const fin = allFinancials.find((f: any) => f.location_id === locId);
+      const tp = fin ? (fin as any).ticket_private : ticketPrivate;
+      const ti = fin ? (fin as any).ticket_insurance : ticketInsurance;
+      return sum + ((c.attended_private ?? 0) * tp) + ((c.attended_insurance ?? 0) * ti);
+    }, 0);
+  }, [monthlyCheckins, allFinancials, ticketPrivate, ticketInsurance, monthlyRevenueTarget]);
+
   useCheckinRealtime();
 
   // Protocol revenue for today
