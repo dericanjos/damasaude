@@ -487,6 +487,81 @@ export default function InsightsPage() {
 
           {/* ── ABA 2: ANÁLISE FINANCEIRA ── */}
           <TabsContent value="financeiro" className="space-y-4 mt-4">
+
+            {/* Projeção do Mês */}
+            {projection && projection.daysWithCheckin >= 2 && (
+              <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
+                <div className="px-4 pt-4 pb-2 flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Projeção do mês</p>
+                </div>
+                <div className="px-4 pb-4 space-y-3">
+                  {/* Acumulado + Projeção */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-muted/40 p-3 text-center">
+                      <p className="text-[10px] text-muted-foreground">Acumulado</p>
+                      <p className="text-lg font-extrabold text-foreground mt-0.5">{formatBRL(projection.revenueAccum)}</p>
+                      <p className="text-[10px] text-muted-foreground">{projection.daysWithCheckin} dias</p>
+                    </div>
+                    <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 text-center">
+                      <p className="text-[10px] text-muted-foreground">Projeção</p>
+                      <p className="text-lg font-extrabold text-primary mt-0.5">{formatBRL(projection.projected)}</p>
+                      <p className="text-[10px] text-muted-foreground">{projection.totalWorkingDays} dias úteis</p>
+                    </div>
+                  </div>
+
+                  {/* Meta progress */}
+                  {projection.monthlyTarget > 0 && (() => {
+                    const pct = Math.min(Math.round((projection.projected / projection.monthlyTarget) * 100), 150);
+                    const onTrack = projection.projected >= projection.monthlyTarget;
+                    return (
+                      <div className="space-y-1.5">
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className={cn('h-full rounded-full transition-all', onTrack ? 'bg-revenue-gain' : 'bg-idea-attention')}
+                            style={{ width: `${Math.min(pct, 100)}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <p className={cn('text-[11px] font-semibold', onTrack ? 'text-revenue-gain' : 'text-idea-attention')}>
+                            {onTrack ? '✓ No ritmo para bater a meta' : '⚠ Ritmo abaixo da meta'}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Projetado: <span className="font-bold">{pct}%</span> da meta
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Mini "E se" simulator */}
+                  <div className="pt-2 border-t border-border/40 space-y-3">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">E se...</p>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-foreground">Reduzir no-show em</span>
+                        <span className="text-xs font-bold text-primary">{projSimNoShow}%</span>
+                      </div>
+                      <Slider value={[projSimNoShow]} onValueChange={(v) => setProjSimNoShow(v[0])} min={0} max={80} step={10} />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-foreground">Aumentar ticket em</span>
+                        <span className="text-xs font-bold text-primary">{projSimTicket}%</span>
+                      </div>
+                      <Slider value={[projSimTicket]} onValueChange={(v) => setProjSimTicket(v[0])} min={0} max={50} step={5} />
+                    </div>
+                    {(projSimNoShow > 0 || projSimTicket > 0) && (
+                      <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 text-center">
+                        <p className="text-[10px] text-muted-foreground">Potencial mensal</p>
+                        <p className="text-xl font-extrabold text-primary mt-0.5">{formatBRL(projPotential)}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Donut: Origem da Perda */}
             <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
               <div className="px-4 pt-4 pb-2">
