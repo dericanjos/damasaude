@@ -245,10 +245,12 @@ export default function CheckinPage() {
     }
   }, [paramSection, existing?.id]);
 
-  // Get capacity from location schedule
+  // Get capacity from location schedule (0 means no schedule for today — don't block)
   const todayWeekday = new Date().getDay();
   const todaySchedule = schedules.find(s => s.weekday === todayWeekday);
-  const dailyCapacity = todaySchedule?.daily_capacity || getCapacityForDate(new Date(), parseDailyCapacities((clinic as any)?.daily_capacities));
+  const rawDailyCapacity = todaySchedule?.daily_capacity ?? getCapacityForDate(new Date(), parseDailyCapacities((clinic as any)?.daily_capacities));
+  // When capacity is 0 (no schedule), use appointments_scheduled as effective or fallback 16
+  const dailyCapacity = rawDailyCapacity > 0 ? rawDailyCapacity : (form.appointments_scheduled > 0 ? form.appointments_scheduled : 16);
   const ticketAvg = financial?.ticket_avg ?? 250;
   const ticketPrivate = (clinic as any)?.ticket_private ?? DEFAULT_TICKET_PRIVATE;
   const ticketInsurance = (clinic as any)?.ticket_insurance ?? DEFAULT_TICKET_INSURANCE;
