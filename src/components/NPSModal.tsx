@@ -120,7 +120,7 @@ export default function NPSModal({ open, onClose }: NPSModalProps) {
         {step === 'feedback' && category === 'promoter' && (
           <div className="space-y-4 text-center">
             <p className="text-sm text-muted-foreground">
-              Uma avaliação na store ajuda outros médicos a descobrirem o DAMA Saúde.
+              Uma avaliação na store ajuda outros médicos a descobrirem o DAMA Clínica.
             </p>
             <Button onClick={handlePromoterAction} className="w-full rounded-xl" disabled={submitting}>
               {submitting ? 'Enviando...' : 'Avaliar na store'}

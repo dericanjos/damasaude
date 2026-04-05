@@ -63,7 +63,7 @@ export default function VersePage() {
 
       // Try native share first (best UX on mobile)
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Versículo do Dia - DAMA' });
+        await navigator.share({ files: [file], title: 'Versículo do Dia - DAMA Clínica' });
         return;
       }
 
@@ -136,7 +136,7 @@ export default function VersePage() {
       >
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <img src={logoDama} alt="DAMA" style={{ height: '120px', objectFit: 'contain' }} />
-          <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '4px', marginTop: '8px' }}>Solução completa para médicos</p>
+          <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '4px', marginTop: '8px' }}>Gestão inteligente para médicos</p>
         </div>
         <div
           style={{
@@ -163,14 +163,14 @@ export default function VersePage() {
           </p>
         </div>
         <p style={{ fontSize: '22px', color: 'rgba(148,163,184,0.5)', fontWeight: 500, letterSpacing: '3px' }}>
-          DAMA · Solução completa para médicos
+          DAMA · Gestão inteligente para médicos
         </p>
       </div>
 
       {/* Logo + subtítulo */}
       <div className="flex-shrink-0 pt-4 flex flex-col items-center">
         <img src={logoDama} alt="DAMA" className="h-[100px] object-contain" />
-        <p className="text-[10px] uppercase tracking-[0.25em] text-white/50 mt-1">Solução completa para médicos</p>
+        <p className="text-[10px] uppercase tracking-[0.25em] text-white/50 mt-1">Gestão inteligente para médicos</p>
       </div>
 
       {/* Verse content */}
@@ -217,7 +217,7 @@ export default function VersePage() {
         </Button>
 
         <p className="text-[10px] text-muted-foreground/50 font-medium tracking-wider mt-2">
-          DAMA · Solução completa para médicos
+          DAMA · Gestão inteligente para médicos
         </p>
       </div>
     </div>
