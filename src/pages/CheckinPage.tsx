@@ -319,13 +319,38 @@ export default function CheckinPage() {
       const quickScheduled = form.appointments_scheduled > 0 ? form.appointments_scheduled : dailyCapacity;
       const quickAttended = Math.max(0, quickScheduled - quickNoshows - quickEmpty);
 
+      // BUG 3 fix: use last checkin ratio for attended split instead of 50/50
+      let privateRatio = 0.5;
+      if (lastCheckin) {
+        const lastPrivate = (lastCheckin as any)?.attended_private ?? 0;
+        const lastInsurance = (lastCheckin as any)?.attended_insurance ?? 0;
+        const lastTotal = lastPrivate + lastInsurance;
+        if (lastTotal > 0) {
+          privateRatio = lastPrivate / lastTotal;
+        }
+      }
+
+      const attendedPrivate = paymentType === 'convenio' ? 0 : (paymentType === 'particular' ? quickAttended : Math.round(quickAttended * privateRatio));
+      const attendedInsurance = paymentType === 'particular' ? 0 : (paymentType === 'convenio' ? quickAttended : quickAttended - Math.round(quickAttended * privateRatio));
+
+      // BUG 2 fix: distribute no-shows proportionally too
+      let noshowPrivate = quickNoshows;
+      let noshowInsurance = 0;
+      if (paymentType === 'convenio') {
+        noshowPrivate = 0;
+        noshowInsurance = quickNoshows;
+      } else if (paymentType === 'ambos') {
+        noshowPrivate = Math.round(quickNoshows * privateRatio);
+        noshowInsurance = quickNoshows - noshowPrivate;
+      }
+
       submitData = {
         ...form,
         appointments_scheduled: quickScheduled,
-        attended_private: paymentType === 'convenio' ? 0 : (paymentType === 'particular' ? quickAttended : Math.ceil(quickAttended / 2)),
-        attended_insurance: paymentType === 'particular' ? 0 : (paymentType === 'convenio' ? quickAttended : Math.floor(quickAttended / 2)),
-        noshows_private: quickNoshows,
-        noshows_insurance: 0,
+        attended_private: attendedPrivate,
+        attended_insurance: attendedInsurance,
+        noshows_private: noshowPrivate,
+        noshows_insurance: noshowInsurance,
         empty_slots: quickEmpty,
         followup_done: quickFollowup,
       };
