@@ -149,18 +149,35 @@ export default function AuthPage() {
                 />
               </div>
               {isSignUp && (
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-white/90">Telefone</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(formatPhone(e.target.value))}
-                    placeholder="(21) 99999-9999"
-                    className="border-white/20 bg-white/10 text-white placeholder:text-white/40"
-                    required
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-white/90">Telefone</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(formatPhone(e.target.value))}
+                      placeholder="(21) 99999-9999"
+                      className="border-white/20 bg-white/10 text-white placeholder:text-white/40"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phoneConfirm" className="text-white/90">Confirmar telefone</Label>
+                    <Input
+                      id="phoneConfirm"
+                      type="tel"
+                      value={phoneConfirm}
+                      onChange={(e) => setPhoneConfirm(formatPhone(e.target.value))}
+                      placeholder="(21) 99999-9999"
+                      className={`border-white/20 bg-white/10 text-white placeholder:text-white/40 ${phoneMismatch ? 'border-red-500' : ''}`}
+                      required
+                    />
+                    {phoneMismatch && (
+                      <p className="text-xs text-red-400">Os números não coincidem</p>
+                    )}
+                  </div>
+                </>
               )}
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-white/90">Senha</Label>
