@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +37,10 @@ export default function AuthPage() {
   const [doctorName, setDoctorName] = useState('');
   const [clinicName, setClinicName] = useState('');
   const [phone, setPhone] = useState('');
+  const [phoneConfirm, setPhoneConfirm] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
+
+  const phoneMismatch = isSignUp && phone !== '' && phoneConfirm !== '' && phone !== phoneConfirm;
 
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -53,6 +58,11 @@ export default function AuthPage() {
         const phoneDigits = phone.replace(/\D/g, '');
         if (phoneDigits.length < 10) {
           toast.error('Informe um telefone válido com DDD');
+          setLoading(false);
+          return;
+        }
+        if (phone !== phoneConfirm) {
+          toast.error('Os números de telefone não coincidem');
           setLoading(false);
           return;
         }
@@ -139,18 +149,35 @@ export default function AuthPage() {
                 />
               </div>
               {isSignUp && (
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-white/90">Telefone</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(formatPhone(e.target.value))}
-                    placeholder="(21) 99999-9999"
-                    className="border-white/20 bg-white/10 text-white placeholder:text-white/40"
-                    required
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-white/90">Telefone</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(formatPhone(e.target.value))}
+                      placeholder="(21) 99999-9999"
+                      className="border-white/20 bg-white/10 text-white placeholder:text-white/40"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phoneConfirm" className="text-white/90">Confirmar telefone</Label>
+                    <Input
+                      id="phoneConfirm"
+                      type="tel"
+                      value={phoneConfirm}
+                      onChange={(e) => setPhoneConfirm(formatPhone(e.target.value))}
+                      placeholder="(21) 99999-9999"
+                      className={`border-white/20 bg-white/10 text-white placeholder:text-white/40 ${phoneMismatch ? 'border-red-500' : ''}`}
+                      required
+                    />
+                    {phoneMismatch && (
+                      <p className="text-xs text-red-400">Os números não coincidem</p>
+                    )}
+                  </div>
+                </>
               )}
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-white/90">Senha</Label>
@@ -166,7 +193,14 @@ export default function AuthPage() {
                 />
               </div>
 
-              <Button type="submit" className="w-full bg-white text-blue-900 font-semibold hover:bg-white/90" disabled={loading}>
+              {!isSignUp && (
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="rememberMe" className="text-sm text-white/80 cursor-pointer">Manter conectado</Label>
+                  <Switch id="rememberMe" checked={rememberMe} onCheckedChange={setRememberMe} />
+                </div>
+              )}
+
+              <Button type="submit" className="w-full bg-white text-blue-900 font-semibold hover:bg-white/90" disabled={loading || (isSignUp && phoneMismatch)}>
                 {loading ? 'Aguarde...' : isSignUp ? 'Criar conta' : 'Entrar'}
               </Button>
             </form>
