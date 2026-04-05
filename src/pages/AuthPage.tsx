@@ -193,7 +193,14 @@ export default function AuthPage() {
                 />
               </div>
 
-              <Button type="submit" className="w-full bg-white text-blue-900 font-semibold hover:bg-white/90" disabled={loading}>
+              {!isSignUp && (
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="rememberMe" className="text-sm text-white/80 cursor-pointer">Manter conectado</Label>
+                  <Switch id="rememberMe" checked={rememberMe} onCheckedChange={setRememberMe} />
+                </div>
+              )}
+
+              <Button type="submit" className="w-full bg-white text-blue-900 font-semibold hover:bg-white/90" disabled={loading || (isSignUp && phoneMismatch)}>
                 {loading ? 'Aguarde...' : isSignUp ? 'Criar conta' : 'Entrar'}
               </Button>
             </form>
