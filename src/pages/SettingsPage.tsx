@@ -266,6 +266,65 @@ function LocationEditDialog({
   );
 }
 
+function VerseUpdateButton() {
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState('');
+
+  const handleUpdate = async () => {
+    setLoading(true);
+    setProgress('Iniciando atualização de 366 versículos...');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-verses-kjv`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+        }
+      );
+      const result = await res.json();
+      if (!res.ok) {
+        toast.error(result.error || 'Erro ao atualizar versículos');
+        setProgress('');
+      } else {
+        setProgress(`✅ Concluído! ${result.updated} atualizados, ${result.replaced} substituídos. ${result.errors?.length || 0} erros.`);
+        toast.success(`${result.updated} versículos atualizados para KJA!`);
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+      setProgress('');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-2">
+      <div className="flex items-center gap-3">
+        <Crown className="h-4 w-4 text-[#D4AF37]" />
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-foreground">Atualizar versículos KJA</p>
+          <p className="text-xs text-muted-foreground">Atualiza todos os 366 versículos para tradução KJA com tema médico</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs border-[#D4AF37]/30 text-[#D4AF37]"
+          onClick={handleUpdate}
+          disabled={loading}
+        >
+          {loading ? 'Processando...' : 'Atualizar'}
+        </Button>
+      </div>
+      {progress && (
+        <p className="text-xs text-muted-foreground animate-in fade-in">{progress}</p>
+      )}
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const navigate = useNavigate();
