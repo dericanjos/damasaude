@@ -32,25 +32,12 @@ const REMINDERS = [
 
 export function useNotificationReminders() {
   const { data: streak = 0 } = useCheckinStreak();
-  const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>(
-    typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'
-  );
 
   const requestPermission = useCallback(async () => {
-    if (!('Notification' in window)) {
-      setPermissionState('unsupported');
-      return false;
-    }
-    if (Notification.permission === 'granted') {
-      setPermissionState('granted');
-      return true;
-    }
-    if (Notification.permission === 'denied') {
-      setPermissionState('denied');
-      return false;
-    }
+    if (!('Notification' in window)) return false;
+    if (Notification.permission === 'granted') return true;
+    if (Notification.permission === 'denied') return false;
     const result = await Notification.requestPermission();
-    setPermissionState(result);
     return result === 'granted';
   }, []);
 
