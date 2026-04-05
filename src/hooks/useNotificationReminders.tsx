@@ -1,54 +1,70 @@
-import { useEffect, useCallback } from 'react';
-import { useTodayLocations, useLocationSchedules } from '@/hooks/useLocations';
-import { useTodayCheckin } from '@/hooks/useCheckin';
+import { useEffect, useCallback, useState } from 'react';
 import { useCheckinStreak } from '@/hooks/useChecklist';
 
 /**
- * Schedules browser notifications for check-in reminders:
- * 1. Start of shift → register today's appointments
- * 2. Mid-shift → update attended/losses so far
- * 3. End of shift → finalize the day's results
- * 4. Streak risk → 1 hour before end if no check-in done
+ * Schedules browser notifications for check-in reminders at fixed times:
+ * 1. 08:00 — Bom dia, hora do check-in
+ * 2. 12:30 — Meio do dia, atualize seus números
+ * 3. 18:00 — Fim do dia, finalize o check-in
+ * + Streak risk at 17:00 if no check-in done
  */
+
+const REMINDERS = [
+  {
+    hour: 8, minute: 0,
+    title: '☀️ Bom dia, Doutor(a)!',
+    body: 'Comece o dia registrando seus agendamentos no DAMA Clínica.',
+    tag: 'checkin-morning',
+  },
+  {
+    hour: 12, minute: 30,
+    title: '📊 Meio do dia — como está a agenda?',
+    body: 'Atualize seus atendimentos e encaixes. Leva menos de 1 minuto!',
+    tag: 'checkin-midday',
+  },
+  {
+    hour: 18, minute: 0,
+    title: '🌙 Hora de fechar o dia!',
+    body: 'Finalize seu check-in: registre no-shows, cancelamentos e resultados.',
+    tag: 'checkin-evening',
+  },
+];
+
 export function useNotificationReminders() {
-  const { todayLocations } = useTodayLocations();
-  const firstLocation = todayLocations[0];
-  const { data: schedules = [] } = useLocationSchedules(firstLocation?.id);
-  const { data: todayCheckin } = useTodayCheckin(firstLocation?.id);
   const { data: streak = 0 } = useCheckinStreak();
+  const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>(
+    typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'
+  );
 
   const requestPermission = useCallback(async () => {
-    if (!('Notification' in window)) return false;
-    if (Notification.permission === 'granted') return true;
-    if (Notification.permission === 'denied') return false;
+    if (!('Notification' in window)) {
+      setPermissionState('unsupported');
+      return false;
+    }
+    if (Notification.permission === 'granted') {
+      setPermissionState('granted');
+      return true;
+    }
+    if (Notification.permission === 'denied') {
+      setPermissionState('denied');
+      return false;
+    }
     const result = await Notification.requestPermission();
+    setPermissionState(result);
     return result === 'granted';
   }, []);
 
   useEffect(() => {
-    if (!('Notification' in window)) return;
-    if (Notification.permission !== 'granted') return;
-    if (schedules.length === 0) return;
-
-    const todayWeekday = new Date().getDay();
-    const todaySchedule = schedules.find(s => s.weekday === todayWeekday && s.is_active);
-    if (!todaySchedule) return;
+    if (permissionState !== 'granted') return;
 
     const now = new Date();
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    const parseTime = (timeStr: string): Date => {
-      const [h, m] = timeStr.split(':').map(Number);
+    const makeTime = (hour: number, minute: number): Date => {
       const d = new Date();
-      d.setHours(h, m, 0, 0);
+      d.setHours(hour, minute, 0, 0);
       return d;
     };
-
-    const startTime = parseTime(todaySchedule.start_time);
-    const endTime = parseTime(todaySchedule.end_time);
-    const midTime = new Date((startTime.getTime() + endTime.getTime()) / 2);
-
-    const locationName = firstLocation?.name || 'seu consultório';
 
     const scheduleNotification = (time: Date, title: string, body: string, tag: string) => {
       const ms = time.getTime() - now.getTime();
@@ -59,38 +75,17 @@ export function useNotificationReminders() {
       }
     };
 
-    // 1. Morning: start of shift
-    scheduleNotification(
-      startTime,
-      '☀️ Bom dia! Hora do check-in',
-      `Registre os agendamentos e atendimentos previstos em ${locationName}.`,
-      'checkin-morning'
-    );
+    // Schedule the 3 fixed reminders
+    REMINDERS.forEach(r => {
+      scheduleNotification(makeTime(r.hour, r.minute), r.title, r.body, r.tag);
+    });
 
-    // 2. Mid-shift: update progress
-    scheduleNotification(
-      midTime,
-      '📊 Meio do expediente',
-      `Atualize os atendimentos e encaixes do dia em ${locationName}.`,
-      'checkin-midshift'
-    );
-
-    // 3. Evening: end of shift
-    scheduleNotification(
-      endTime,
-      '🌙 Fim do expediente',
-      `Finalize o check-in em ${locationName}: no-shows, cancelamentos e follow-up.`,
-      'checkin-evening'
-    );
-
-    // 4. Streak risk: 1 hour before end, only if no check-in and streak > 0
-    if (!todayCheckin && streak > 0) {
-      const streakRiskTime = new Date(endTime.getTime() - 60 * 60 * 1000);
-      const hoursLeft = Math.max(1, Math.round((endTime.getTime() - streakRiskTime.getTime()) / (1000 * 60 * 60)));
+    // Streak risk at 17:00 if streak > 0
+    if (streak > 0) {
       scheduleNotification(
-        streakRiskTime,
+        makeTime(17, 0),
         `🔥 Seu streak de ${streak} dias está em risco!`,
-        `Faltam ${hoursLeft} hora${hoursLeft > 1 ? 's' : ''} para fechar o expediente. Faça o check-in para manter sua sequência.`,
+        'Falta 1 hora para as 18h. Faça o check-in para manter sua sequência!',
         'checkin-streak-risk'
       );
     }
@@ -98,7 +93,7 @@ export function useNotificationReminders() {
     return () => {
       timers.forEach(clearTimeout);
     };
-  }, [schedules, firstLocation, todayCheckin, streak]);
+  }, [permissionState, streak]);
 
-  return { requestPermission };
+  return { requestPermission, permissionState };
 }
