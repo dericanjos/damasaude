@@ -177,6 +177,71 @@ export default function InsightsPage() {
     return noShowSaving + ticketGain;
   }, [tw, simNoShow, simTicket, TICKET_PRIVATE, TICKET_INSURANCE, thisWeek.length]);
 
+  // ── FINANCEIRO: Projeção Mensal ──
+  const workingDays: string[] = Array.isArray((clinic as any)?.working_days) ? (clinic as any).working_days : ['seg', 'ter', 'qua', 'qui', 'sex'];
+  const WEEKDAY_PT: Record<number, string> = { 0: 'dom', 1: 'seg', 2: 'ter', 3: 'qua', 4: 'qui', 5: 'sex', 6: 'sab' };
+
+  const currentMonthStart = useMemo(() => format(startOfMonth(new Date()), 'yyyy-MM-dd'), []);
+  const currentMonthEnd = useMemo(() => format(endOfMonth(new Date()), 'yyyy-MM-dd'), []);
+  const { data: currentMonthCheckins = [] } = useCheckinRange(currentMonthStart, currentMonthEnd, selectedLocationId);
+
+  const projection = useMemo(() => {
+    if (currentMonthCheckins.length === 0) return null;
+
+    // Revenue accumulated this month
+    const revenueAccum = currentMonthCheckins.reduce((s, c) => {
+      const attP = (c as any).attended_private ?? (c as any).appointments_done ?? 0;
+      const attI = (c as any).attended_insurance ?? 0;
+      return s + (attP * TICKET_PRIVATE) + (attI * TICKET_INSURANCE);
+    }, 0);
+
+    const daysWithCheckin = currentMonthCheckins.length;
+    const avgDaily = revenueAccum / daysWithCheckin;
+
+    // Count total working days in current month
+    const now = new Date();
+    const monthDays = eachDayOfInterval({ start: startOfMonth(now), end: endOfMonth(now) });
+    const totalWorkingDays = monthDays.filter(d => workingDays.includes(WEEKDAY_PT[getDay(d)])).length;
+
+    const projected = avgDaily * totalWorkingDays;
+    const monthlyTarget = (clinic as any)?.monthly_revenue_target ?? 0;
+
+    // Noshow rate this month for "E se" simulator
+    const totalNoshowsMonth = currentMonthCheckins.reduce((s, c) => {
+      return s + ((c as any).noshows_private ?? (c as any).no_show ?? 0) + ((c as any).noshows_insurance ?? 0);
+    }, 0);
+    const totalScheduledMonth = currentMonthCheckins.reduce((s, c) => s + c.appointments_scheduled, 0);
+    const noshowRateMonth = totalScheduledMonth > 0 ? totalNoshowsMonth / totalScheduledMonth : 0;
+
+    return {
+      revenueAccum,
+      projected,
+      monthlyTarget,
+      avgDaily,
+      totalWorkingDays,
+      daysWithCheckin,
+      noshowRateMonth,
+    };
+  }, [currentMonthCheckins, TICKET_PRIVATE, TICKET_INSURANCE, workingDays, clinic]);
+
+  // "E se" sliders for projection
+  const [projSimNoShow, setProjSimNoShow] = useState(30);
+  const [projSimTicket, setProjSimTicket] = useState(10);
+
+  const projPotential = useMemo(() => {
+    if (!projection) return 0;
+    // If reduce noshows by X%, recover that fraction of lost revenue
+    const noshowLossMonth = currentMonthCheckins.reduce((s, c) => {
+      const nsP = (c as any).noshows_private ?? (c as any).no_show ?? 0;
+      const nsI = (c as any).noshows_insurance ?? 0;
+      return s + (nsP * TICKET_PRIVATE) + (nsI * TICKET_INSURANCE);
+    }, 0);
+    const projectedNoshowLoss = (noshowLossMonth / projection.daysWithCheckin) * projection.totalWorkingDays;
+    const noshowSaving = projectedNoshowLoss * (projSimNoShow / 100);
+    const ticketGain = projection.projected * (projSimTicket / 100);
+    return projection.projected + noshowSaving + ticketGain;
+  }, [projection, projSimNoShow, projSimTicket, currentMonthCheckins, TICKET_PRIVATE, TICKET_INSURANCE]);
+
   // ── PACIENTES: Funnel ──
   const funnelData = useMemo(() => {
     const scheduled = last30.reduce((s, c) => s + c.appointments_scheduled, 0);
