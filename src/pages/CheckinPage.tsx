@@ -268,10 +268,17 @@ export default function CheckinPage() {
   const attendedMismatch = paymentType === 'ambos' && effectiveCapacity > 0 && totalAttendedNow !== effectiveCapacity;
 
   // Losses per category limited by what was scheduled in that category
-  const maxNoshowPrivate = Math.max(0, form.attended_private - form.cancellations_private);
-  const maxNoshowInsurance = Math.max(0, form.attended_insurance - form.cancellations_insurance);
-  const maxCancelPrivate = Math.max(0, form.attended_private - form.noshows_private);
-  const maxCancelInsurance = Math.max(0, form.attended_insurance - form.noshows_insurance);
+  // BUG 4 fix: no-shows + cancellations limited by (scheduled - attended) per category, not by attended
+  // In "ambos" mode, attended_private/insurance represent the scheduled proportion
+  // Max losses = what was NOT attended (i.e. scheduled_proportion - attended is wrong; 
+  // the constraint is: attended + noshows + cancellations <= category_slots)
+  // category_slots ≈ attended + current losses, so max for each loss = category_slots - attended - other_loss
+  const slotsPrivate = form.attended_private + form.noshows_private + form.cancellations_private;
+  const slotsInsurance = form.attended_insurance + form.noshows_insurance + form.cancellations_insurance;
+  const maxNoshowPrivate = Math.max(0, slotsPrivate - form.attended_private - form.cancellations_private);
+  const maxNoshowInsurance = Math.max(0, slotsInsurance - form.attended_insurance - form.cancellations_insurance);
+  const maxCancelPrivate = Math.max(0, slotsPrivate - form.attended_private - form.noshows_private);
+  const maxCancelInsurance = Math.max(0, slotsInsurance - form.attended_insurance - form.noshows_insurance);
 
   // For single payment type modes
   const maxNoshowsTotal = paymentType === 'particular' ? maxNoshowPrivate : maxNoshowInsurance;
@@ -292,9 +299,7 @@ export default function CheckinPage() {
   }, [autoEmptySlots, quickMode]);
   const hasValidationError = !quickMode && effectiveCapacity > 0 && (
     totalAttendedNow > effectiveCapacity ||
-    attendedMismatch ||
-    totalLossesPrivate > form.attended_private ||
-    totalLossesInsurance > form.attended_insurance
+    attendedMismatch
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -319,13 +324,38 @@ export default function CheckinPage() {
       const quickScheduled = form.appointments_scheduled > 0 ? form.appointments_scheduled : dailyCapacity;
       const quickAttended = Math.max(0, quickScheduled - quickNoshows - quickEmpty);
 
+      // BUG 3 fix: use last checkin ratio for attended split instead of 50/50
+      let privateRatio = 0.5;
+      if (lastCheckin) {
+        const lastPrivate = (lastCheckin as any)?.attended_private ?? 0;
+        const lastInsurance = (lastCheckin as any)?.attended_insurance ?? 0;
+        const lastTotal = lastPrivate + lastInsurance;
+        if (lastTotal > 0) {
+          privateRatio = lastPrivate / lastTotal;
+        }
+      }
+
+      const attendedPrivate = paymentType === 'convenio' ? 0 : (paymentType === 'particular' ? quickAttended : Math.round(quickAttended * privateRatio));
+      const attendedInsurance = paymentType === 'particular' ? 0 : (paymentType === 'convenio' ? quickAttended : quickAttended - Math.round(quickAttended * privateRatio));
+
+      // BUG 2 fix: distribute no-shows proportionally too
+      let noshowPrivate = quickNoshows;
+      let noshowInsurance = 0;
+      if (paymentType === 'convenio') {
+        noshowPrivate = 0;
+        noshowInsurance = quickNoshows;
+      } else if (paymentType === 'ambos') {
+        noshowPrivate = Math.round(quickNoshows * privateRatio);
+        noshowInsurance = quickNoshows - noshowPrivate;
+      }
+
       submitData = {
         ...form,
         appointments_scheduled: quickScheduled,
-        attended_private: paymentType === 'convenio' ? 0 : (paymentType === 'particular' ? quickAttended : Math.ceil(quickAttended / 2)),
-        attended_insurance: paymentType === 'particular' ? 0 : (paymentType === 'convenio' ? quickAttended : Math.floor(quickAttended / 2)),
-        noshows_private: quickNoshows,
-        noshows_insurance: 0,
+        attended_private: attendedPrivate,
+        attended_insurance: attendedInsurance,
+        noshows_private: noshowPrivate,
+        noshows_insurance: noshowInsurance,
         empty_slots: quickEmpty,
         followup_done: quickFollowup,
       };
@@ -375,7 +405,7 @@ export default function CheckinPage() {
         ticket_insurance: ticketInsurance,
       });
       const protocolRevenue = protocolEntries.reduce((s, p) => s + p.value, 0);
-      const lossMap = calculateLossMap(checkinData, ticketAvg);
+      const lossMap = calculateLossMap(checkinData, ticketPrivate, ticketInsurance, ticketAvg);
       setReward({
         score: ideaScore,
         estimated: rev.estimated + protocolRevenue,
