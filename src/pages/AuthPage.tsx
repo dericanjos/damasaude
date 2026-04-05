@@ -85,7 +85,7 @@ export default function AuthPage() {
 
   return (
     <div
-      className="flex min-h-screen items-center justify-center p-4"
+      className="flex min-h-screen items-center justify-center p-4 pt-8 md:pt-4"
       style={{
         backgroundImage: `url(${authBg})`,
         backgroundSize: 'cover',
