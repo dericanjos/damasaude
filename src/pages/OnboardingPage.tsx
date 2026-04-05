@@ -54,7 +54,14 @@ export default function OnboardingPage() {
   const [paymentType, setPaymentType] = useState('ambos');
   const [hasSecretary, setHasSecretary] = useState(false);
   const [source, setSource] = useState('');
-  const [referralCode, setReferralCode] = useState('');
+  const [referralCode, setReferralCode] = useState(() => {
+    const stored = localStorage.getItem('dama_referral_code');
+    if (stored) {
+      localStorage.removeItem('dama_referral_code');
+      return stored;
+    }
+    return '';
+  });
 
   // Step 2
   const [clinicName, setClinicName] = useState('');
