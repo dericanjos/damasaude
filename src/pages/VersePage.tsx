@@ -136,7 +136,7 @@ export default function VersePage() {
       >
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <img src={logoDama} alt="DAMA" style={{ height: '120px', objectFit: 'contain' }} />
-          <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '4px', marginTop: '8px' }}>Solução completa para médicos</p>
+          <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '4px', marginTop: '8px' }}>Gestão inteligente para médicos</p>
         </div>
         <div
           style={{
