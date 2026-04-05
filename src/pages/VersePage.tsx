@@ -134,7 +134,10 @@ export default function VersePage() {
           padding: '120px 80px',
         }}
       >
-        <img src={logoDama} alt="DAMA" style={{ height: '120px', objectFit: 'contain' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <img src={logoDama} alt="DAMA" style={{ height: '120px', objectFit: 'contain' }} />
+          <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '4px', marginTop: '8px' }}>Solução completa para médicos</p>
+        </div>
         <div
           style={{
             border: '1px solid rgba(212,175,55,0.3)',
@@ -164,18 +167,19 @@ export default function VersePage() {
         </p>
       </div>
 
-      {/* Logo */}
-      <div className="flex-shrink-0 pt-4">
+      {/* Logo + subtítulo */}
+      <div className="flex-shrink-0 pt-4 flex flex-col items-center">
         <img src={logoDama} alt="DAMA" className="h-[100px] object-contain" />
+        <p className="text-[10px] uppercase tracking-[0.25em] text-white/50 mt-1">Solução completa para médicos</p>
       </div>
 
       {/* Verse content */}
       <div
         ref={cardRef}
-        className="flex flex-col items-center justify-center text-center max-w-sm rounded-2xl p-8"
+        className="flex flex-col items-center justify-center text-center max-w-sm rounded-2xl p-8 max-h-[300px] overflow-y-auto"
         style={{ border: '1px solid rgba(212,175,55,0.3)' }}
       >
-        <p className="text-xl font-medium text-foreground leading-relaxed italic">
+        <p className={`font-medium text-foreground leading-relaxed italic text-center ${verse.verse_text.length > 150 ? 'text-sm' : verse.verse_text.length > 100 ? 'text-base' : 'text-lg'}`}>
           <span style={{ fontFamily: 'Georgia, serif', fontSize: '64px', color: 'rgba(212,175,55,0.6)', lineHeight: '0.5', verticalAlign: '-0.15em' }}>{"\u201C"}</span>
           {verse.verse_text}
           <span style={{ fontFamily: 'Georgia, serif', fontSize: '64px', color: 'rgba(212,175,55,0.6)', lineHeight: '0.5', verticalAlign: '-0.4em' }}>{"\u201D"}</span>
