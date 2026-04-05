@@ -12,7 +12,8 @@ import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
 import { Button } from '@/components/ui/button';
 import { startOfWeek, subWeeks, addWeeks, addDays, format, getDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, BarChart3, TrendingUp, TrendingDown, Loader2, Sparkles, Mail, Info, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BarChart3, TrendingUp, TrendingDown, Loader2, Sparkles, Mail, Info, AlertCircle, FileDown } from 'lucide-react';
+import { exportReportPdf } from '@/lib/exportReportPdf';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
@@ -208,10 +209,42 @@ export default function WeeklyReportPage() {
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl gradient-primary shadow-premium">
           <BarChart3 className="h-5 w-5 text-white" />
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="text-lg font-bold text-foreground">Relatório Semanal</h1>
           <p className="text-xs text-muted-foreground capitalize">{weekLabel}</p>
         </div>
+        {aiReport && hasEnoughData && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-xl text-xs gap-1.5 h-8"
+            onClick={async () => {
+              try {
+                const weekEnd = addDays(weekStart, 6);
+                const periodLabel = `${format(weekStart, 'dd/MM', { locale: ptBR })} a ${format(weekEnd, 'dd/MM/yyyy', { locale: ptBR })}`;
+                await exportReportPdf({
+                  type: 'weekly',
+                  periodLabel,
+                  periodSlug: format(weekStart, 'yyyy-MM-dd'),
+                  doctorName: (clinic as any)?.doctor_name ? `Dr. ${(clinic as any).doctor_name}` : undefined,
+                  specialty: (clinic as any)?.specialty || undefined,
+                  revenueEstimated: totalRevenueEstimated,
+                  revenueLost: totalRevenueLost,
+                  occupancy: avgOccupancy,
+                  noshowRate: avgNoShow,
+                  reportText: aiReport,
+                });
+                toast.success('PDF exportado com sucesso!');
+              } catch (e) {
+                toast.error('Erro ao gerar PDF');
+                console.error(e);
+              }
+            }}
+          >
+            <FileDown className="h-3.5 w-3.5" />
+            PDF
+          </Button>
+        )}
       </div>
 
       {/* Location selector */}
