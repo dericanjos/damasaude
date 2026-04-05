@@ -268,10 +268,17 @@ export default function CheckinPage() {
   const attendedMismatch = paymentType === 'ambos' && effectiveCapacity > 0 && totalAttendedNow !== effectiveCapacity;
 
   // Losses per category limited by what was scheduled in that category
-  const maxNoshowPrivate = Math.max(0, form.attended_private - form.cancellations_private);
-  const maxNoshowInsurance = Math.max(0, form.attended_insurance - form.cancellations_insurance);
-  const maxCancelPrivate = Math.max(0, form.attended_private - form.noshows_private);
-  const maxCancelInsurance = Math.max(0, form.attended_insurance - form.noshows_insurance);
+  // BUG 4 fix: no-shows + cancellations limited by (scheduled - attended) per category, not by attended
+  // In "ambos" mode, attended_private/insurance represent the scheduled proportion
+  // Max losses = what was NOT attended (i.e. scheduled_proportion - attended is wrong; 
+  // the constraint is: attended + noshows + cancellations <= category_slots)
+  // category_slots ≈ attended + current losses, so max for each loss = category_slots - attended - other_loss
+  const slotsPrivate = form.attended_private + form.noshows_private + form.cancellations_private;
+  const slotsInsurance = form.attended_insurance + form.noshows_insurance + form.cancellations_insurance;
+  const maxNoshowPrivate = Math.max(0, slotsPrivate - form.attended_private - form.cancellations_private);
+  const maxNoshowInsurance = Math.max(0, slotsInsurance - form.attended_insurance - form.cancellations_insurance);
+  const maxCancelPrivate = Math.max(0, slotsPrivate - form.attended_private - form.noshows_private);
+  const maxCancelInsurance = Math.max(0, slotsInsurance - form.attended_insurance - form.noshows_insurance);
 
   // For single payment type modes
   const maxNoshowsTotal = paymentType === 'particular' ? maxNoshowPrivate : maxNoshowInsurance;
