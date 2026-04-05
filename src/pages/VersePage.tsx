@@ -170,7 +170,7 @@ export default function VersePage() {
       {/* Logo + subtítulo */}
       <div className="flex-shrink-0 pt-4 flex flex-col items-center">
         <img src={logoDama} alt="DAMA" className="h-[100px] object-contain" />
-        <p className="text-[10px] uppercase tracking-[0.25em] text-white/50 mt-1">Solução completa para médicos</p>
+        <p className="text-[10px] uppercase tracking-[0.25em] text-white/50 mt-1">Gestão inteligente para médicos</p>
       </div>
 
       {/* Verse content */}
