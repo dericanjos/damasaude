@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { Rocket, Crown, TrendingDown } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import logoDama from '@/assets/logo-dama.png';
 
 const SPECIALTIES = [
@@ -59,6 +61,7 @@ export default function OnboardingPage() {
   const [dailyCapacity, setDailyCapacity] = useState<number | ''>(16);
   const [ticketPrivate, setTicketPrivate] = useState<number | ''>(250);
   const [ticketInsurance, setTicketInsurance] = useState<number | ''>(100);
+  const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
 
   // Step 3 — Diagnostic
   const [weeklyNoshows, setWeeklyNoshows] = useState<number | ''>(3);
@@ -109,8 +112,9 @@ export default function OnboardingPage() {
     try {
       const timezone = detectTimezone();
       const cap = (dailyCapacity || 16) as number;
-      const defaultWorkingDays = ['seg', 'ter', 'qua', 'qui', 'sex'];
-      const defaultCaps: Record<string, number> = { dom: 0, seg: cap, ter: cap, qua: cap, qui: cap, sex: cap, sab: 0 };
+      const selectedDays = workingDays.length > 0 ? workingDays : ['seg', 'ter', 'qua', 'qui', 'sex'];
+      const defaultCaps: Record<string, number> = { dom: 0, seg: 0, ter: 0, qua: 0, qui: 0, sex: 0, sab: 0 };
+      selectedDays.forEach(d => { defaultCaps[d] = cap; });
 
       const { data: existingClinic } = await supabase
         .from('clinics').select('id').eq('user_id', user.id).maybeSingle();
@@ -123,7 +127,7 @@ export default function OnboardingPage() {
         has_secretary: hasSecretary,
         num_doctors: 1,
         payment_type: paymentType,
-        working_days: defaultWorkingDays,
+        working_days: selectedDays,
         daily_capacities: defaultCaps,
         daily_capacity: cap,
         ticket_private: paymentType === 'convenio' ? 0 : tp,
@@ -162,7 +166,7 @@ export default function OnboardingPage() {
           ticket_insurance: paymentType === 'particular' ? 0 : ti,
         } as any);
 
-        const scheduleRows = defaultWorkingDays.map(d => ({
+        const scheduleRows = selectedDays.map(d => ({
           user_id: user.id,
           location_id: newLoc.id,
           weekday: DAY_MAP[d],
@@ -399,6 +403,36 @@ export default function OnboardingPage() {
                 <p className="text-[11px] text-muted-foreground">Valor médio recebido por consulta via convênio.</p>
               </div>
             )}
+            {/* Day selector */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dias de atendimento *</Label>
+              <div className="flex gap-2 justify-between">
+                {(['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'] as const).map((day) => {
+                  const labels: Record<string, string> = { dom: 'D', seg: 'S', ter: 'T', qua: 'Q', qui: 'Q', sex: 'S', sab: 'S' };
+                  const fullLabels: Record<string, string> = { dom: 'Dom', seg: 'Seg', ter: 'Ter', qua: 'Qua', qui: 'Qui', sex: 'Sex', sab: 'Sáb' };
+                  const checked = workingDays.includes(day);
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => setWorkingDays(prev => 
+                        prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+                      )}
+                      className={cn(
+                        'flex flex-col items-center justify-center w-10 h-12 rounded-lg border text-xs font-medium transition-colors',
+                        checked
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background text-muted-foreground border-border hover:border-primary/50'
+                      )}
+                    >
+                      <span className="text-[10px] opacity-70">{fullLabels[day]}</span>
+                      <span className="text-sm font-bold">{labels[day]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-muted-foreground">Selecione os dias em que você atende neste local.</p>
+            </div>
           </div>
         )}
 

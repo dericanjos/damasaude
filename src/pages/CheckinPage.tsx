@@ -86,8 +86,13 @@ function Stepper({ value, onChange }: { value: number; onChange: (v: number) => 
       <input
         type="number"
         min={0}
-        value={value === 0 ? value : (value || '')}
-        onChange={e => onChange(e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
+        value={value}
+        onChange={e => {
+          const raw = e.target.value;
+          if (raw === '') { onChange(0); return; }
+          const n = Number(raw);
+          if (!isNaN(n)) onChange(Math.max(0, Math.floor(n)));
+        }}
         className="w-14 text-center text-2xl font-bold bg-transparent border-none outline-none text-foreground"
       />
       <button
@@ -240,10 +245,12 @@ export default function CheckinPage() {
     }
   }, [paramSection, existing?.id]);
 
-  // Get capacity from location schedule
+  // Get capacity from location schedule (0 means no schedule for today — don't block)
   const todayWeekday = new Date().getDay();
   const todaySchedule = schedules.find(s => s.weekday === todayWeekday);
-  const dailyCapacity = todaySchedule?.daily_capacity || getCapacityForDate(new Date(), parseDailyCapacities((clinic as any)?.daily_capacities));
+  const rawDailyCapacity = todaySchedule?.daily_capacity ?? getCapacityForDate(new Date(), parseDailyCapacities((clinic as any)?.daily_capacities));
+  // When capacity is 0 (no schedule), use appointments_scheduled as effective or fallback 16
+  const dailyCapacity = rawDailyCapacity > 0 ? rawDailyCapacity : (form.appointments_scheduled > 0 ? form.appointments_scheduled : 16);
   const ticketAvg = financial?.ticket_avg ?? 250;
   const ticketPrivate = (clinic as any)?.ticket_private ?? DEFAULT_TICKET_PRIVATE;
   const ticketInsurance = (clinic as any)?.ticket_insurance ?? DEFAULT_TICKET_INSURANCE;
@@ -1161,8 +1168,8 @@ export default function CheckinPage() {
                 label="Agendados"
                 value={form.appointments_scheduled}
                 onChange={v => setField('appointments_scheduled', v)}
-                max={dailyCapacity}
-                hint={form.appointments_scheduled >= dailyCapacity ? 'Agenda lotada! Use "Encaixes" para consultas extras.' : undefined}
+                max={rawDailyCapacity > 0 ? dailyCapacity : undefined}
+                hint={rawDailyCapacity > 0 && form.appointments_scheduled >= dailyCapacity ? 'Agenda lotada! Use "Encaixes" para consultas extras.' : undefined}
               />
             </div>
 
