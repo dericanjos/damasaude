@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ChevronDown, Info, MapPin } from 'lucide-react';
+import { ChevronDown, Info, MapPin, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -174,6 +174,24 @@ export default function Dashboard() {
     if (!sparklineData) return 0;
     return Math.round(sparklineData.reduce((s, p) => s + p.score, 0) / sparklineData.length);
   }, [sparklineData]);
+
+  // Benchmark data (cached 24h)
+  const { data: benchmarkData } = useQuery({
+    queryKey: ['benchmarks', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      const res = await supabase.functions.invoke('calculate-benchmarks', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.error || res.data?.error) return null;
+      return res.data as { specialty: string; peerCount: number; avgOccupancy: number; avgNoshowRate: number; avgIdeaScore: number };
+    },
+    enabled: !!user && !!(clinic as any)?.specialty,
+    staleTime: 24 * 60 * 60 * 1000, // 24h
+    refetchOnWindowFocus: false,
+  });
 
   useCheckinRealtime();
 
@@ -920,6 +938,73 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* ── BENCHMARK CARD ── */}
+      {benchmarkData && displayRevenue && (() => {
+        const myOcc = displayRevenue.occupancyRate ?? 0;
+        const myNS = displayRevenue.noShowRate;
+        const peerOcc = benchmarkData.avgOccupancy;
+        const peerNS = benchmarkData.avgNoshowRate;
+        const occAbove = myOcc >= peerOcc;
+        const nsBelow = myNS <= peerNS; // lower is better
+        return (
+          <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
+            <div className="flex items-center gap-1.5 mb-3">
+              <Users className="h-3.5 w-3.5 text-primary" />
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                Comparativo · {benchmarkData.specialty}
+              </span>
+            </div>
+            {/* Occupancy comparison */}
+            <div className="space-y-1 mb-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Sua ocupação</span>
+                <span className={cn('text-xs font-semibold', occAbove ? 'text-idea-stable' : 'text-idea-attention')}>
+                  {safePercent(myOcc)}
+                </span>
+              </div>
+              <div className="flex gap-1 h-1 rounded-full overflow-hidden bg-muted">
+                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(100, myOcc * 100)}%` }} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Média dos pares</span>
+                <span className="text-xs font-medium text-muted-foreground">{safePercent(peerOcc)}</span>
+              </div>
+              <div className="flex gap-1 h-1 rounded-full overflow-hidden bg-muted">
+                <div className="h-full rounded-full bg-muted-foreground/30 transition-all" style={{ width: `${Math.min(100, peerOcc * 100)}%` }} />
+              </div>
+            </div>
+            {/* No-show comparison */}
+            <div className="space-y-1 mb-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Seu no-show</span>
+                <span className={cn('text-xs font-semibold', nsBelow ? 'text-idea-stable' : 'text-idea-attention')}>
+                  {safePercent(myNS)}
+                </span>
+              </div>
+              <div className="flex gap-1 h-1 rounded-full overflow-hidden bg-muted">
+                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(100, myNS * 100 * 4)}%` }} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Média dos pares</span>
+                <span className="text-xs font-medium text-muted-foreground">{safePercent(peerNS)}</span>
+              </div>
+              <div className="flex gap-1 h-1 rounded-full overflow-hidden bg-muted">
+                <div className="h-full rounded-full bg-muted-foreground/30 transition-all" style={{ width: `${Math.min(100, peerNS * 100 * 4)}%` }} />
+              </div>
+            </div>
+            {/* Summary */}
+            <div className="flex items-center justify-between border-t border-border/50 pt-2">
+              <p className="text-[10px] text-muted-foreground">
+                Baseado em {benchmarkData.peerCount} {benchmarkData.specialty?.toLowerCase()}s no DAMA Clínica
+              </p>
+              <span className={cn('text-[10px] font-semibold', occAbove && nsBelow ? 'text-idea-stable' : 'text-idea-attention')}>
+                {occAbove && nsBelow ? 'Acima da média' : 'Abaixo da média'}
+              </span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── SINGLE ALERT ── */}
       {(checkinData || isConsolidated) && (
