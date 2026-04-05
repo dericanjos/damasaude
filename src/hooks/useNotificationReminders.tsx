@@ -1,33 +1,36 @@
 import { useEffect, useCallback } from 'react';
 import { useCheckinStreak } from '@/hooks/useChecklist';
 
-/**
- * Schedules browser notifications for check-in reminders at fixed times:
- * 1. 08:00 — Bom dia, hora do check-in
- * 2. 12:30 — Meio do dia, atualize seus números
- * 3. 18:00 — Fim do dia, finalize o check-in
- * + Streak risk at 17:00 if no check-in done
- */
+const STORAGE_KEY = 'dama-notification-times';
 
-const REMINDERS = [
-  {
-    hour: 8, minute: 0,
-    title: '☀️ Bom dia, Doutor(a)!',
-    body: 'Comece o dia registrando seus agendamentos no DAMA Clínica.',
-    tag: 'checkin-morning',
-  },
-  {
-    hour: 12, minute: 30,
-    title: '📊 Meio do dia — como está a agenda?',
-    body: 'Atualize seus atendimentos e encaixes. Leva menos de 1 minuto!',
-    tag: 'checkin-midday',
-  },
-  {
-    hour: 18, minute: 0,
-    title: '🌙 Hora de fechar o dia!',
-    body: 'Finalize seu check-in: registre no-shows, cancelamentos e resultados.',
-    tag: 'checkin-evening',
-  },
+export interface NotificationTimes {
+  morning: string;   // "HH:MM"
+  midday: string;
+  evening: string;
+}
+
+const DEFAULT_TIMES: NotificationTimes = {
+  morning: '08:00',
+  midday: '12:30',
+  evening: '18:00',
+};
+
+export function getNotificationTimes(): NotificationTimes {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return { ...DEFAULT_TIMES, ...JSON.parse(stored) };
+  } catch {}
+  return DEFAULT_TIMES;
+}
+
+export function saveNotificationTimes(times: NotificationTimes) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(times));
+}
+
+const REMINDER_META = [
+  { key: 'morning' as const, title: '☀️ Bom dia, Doutor(a)!', body: 'Comece o dia registrando seus agendamentos no DAMA Clínica.', tag: 'checkin-morning' },
+  { key: 'midday' as const, title: '📊 Meio do dia — como está a agenda?', body: 'Atualize seus atendimentos e encaixes. Leva menos de 1 minuto!', tag: 'checkin-midday' },
+  { key: 'evening' as const, title: '🌙 Hora de fechar o dia!', body: 'Finalize seu check-in: registre no-shows, cancelamentos e resultados.', tag: 'checkin-evening' },
 ];
 
 export function useNotificationReminders() {
@@ -45,12 +48,14 @@ export function useNotificationReminders() {
     if (!('Notification' in window)) return;
     if (Notification.permission !== 'granted') return;
 
+    const times = getNotificationTimes();
     const now = new Date();
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    const makeTime = (hour: number, minute: number): Date => {
+    const parseTime = (timeStr: string): Date => {
+      const [h, m] = timeStr.split(':').map(Number);
       const d = new Date();
-      d.setHours(hour, minute, 0, 0);
+      d.setHours(h, m, 0, 0);
       return d;
     };
 
@@ -63,22 +68,23 @@ export function useNotificationReminders() {
       }
     };
 
-    REMINDERS.forEach(r => {
-      scheduleNotification(makeTime(r.hour, r.minute), r.title, r.body, r.tag);
+    REMINDER_META.forEach(r => {
+      scheduleNotification(parseTime(times[r.key]), r.title, r.body, r.tag);
     });
 
+    // Streak risk 1h before evening
     if (streak > 0) {
+      const eveningTime = parseTime(times.evening);
+      const riskTime = new Date(eveningTime.getTime() - 60 * 60 * 1000);
       scheduleNotification(
-        makeTime(17, 0),
+        riskTime,
         `🔥 Seu streak de ${streak} dias está em risco!`,
-        'Falta 1 hora para as 18h. Faça o check-in para manter sua sequência!',
+        `Falta 1 hora para as ${times.evening}. Faça o check-in para manter sua sequência!`,
         'checkin-streak-risk'
       );
     }
 
-    return () => {
-      timers.forEach(clearTimeout);
-    };
+    return () => { timers.forEach(clearTimeout); };
   }, [streak]);
 
   return { requestPermission };
