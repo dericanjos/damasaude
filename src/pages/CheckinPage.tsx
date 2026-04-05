@@ -1168,8 +1168,8 @@ export default function CheckinPage() {
                 label="Agendados"
                 value={form.appointments_scheduled}
                 onChange={v => setField('appointments_scheduled', v)}
-                max={dailyCapacity}
-                hint={form.appointments_scheduled >= dailyCapacity ? 'Agenda lotada! Use "Encaixes" para consultas extras.' : undefined}
+                max={rawDailyCapacity > 0 ? dailyCapacity : undefined}
+                hint={rawDailyCapacity > 0 && form.appointments_scheduled >= dailyCapacity ? 'Agenda lotada! Use "Encaixes" para consultas extras.' : undefined}
               />
             </div>
 
