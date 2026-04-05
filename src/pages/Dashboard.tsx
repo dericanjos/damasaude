@@ -762,6 +762,43 @@ export default function Dashboard() {
           </button>
         </div>
       )}
+      {/* ── IDEA SPARKLINE (last 7 days) ── */}
+      {todayScore != null && sparklineData && (
+        <div className="rounded-2xl bg-card border border-border/60 p-4 pb-3 shadow-card">
+          <div style={{ width: '100%', height: 80 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={sparklineData} margin={{ top: 8, right: 4, bottom: 0, left: 4 }}>
+                <defs>
+                  <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <Area
+                  type="monotone"
+                  dataKey="score"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  fill="url(#sparkGrad)"
+                  dot={(props: any) => {
+                    const { cx, cy, index } = props;
+                    if (index === 0 || index === sparklineData.length - 1) {
+                      return <circle cx={cx} cy={cy} r={4} fill="hsl(var(--primary))" stroke="hsl(var(--card))" strokeWidth={2} />;
+                    }
+                    return <circle cx={cx} cy={cy} r={0} fill="none" />;
+                  }}
+                  activeDot={false}
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1.5 text-center">
+            Últimos {sparklineData.length} dias · Média: {sparklineAvg}
+          </p>
+        </div>
+      )}
+
       {/* Loading skeletons for metric cards */}
       {!isFirstAccess && !displayRevenue && (checkinLoading || allCheckinsLoading) && (
         <>
