@@ -189,6 +189,8 @@ serve(async (req) => {
       comparisonBlock = `\n\n**Comparativo entre locais:**\n• Maior vazamento (R$): ${worstLeakerName} — R$${Math.round(worstLeakerLost)}\n• Maior no-show: ${worstNoshowName} — ${Math.round(worstNoshowRate * 100)}%\n• Melhor ocupação: ${bestOccName} — ${Math.round(bestOcc * 100)}%`;
     }
 
+    const monthlyTarget = (clinic as any)?.monthly_revenue_target ?? null;
+
     const summary = {
       dias_com_checkin: checkins.length,
       dias_de_atendimento: workingDaysCount,
@@ -208,6 +210,7 @@ serve(async (req) => {
       taxa_noshow: `${totalScheduled > 0 ? Math.round((totalNoShow / totalScheduled) * 100) : 0}%`,
       meta_ocupacao: `${Math.round((clinic?.target_fill_rate ?? 0.85) * 100)}%`,
       meta_noshow: `${Math.round((clinic?.target_noshow_rate ?? 0.05) * 100)}%`,
+      meta_receita_mensal: monthlyTarget ? `R$${Math.round(monthlyTarget)}` : null,
       multi_local: isMultiLocation,
       locais: isMultiLocation ? Object.entries(perLocation).map(([id, d]) => ({
         nome: locNameMap[id] || id,
