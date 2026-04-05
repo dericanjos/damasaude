@@ -204,6 +204,19 @@ export default function AuthPage() {
                 />
               </div>
 
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="referralCode" className="text-white/90">Código de convite (opcional)</Label>
+                  <Input
+                    id="referralCode"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                    placeholder="Ex: DAMA-DRSILVA-A1B2"
+                    className="border-white/20 bg-white/10 text-white placeholder:text-white/40"
+                  />
+                </div>
+              )
+
               {!isSignUp && (
                 <div className="flex items-center justify-between">
                   <Label htmlFor="rememberMe" className="text-sm text-white/80 cursor-pointer">Manter conectado</Label>
