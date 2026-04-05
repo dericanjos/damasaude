@@ -365,6 +365,10 @@ export default function SettingsPage() {
     try {
       const { data, error } = await supabase.functions.invoke('customer-portal');
       if (error) throw error;
+      if (data?.error === 'no_customer') {
+        toast.info(data.message || 'Você ainda não possui uma assinatura ativa.');
+        return;
+      }
       if (data?.url) window.location.href = data.url;
     } catch (err: any) {
       toast.error(err.message || 'Erro ao abrir portal');

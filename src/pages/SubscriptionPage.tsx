@@ -55,6 +55,11 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
     try {
       const { data, error } = await supabase.functions.invoke('customer-portal');
       if (error) throw error;
+      if (data?.error === 'no_customer') {
+        toast.info(data.message || 'Você ainda não possui uma assinatura ativa.');
+        handleCheckout();
+        return;
+      }
       if (data?.url) {
         window.location.href = data.url;
       }
