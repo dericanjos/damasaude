@@ -20,7 +20,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="flex items-center justify-center pt-4 pb-1">
+      <header className="flex items-center justify-center pb-1" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
         <img src={logoDama} alt="DAMA" className="h-[65px] object-contain" />
       </header>
       <main className="flex-1 safe-bottom">
