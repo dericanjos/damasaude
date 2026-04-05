@@ -127,7 +127,7 @@ export default function OnboardingPage() {
         has_secretary: hasSecretary,
         num_doctors: 1,
         payment_type: paymentType,
-        working_days: defaultWorkingDays,
+        working_days: selectedDays,
         daily_capacities: defaultCaps,
         daily_capacity: cap,
         ticket_private: paymentType === 'convenio' ? 0 : tp,
