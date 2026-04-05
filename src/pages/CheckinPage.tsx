@@ -375,7 +375,7 @@ export default function CheckinPage() {
         ticket_insurance: ticketInsurance,
       });
       const protocolRevenue = protocolEntries.reduce((s, p) => s + p.value, 0);
-      const lossMap = calculateLossMap(checkinData, ticketAvg);
+      const lossMap = calculateLossMap(checkinData, ticketPrivate, ticketInsurance, ticketAvg);
       setReward({
         score: ideaScore,
         estimated: rev.estimated + protocolRevenue,
