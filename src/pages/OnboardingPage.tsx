@@ -59,6 +59,7 @@ export default function OnboardingPage() {
   const [dailyCapacity, setDailyCapacity] = useState<number | ''>(16);
   const [ticketPrivate, setTicketPrivate] = useState<number | ''>(250);
   const [ticketInsurance, setTicketInsurance] = useState<number | ''>(100);
+  const [workingDays, setWorkingDays] = useState<string[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
 
   // Step 3 — Diagnostic
   const [weeklyNoshows, setWeeklyNoshows] = useState<number | ''>(3);

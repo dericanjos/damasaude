@@ -86,8 +86,13 @@ function Stepper({ value, onChange }: { value: number; onChange: (v: number) => 
       <input
         type="number"
         min={0}
-        value={value === 0 ? value : (value || '')}
-        onChange={e => onChange(e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
+        value={value}
+        onChange={e => {
+          const raw = e.target.value;
+          if (raw === '') { onChange(0); return; }
+          const n = Number(raw);
+          if (!isNaN(n)) onChange(Math.max(0, Math.floor(n)));
+        }}
         className="w-14 text-center text-2xl font-bold bg-transparent border-none outline-none text-foreground"
       />
       <button
