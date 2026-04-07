@@ -63,7 +63,7 @@ export default function VersePage() {
 
       // Try native share first (best UX on mobile)
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Versículo do Dia - DAMA Clinic' });
+        await navigator.share({ files: [file], title: 'Versículo do Dia - DAMA Doc' });
         return;
       }
 

@@ -996,7 +996,7 @@ export default function Dashboard() {
             {/* Summary */}
             <div className="flex items-center justify-between border-t border-border/50 pt-2">
               <p className="text-[10px] text-muted-foreground">
-                Baseado em {benchmarkData.peerCount} {benchmarkData.specialty?.toLowerCase()}s no DAMA Clinic
+                Baseado em {benchmarkData.peerCount} {benchmarkData.specialty?.toLowerCase()}s no DAMA Doc
               </p>
               <span className={cn('text-[10px] font-semibold', occAbove && nsBelow ? 'text-idea-stable' : 'text-idea-attention')}>
                 {occAbove && nsBelow ? 'Acima da média' : 'Abaixo da média'}

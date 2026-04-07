@@ -31,7 +31,7 @@ export default function NotificationSettings() {
       if (!granted) {
         toast.error(
           isNative
-            ? 'Permissão negada. Ative as notificações em Ajustes > DAMA Clinic.'
+            ? 'Permissão negada. Ative as notificações em Ajustes > DAMA Doc.'
             : 'Permissão negada. Ative nas configurações do navegador.'
         );
         return;
@@ -75,7 +75,7 @@ export default function NotificationSettings() {
 
       {isDenied && (
         <p className="text-[11px] text-destructive">
-          ⚠️ Notificações bloqueadas. {isNative ? 'Vá em Ajustes > DAMA Clinic para desbloquear.' : 'Ative nas configurações do navegador.'}
+          ⚠️ Notificações bloqueadas. {isNative ? 'Vá em Ajustes > DAMA Doc para desbloquear.' : 'Ative nas configurações do navegador.'}
         </p>
       )}
 

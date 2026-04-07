@@ -59,7 +59,7 @@ const WEEKDAY_MAP: Record<string, number> = {
 };
 
 const REMINDER_META = [
-  { key: 'morning' as const, id: 1001, title: '☀️ Bom dia, Doutor(a)!', body: 'Sua agenda de hoje está pronta. Faça seu check-in no DAMA Clinic.', tag: 'checkin-morning' },
+  { key: 'morning' as const, id: 1001, title: '☀️ Bom dia, Doutor(a)!', body: 'Sua agenda de hoje está pronta. Faça seu check-in no DAMA Doc.', tag: 'checkin-morning' },
   { key: 'midday' as const, id: 1002, title: '📊 Meio do dia — como está a agenda?', body: 'Atualize seus atendimentos e encaixes. Leva menos de 1 minuto!', tag: 'checkin-midday' },
   { key: 'evening' as const, id: 1003, title: '🌙 Hora de fechar o dia!', body: 'Finalize seu check-in: registre no-shows, cancelamentos e veja seu IDEA Score.', tag: 'checkin-evening' },
 ];
@@ -120,7 +120,7 @@ export function useNotificationReminders() {
       const result = await LN.requestPermissions();
       setPermissionState(result.display);
       if (result.display !== 'granted') {
-        toast.error('Permissão negada. Ative as notificações em Ajustes > DAMA Clinic.');
+        toast.error('Permissão negada. Ative as notificações em Ajustes > DAMA Doc.');
         return false;
       }
       return true;
