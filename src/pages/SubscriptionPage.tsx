@@ -83,7 +83,7 @@ export default function SubscriptionPage({ reason }: SubscriptionPageProps) {
         <div className="flex flex-col items-center gap-3 text-center">
           <img
             src={logoTagline}
-            alt="DAMA Clínica - Gestão inteligente para médicos"
+            alt="DAMA Clinic - Gestão inteligente para médicos"
             className="h-32 w-auto object-contain drop-shadow-lg"
           />
           <h1 className="text-2xl font-bold text-white">

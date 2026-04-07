@@ -55,7 +55,7 @@ export default function InstitucionalPage() {
           <div className="h-px w-12 mx-auto bg-white/10" />
 
           <p className="text-[15px] leading-relaxed text-white/80 font-medium">
-            Você sabe disso. O DAMA Clínica acabou de te mostrar os números.
+            Você sabe disso. O DAMA Clinic acabou de te mostrar os números.
           </p>
           <p className="text-base text-white font-semibold pt-2">
             A pergunta é: você vai continuar resolvendo isso sozinho?

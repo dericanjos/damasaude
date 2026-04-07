@@ -93,7 +93,7 @@ export default function ReferralPage() {
   const handleWhatsApp = () => {
     const link = `https://damasaude.com.br/auth?ref=${code}`;
     const msg = encodeURIComponent(
-      `Estou usando o DAMA Clínica pra gerenciar minha clínica e tem me ajudado muito! Crie sua conta com meu link: ${link}`
+      `Estou usando o DAMA Clinic pra gerenciar minha clínica e tem me ajudado muito! Crie sua conta com meu link: ${link}`
     );
     window.open(`https://wa.me/?text=${msg}`, '_blank');
   };

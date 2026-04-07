@@ -17,7 +17,7 @@ export default function LossRadarCard() {
     const trend = radar.worstTrend;
     const pct = Math.round(trend.percentChange);
     scheduleTrendAlert(
-      `Seus ${trend.label.toLowerCase()} aumentaram ${pct}% nas últimas 2 semanas. Confira seus insights no DAMA Clínica.`
+      `Seus ${trend.label.toLowerCase()} aumentaram ${pct}% nas últimas 2 semanas. Confira seus insights no DAMA Clinic.`
     );
     trendNotified.current = true;
   }, [radar?.worstTrend]);

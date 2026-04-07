@@ -125,7 +125,7 @@ export default function CalculadoraPage() {
 
         {/* Footer */}
         <div className="mt-12 text-center">
-          <p className="text-[11px] text-white/30 tracking-wider">DAMA Clínica · Gestão inteligente para médicos</p>
+          <p className="text-[11px] text-white/30 tracking-wider">DAMA Clinic · Gestão inteligente para médicos</p>
         </div>
       </div>
     </div>
