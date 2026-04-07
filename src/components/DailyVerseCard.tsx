@@ -81,7 +81,7 @@ export default function DailyVerseCard() {
   if (!verse) return null;
 
   const textLength = verse.verse_text.length;
-  const verseFontClass = textLength > 120 ? 'text-xs' : 'text-sm';
+  const verseFontClass = textLength > 200 ? 'text-xs' : textLength > 150 ? 'text-sm' : textLength > 100 ? 'text-[13px]' : 'text-sm';
 
   return (
     <>
