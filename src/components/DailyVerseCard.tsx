@@ -88,7 +88,7 @@ export default function DailyVerseCard() {
       {/* Shareable card (rendered for screenshot) */}
       <div
         ref={cardRef}
-        className="rounded-2xl border border-primary/20 bg-gradient-to-br from-[hsl(222,47%,14%)] to-[hsl(222,47%,10%)] p-5 shadow-card overflow-hidden relative max-h-[280px]"
+        className="rounded-2xl border border-primary/20 bg-gradient-to-br from-[hsl(222,47%,14%)] to-[hsl(222,47%,10%)] p-5 shadow-card overflow-hidden relative"
       >
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
