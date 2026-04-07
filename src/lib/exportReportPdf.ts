@@ -77,7 +77,7 @@ function drawFooter(doc: jsPDF, pageNum: number, totalPages: number) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(COLORS.footerText);
-  doc.text('DAMA Clínica · damasaude.com.br · Relatório gerado automaticamente', 20, y);
+  doc.text('DAMA Clinic · damasaude.com.br · Relatório gerado automaticamente', 20, y);
   doc.text(`${pageNum}/${totalPages}`, pageW - 20, y, { align: 'right' });
 }
 
@@ -156,7 +156,7 @@ export async function exportReportPdf(options: ReportPdfOptions) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor('#ffffff');
-  doc.text('DAMA Clínica · Gestão inteligente para médicos', marginX, 24);
+  doc.text('DAMA Clinic · Gestão inteligente para médicos', marginX, 24);
 
   // Gold accent line
   doc.setFillColor(COLORS.gold);
