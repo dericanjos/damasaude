@@ -8,9 +8,9 @@ export default function WelcomeCard() {
     <div className="rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-[#D4AF37]/20 p-6 shadow-card space-y-4">
       <div className="text-center space-y-2">
         <p className="text-4xl">🎯</p>
-         <h2 className="text-xl font-bold text-foreground">Bem-vindo ao DAMA Clinic!</h2>
+         <h2 className="text-xl font-bold text-foreground">Bem-vindo ao DAMA Doc!</h2>
         <p className="text-sm text-muted-foreground">
-          O DAMA Clinic transforma dados da sua agenda em inteligência. Faça seu primeiro check-in para ativar:
+          O DAMA Doc transforma dados da sua agenda em inteligência. Faça seu primeiro check-in para ativar:
         </p>
       </div>
 

@@ -110,7 +110,7 @@ export default function AuthPage() {
         <div className="mb-8 flex justify-center">
           <img
             src={logoTagline}
-            alt="DAMA Clinic - Gestão inteligente para médicos"
+            alt="DAMA Doc - Gestão inteligente para médicos"
             className="h-40 w-auto object-contain drop-shadow-lg"
           />
         </div>

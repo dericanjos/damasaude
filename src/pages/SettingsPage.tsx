@@ -422,7 +422,7 @@ export default function SettingsPage() {
             <p className="text-sm text-muted-foreground">Early Adopter — R$19,90/mês (preço especial permanente)</p>
           )}
           {tier === 'standard' && (
-            <p className="text-sm text-muted-foreground">DAMA Clinic — R$47,90/mês</p>
+            <p className="text-sm text-muted-foreground">DAMA Doc — R$47,90/mês</p>
           )}
           {subscriptionEnd && (
             <div className="flex items-center justify-between">
