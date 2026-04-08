@@ -280,12 +280,11 @@ export default function CheckinPage() {
   // Max losses = what was NOT attended (i.e. scheduled_proportion - attended is wrong; 
   // the constraint is: attended + noshows + cancellations <= category_slots)
   // category_slots ≈ attended + current losses, so max for each loss = category_slots - attended - other_loss
-  const slotsPrivate = form.attended_private + form.noshows_private + form.cancellations_private;
-  const slotsInsurance = form.attended_insurance + form.noshows_insurance + form.cancellations_insurance;
-  const maxNoshowPrivate = Math.max(0, slotsPrivate - form.attended_private - form.cancellations_private);
-  const maxNoshowInsurance = Math.max(0, slotsInsurance - form.attended_insurance - form.cancellations_insurance);
-  const maxCancelPrivate = Math.max(0, slotsPrivate - form.attended_private - form.noshows_private);
-  const maxCancelInsurance = Math.max(0, slotsInsurance - form.attended_insurance - form.noshows_insurance);
+  // Max losses per category: losses <= attended (DB trigger constraint)
+  const maxNoshowPrivate = Math.max(0, form.attended_private - form.cancellations_private);
+  const maxNoshowInsurance = Math.max(0, form.attended_insurance - form.cancellations_insurance);
+  const maxCancelPrivate = Math.max(0, form.attended_private - form.noshows_private);
+  const maxCancelInsurance = Math.max(0, form.attended_insurance - form.noshows_insurance);
 
   // For single payment type modes
   const maxNoshowsTotal = paymentType === 'particular' ? maxNoshowPrivate : maxNoshowInsurance;
@@ -427,10 +426,11 @@ export default function CheckinPage() {
       });
       setShowReward(true);
 
+      const isEdit = !!existing;
       const hasSecretary = selectedLocation?.has_secretary ?? (clinic as any)?.has_secretary ?? false;
       generateMicroInsight([submitData], 'micro', hasSecretary).then((micro) => {
         if (micro) {
-          toast.success(`Check-in salvo! ✨ Dica do dia: ${micro}`, { duration: 8000 });
+          toast.success(`${isEdit ? 'Check-in atualizado' : 'Check-in salvo'}! ✨ Dica do dia: ${micro}`, { duration: 8000 });
         }
       });
     } catch (err: any) {
@@ -1105,6 +1105,14 @@ export default function CheckinPage() {
               Trocar
             </Button>
           )}
+        </div>
+      )}
+
+      {/* Edit banner */}
+      {existing && (
+        <div className="mb-4 rounded-2xl bg-revenue-gain/10 border border-revenue-gain/30 p-3 flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 text-revenue-gain shrink-0" />
+          <p className="text-xs text-foreground">Check-in do dia já realizado. Edite os valores abaixo.</p>
         </div>
       )}
 
