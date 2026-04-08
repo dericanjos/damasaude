@@ -1128,6 +1128,107 @@ export default function CheckinPage() {
         <Switch checked={quickMode} onCheckedChange={setQuickMode} />
       </div>
 
+      {/* Quick "perfect day" button — no losses, saves immediately */}
+      {!existing && selectedLocationId && (
+        <button
+          type="button"
+          onClick={async () => {
+            if (!selectedLocationId) {
+              toast.error('Selecione um local de atendimento');
+              return;
+            }
+
+            // Use dailyCapacity as scheduled, distribute attended using last checkin ratio
+            const scheduled = dailyCapacity;
+            let privateRatio = 0.5;
+            if (lastCheckin) {
+              const lastP = (lastCheckin as any)?.attended_private ?? 0;
+              const lastI = (lastCheckin as any)?.attended_insurance ?? 0;
+              const lastT = lastP + lastI;
+              if (lastT > 0) privateRatio = lastP / lastT;
+            }
+            const attPriv = paymentType === 'convenio' ? 0 : (paymentType === 'particular' ? scheduled : Math.round(scheduled * privateRatio));
+            const attIns = paymentType === 'particular' ? 0 : (paymentType === 'convenio' ? scheduled : scheduled - Math.round(scheduled * privateRatio));
+
+            const checkinPayload = {
+              appointments_scheduled: scheduled,
+              attended_private: attPriv,
+              attended_insurance: attIns,
+              noshows_private: 0,
+              noshows_insurance: 0,
+              cancellations: 0,
+              cancellations_private: 0,
+              cancellations_insurance: 0,
+              new_appointments: 0,
+              empty_slots: 0,
+              extra_appointments: 0,
+              rescheduled: 0,
+              followup_done: true,
+              notes: '',
+              location_id: selectedLocationId,
+              appointments_done: scheduled,
+              no_show: 0,
+              insight_text: 'Dia perfeito! Nenhuma perda registrada.',
+            };
+
+            try {
+              const checkinData = {
+                appointments_scheduled: scheduled,
+                attended_private: attPriv,
+                attended_insurance: attIns,
+                noshows_private: 0,
+                noshows_insurance: 0,
+                cancellations: 0,
+                new_appointments: 0,
+                empty_slots: 0,
+                followup_done: true,
+              };
+
+              const saved = await saveCheckin.mutateAsync(checkinPayload);
+              await generateActions.mutateAsync({ checkinData, locationId: selectedLocationId });
+
+              const ideaScore = calculateIDEA(checkinData, scheduled, ticketPrivate, ticketInsurance);
+              const rev = calculateRevenue({
+                ...checkinData,
+                daily_capacity: scheduled,
+                ticket_private: ticketPrivate,
+                ticket_insurance: ticketInsurance,
+              });
+
+              setReward({
+                score: ideaScore,
+                estimated: rev.estimated,
+                lost: 0,
+                occupancyRate: rev.occupancyRate,
+                insightText: 'Dia perfeito! Nenhuma perda registrada.',
+                lossSources: [],
+                lossNoshow: 0,
+                lossCancel: 0,
+                lossBuracos: 0,
+                lossBiggest: null,
+              });
+              setShowReward(true);
+              toast.success('Dia perfeito registrado! ✨');
+            } catch (err: any) {
+              toast.error(err.message || 'Erro ao salvar');
+            }
+          }}
+          disabled={saveCheckin.isPending || generateActions.isPending}
+          className="w-full rounded-2xl border border-revenue-gain/30 bg-revenue-gain/5 p-4 text-left transition-all hover:border-revenue-gain/50 active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="h-5 w-5 text-revenue-gain shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">✅ Dia sem no-shows ou cancelamentos</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Salva o check-in com {dailyCapacity} atendidos e zero perdas
+              </p>
+            </div>
+          </div>
+        </button>
+      )}
+
+
       {/* Validation warnings removed from here – shown inside losses section only */}
 
       <form onSubmit={handleSubmit} className="space-y-4">
