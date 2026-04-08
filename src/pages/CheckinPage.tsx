@@ -1064,7 +1064,7 @@ export default function CheckinPage() {
         </div>
         <div>
           <h1 className="text-lg font-bold text-foreground">Check-in Operacional</h1>
-          <p className="text-xs text-muted-foreground"><p className="text-xs text-muted-foreground">Tenha clareza da sua agenda em menos de 1 minuto.</p></p>
+          <p className="text-xs text-muted-foreground">Tenha clareza da sua agenda em menos de 1 minuto.</p>
         </div>
       </div>
 
