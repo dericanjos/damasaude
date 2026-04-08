@@ -272,7 +272,9 @@ export default function CheckinPage() {
 
   // How many slots still need to be distributed by payment type
   const attendedRemaining = effectiveCapacity - totalAttendedNow;
-  const attendedMismatch = paymentType === 'ambos' && effectiveCapacity > 0 && totalAttendedNow !== effectiveCapacity;
+  // No modo "ambos", exigimos que o TOTAL de outcomes (atendidos + perdas) não exceda a capacidade
+  const totalOutcomesAll = totalAttendedNow + totalNoshowsNow + totalCancellationsNow + form.empty_slots;
+  const attendedMismatch = paymentType === 'ambos' && effectiveCapacity > 0 && totalOutcomesAll > effectiveCapacity;
 
   // Max losses per category: respect the total effective capacity constraint
   // Each loss stepper's max = remaining space for that specific loss category
@@ -438,33 +440,20 @@ export default function CheckinPage() {
     setForm(prev => {
       const next = { ...prev, [key]: value };
 
-      // When changing a loss field, clamp it to the category limit
       if (typeof value === 'number') {
-        if (key === 'noshows_private') {
-          next.noshows_private = Math.min(value, Math.max(0, next.attended_private - next.cancellations_private));
-        } else if (key === 'noshows_insurance') {
-          next.noshows_insurance = Math.min(value, Math.max(0, next.attended_insurance - next.cancellations_insurance));
-        } else if (key === 'cancellations_private') {
-          next.cancellations_private = Math.min(value, Math.max(0, next.attended_private - next.noshows_private));
-        } else if (key === 'cancellations_insurance') {
-          next.cancellations_insurance = Math.min(value, Math.max(0, next.attended_insurance - next.noshows_insurance));
-        }
+        const scheduledTotal = next.appointments_scheduled + next.extra_appointments;
 
-        // When reducing attended, also clamp any losses that now exceed it
-        if (key === 'attended_private') {
-          const maxLossPrivate = Math.max(0, next.attended_private);
-          if (next.noshows_private + next.cancellations_private > maxLossPrivate) {
-            next.noshows_private = Math.min(next.noshows_private, maxLossPrivate);
-            next.cancellations_private = Math.min(next.cancellations_private, maxLossPrivate - next.noshows_private);
-          }
-        }
-        if (key === 'attended_insurance') {
-          const maxLossInsurance = Math.max(0, next.attended_insurance);
-          if (next.noshows_insurance + next.cancellations_insurance > maxLossInsurance) {
-            next.noshows_insurance = Math.min(next.noshows_insurance, maxLossInsurance);
-            next.cancellations_insurance = Math.min(next.cancellations_insurance, maxLossInsurance - next.noshows_insurance);
-          }
-        }
+        const clampLoss = (field: 'noshows_private' | 'noshows_insurance' | 'cancellations_private' | 'cancellations_insurance') => {
+          const otherFields: Array<keyof typeof next> = ['attended_private', 'attended_insurance', 'noshows_private', 'noshows_insurance', 'cancellations_private', 'cancellations_insurance'];
+          const others = otherFields.filter(f => f !== field).reduce((s, f) => s + (next[f] as number), 0);
+          const maxAllowed = Math.max(0, scheduledTotal - others);
+          next[field] = Math.min(next[field] as number, maxAllowed);
+        };
+
+        if (key === 'noshows_private') clampLoss('noshows_private');
+        else if (key === 'noshows_insurance') clampLoss('noshows_insurance');
+        else if (key === 'cancellations_private') clampLoss('cancellations_private');
+        else if (key === 'cancellations_insurance') clampLoss('cancellations_insurance');
       }
 
       return next;
