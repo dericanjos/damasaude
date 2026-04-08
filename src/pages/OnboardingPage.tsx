@@ -47,8 +47,8 @@ export default function OnboardingPage() {
   const [saving, setSaving] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
 
-  // Step 1
-  const [doctorName, setDoctorName] = useState(user?.user_metadata?.doctor_name || '');
+  // Doctor name from auth metadata (already collected at signup)
+  const doctorName = user?.user_metadata?.doctor_name || '';
   const [doctorGender, setDoctorGender] = useState<string>('masculino');
   const [specialty, setSpecialty] = useState('');
   const [paymentType, setPaymentType] = useState('ambos');
