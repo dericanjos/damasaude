@@ -78,7 +78,7 @@ export default function OnboardingPage() {
   const canAdvance = () => {
     switch (step) {
       case 1:
-        return doctorName.trim() && specialty;
+        return specialty;
       case 2: {
         if (!clinicName.trim()) return false;
         if (typeof dailyCapacity !== 'number' || dailyCapacity < 1) return false;
@@ -288,11 +288,6 @@ export default function OnboardingPage() {
             <div>
               <h2 className="text-xl font-bold text-foreground">Vamos nos conhecer</h2>
               <p className="text-sm text-muted-foreground mt-1">Conte um pouco sobre você.</p>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nome completo *</Label>
-              <Input value={doctorName} onChange={e => setDoctorName(e.target.value)} placeholder="Maria Silva" className="rounded-xl" />
-              <p className="text-[11px] text-muted-foreground">Seu nome completo para identificação no sistema.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tratamento *</Label>
