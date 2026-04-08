@@ -1307,8 +1307,7 @@ export default function CheckinPage() {
                   {attendedMismatch && (
                     <p className="text-[10px] text-destructive flex items-center gap-1">
                       <AlertCircle className="h-3 w-3 shrink-0" />
-                      A soma ({totalAttendedNow}) precisa ser igual aos agendamentos ({effectiveCapacity}).
-                      {attendedRemaining > 0 ? ` Distribua mais ${attendedRemaining}.` : ` Reduza ${Math.abs(attendedRemaining)}.`}
+                      Total de desfechos ({totalOutcomesAll}) excede a capacidade ({effectiveCapacity}). Reduza {totalOutcomesAll - effectiveCapacity}.
                     </p>
                   )}
                 </>
