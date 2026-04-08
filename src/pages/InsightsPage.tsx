@@ -352,7 +352,18 @@ export default function InsightsPage() {
 
       {locations.length > 1 && <LocationSelector />}
 
-      {!hasEnoughData ? (
+      {totalCheckins === 0 ? (
+        <div className="rounded-2xl bg-card border border-border/60 shadow-card py-8 text-center px-6 space-y-4">
+          <Sparkles className="mx-auto h-8 w-8 text-muted-foreground mb-1" />
+          <p className="text-sm font-semibold text-foreground">Faça seu primeiro check-in</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Seus insights estratégicos, gráficos e relatórios aparecerão aqui após confirmar pelo menos um check-in diário.
+          </p>
+          <Button size="sm" className="rounded-xl" onClick={() => window.location.href = '/checkin'}>
+            Fazer check-in agora
+          </Button>
+        </div>
+      ) : !hasEnoughData ? (
         <div className="rounded-2xl bg-card border border-border/60 shadow-card py-8 text-center px-6 space-y-4">
           <Sparkles className="mx-auto h-8 w-8 text-muted-foreground mb-1" />
           <p className="text-sm font-semibold text-foreground">Seus insights estão sendo construídos</p>

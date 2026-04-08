@@ -832,19 +832,25 @@ export default function Dashboard() {
               <Skeleton className="h-3 w-16" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-2">
-              <Skeleton className="h-3 w-16" />
-              <Skeleton className="h-8 w-14" />
-              <Skeleton className="h-1.5 w-full rounded-full" />
-            </div>
-            <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card space-y-2">
-              <Skeleton className="h-3 w-16" />
-              <Skeleton className="h-8 w-14" />
-              <Skeleton className="h-1.5 w-full rounded-full" />
-            </div>
-          </div>
         </>
+      )}
+
+      {/* Placeholder when no checkin exists and loading is done */}
+      {!isFirstAccess && !displayRevenue && !checkinLoading && !allCheckinsLoading && todayScore == null && (
+        <div className="rounded-2xl bg-card border border-border/60 p-6 shadow-card text-center space-y-3">
+          <ClipboardCheck className="h-8 w-8 text-muted-foreground mx-auto" />
+          <p className="text-sm font-semibold text-foreground">Confirme seu check-in diário</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Seus insights, receita estimada e relatórios aparecerão aqui após confirmar o check-in do dia.
+          </p>
+          <Button
+            size="sm"
+            className="rounded-xl"
+            onClick={() => navigate('/checkin')}
+          >
+            Fazer check-in agora
+          </Button>
+        </div>
       )}
       {displayRevenue && (
         <div className="grid grid-cols-2 gap-3">
