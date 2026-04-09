@@ -5,8 +5,9 @@ export interface MedicalNewsItem {
   id: string;
   title: string;
   summary: string;
+  content: string | null;
   source: string;
-  external_url: string;
+  external_url: string | null;
   category: string;
   image_url: string | null;
   published_at: string;
@@ -19,7 +20,7 @@ export function useLatestMedicalNews() {
     queryKey: ['medical_news', 'latest'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('medical_news' as any)
+        .from('medical_news')
         .select('*')
         .eq('is_active', true)
         .order('published_at', { ascending: false })
@@ -35,7 +36,7 @@ export function useAllMedicalNews() {
     queryKey: ['medical_news', 'all'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('medical_news' as any)
+        .from('medical_news')
         .select('*')
         .eq('is_active', true)
         .order('published_at', { ascending: false });
@@ -50,11 +51,28 @@ export function useMedicalNewsCount() {
     queryKey: ['medical_news', 'count'],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from('medical_news' as any)
+        .from('medical_news')
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);
       if (error) throw error;
       return count ?? 0;
     },
+  });
+}
+
+export function useMedicalNewsById(id: string | undefined) {
+  return useQuery({
+    queryKey: ['medical_news', 'by-id', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data, error } = await supabase
+        .from('medical_news')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      if (error) throw error;
+      return data as unknown as MedicalNewsItem | null;
+    },
+    enabled: !!id,
   });
 }
