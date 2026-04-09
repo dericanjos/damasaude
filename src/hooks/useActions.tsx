@@ -43,14 +43,6 @@ export function useGenerateActions() {
       const today = format(new Date(), 'yyyy-MM-dd');
       const { checkinData, locationId } = params;
 
-      // Delete existing actions for today and this location
-      await supabase
-        .from('daily_actions')
-        .delete()
-        .eq('clinic_id', clinic.id)
-        .eq('date', today)
-        .eq('location_id', locationId);
-
       const ideaScore = calculateIDEA(checkinData, checkinData.appointments_scheduled || undefined);
       // Get has_secretary and tickets from the specific location
       const { data: loc } = await supabase
@@ -69,7 +61,8 @@ export function useGenerateActions() {
       const ticketAvg = (fin as any)?.ticket_avg ?? 250;
       const actions = generateActions(checkinData, clinic.target_noshow_rate, ideaScore, hasSecretary, ticketPrivate, ticketInsurance, ticketAvg);
 
-      const { data, error } = await supabase
+      // Insert new actions first, then delete old ones only on success
+      const { data: newActions, error: insertError } = await supabase
         .from('daily_actions')
         .insert(actions.map(a => ({
           clinic_id: clinic.id,
@@ -83,8 +76,20 @@ export function useGenerateActions() {
         })))
         .select();
 
-      if (error) throw error;
-      return data;
+      if (insertError) throw insertError;
+
+      // Delete old actions only after successful insert
+      // Use the IDs of the new actions to exclude them from deletion
+      const newIds = (newActions || []).map(a => a.id);
+      await supabase
+        .from('daily_actions')
+        .delete()
+        .eq('clinic_id', clinic.id)
+        .eq('date', today)
+        .eq('location_id', locationId)
+        .not('id', 'in', `(${newIds.join(',')})`);
+
+      return newActions;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['actions'] });
