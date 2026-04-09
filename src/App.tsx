@@ -12,7 +12,7 @@ import AppLayout from "@/components/AppLayout";
 import AuthPage from "@/pages/AuthPage";
 import Dashboard from "@/pages/Dashboard";
 import CheckinPage from "@/pages/CheckinPage";
-import LossReasonsPage from "@/pages/LossReasonsPage";
+
 import WeeklyReportPage from "@/pages/WeeklyReportPage";
 import SettingsPage from "@/pages/SettingsPage";
 import SubscriptionPage from "@/pages/SubscriptionPage";
