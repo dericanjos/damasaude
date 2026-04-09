@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useWeekCheckins, useCheckinRange, useAllCheckins } from '@/hooks/useCheckin';
 import { useClinic } from '@/hooks/useClinic';
 import { useLocationFilter } from '@/hooks/useLocationFilter';
-import { useActiveLocations } from '@/hooks/useLocations';
+import { useActiveLocations, useLocationFinancial } from '@/hooks/useLocations';
 import LocationSelector from '@/components/LocationSelector';
 import { useGenerateInsight } from '@/hooks/useInsights';
 import { calculateIDEA, type CheckinData } from '@/lib/idea';
@@ -70,8 +70,13 @@ export default function InsightsPage() {
 
   const { generate, insight: aiInsight, loading: aiLoading, error: aiError } = useGenerateInsight();
 
-  const TICKET_PRIVATE = (clinic as any)?.ticket_private ?? 250;
-  const TICKET_INSURANCE = (clinic as any)?.ticket_insurance ?? 100;
+  const { data: selectedLocationFinancial } = useLocationFinancial(selectedLocationId || undefined);
+  const TICKET_PRIVATE = selectedLocationId && (selectedLocationFinancial as any)?.ticket_private != null
+    ? (selectedLocationFinancial as any).ticket_private
+    : ((clinic as any)?.ticket_private ?? 250);
+  const TICKET_INSURANCE = selectedLocationId && (selectedLocationFinancial as any)?.ticket_insurance != null
+    ? (selectedLocationFinancial as any).ticket_insurance
+    : ((clinic as any)?.ticket_insurance ?? 100);
   const AVG_TICKET = (TICKET_PRIVATE + TICKET_INSURANCE) / 2;
   const caps: DailyCapacities = parseDailyCapacities((clinic as any)?.daily_capacities);
   const CAPACITY = (clinic as any)?.daily_capacity ?? 16; // fallback for averages

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { lovable } from '@/integrations/lovable/index';
+import { supabase } from '@/integrations/supabase/client';
 import logoTagline from '@/assets/logo-dama-tagline.png';
 import authBg from '@/assets/auth-bg.png';
 
@@ -55,6 +56,30 @@ export default function AuthPage() {
   }, [searchParams]);
 
   const phoneMismatch = isSignUp && phone !== '' && phoneConfirm !== '' && phone !== phoneConfirm;
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      toast.error('Digite seu e-mail primeiro para receber o link de recuperação');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      toast.error('E-mail com formato inválido');
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/redefinir-senha`,
+      });
+      if (error) throw error;
+      toast.success('Enviamos um link de recuperação para o seu e-mail. Confira a caixa de entrada (e spam).');
+    } catch (err: any) {
+      toast.error(err.message || 'Não foi possível enviar o e-mail de recuperação');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -245,6 +270,15 @@ export default function AuthPage() {
                   </button>
                 </div>
               </div>
+              {!isSignUp && (
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-xs text-white/70 hover:text-white underline self-end mt-1"
+                >
+                  Esqueci minha senha
+                </button>
+              )}
 
               {isSignUp && (
                 <div className="space-y-2">

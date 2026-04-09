@@ -25,6 +25,7 @@ import IdeaPage from "@/pages/IdeaPage";
 import CalculadoraPage from "@/pages/CalculadoraPage";
 import ReferralPage from "@/pages/ReferralPage";
 import NotFound from "./pages/NotFound";
+import RedefinirSenhaPage from "@/pages/RedefinirSenhaPage";
 
 const queryClient = new QueryClient();
 
@@ -113,6 +114,7 @@ const App = () => {
                 <Route path="/versiculo" element={<VerseRoute />} />
                 <Route path="/assinatura" element={<SubscriptionRoute />} />
                 <Route path="/institucional" element={<InstitucionalPage />} />
+                <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
                 <Route path="/calculadora" element={<CalculadoraPage />} />
                 <Route path="/*" element={<ProtectedRoutes />} />
               </Routes>

@@ -326,23 +326,38 @@ export default function Dashboard() {
       return calculateIDEA(checkinData, effectiveCap || dailyCapacity, ticketPrivate, ticketInsurance);
     }
     // If no single checkin but we have consolidated data (multiple locations, no filter)
-    if (consolidated) {
+    if (consolidated && allTodayCheckins.length > 0) {
+      const totalAttPriv = allTodayCheckins.reduce((s, c: any) => s + (c.attended_private ?? c.appointments_done ?? 0), 0);
+      const totalAttIns = allTodayCheckins.reduce((s, c: any) => s + (c.attended_insurance ?? 0), 0);
+      const totalNsPriv = allTodayCheckins.reduce((s, c: any) => s + (c.noshows_private ?? c.no_show ?? 0), 0);
+      const totalNsIns = allTodayCheckins.reduce((s, c: any) => s + (c.noshows_insurance ?? 0), 0);
+      const totalNew = allTodayCheckins.reduce((s, c: any) => s + (c.new_appointments ?? 0), 0);
+      const allFollowupDone = allTodayCheckins.every((c: any) => c.followup_done === true);
+
       const syntheticData: CheckinData = {
         appointments_scheduled: consolidated.totalScheduled,
-        attended_private: consolidated.totalAttended,
-        attended_insurance: 0,
-        noshows_private: consolidated.totalNoshows,
-        noshows_insurance: 0,
+        attended_private: totalAttPriv,
+        attended_insurance: totalAttIns,
+        noshows_private: totalNsPriv,
+        noshows_insurance: totalNsIns,
         cancellations: consolidated.totalCancellations,
-        new_appointments: 0,
+        new_appointments: totalNew,
         empty_slots: consolidated.totalEmptySlots,
-        followup_done: true,
+        followup_done: allFollowupDone,
       };
       const safeCap = Math.max(consolidated.totalCapacity, 1);
-      return calculateIDEA(syntheticData, safeCap, ticketPrivate, ticketInsurance);
+      const totalAttended = totalAttPriv + totalAttIns;
+      const totalRevenue = consolidated.totalRevenueEstimated;
+      const weightedTicketPriv = totalAttPriv > 0
+        ? (totalRevenue * (totalAttPriv / Math.max(totalAttended, 1))) / totalAttPriv
+        : ticketPrivate;
+      const weightedTicketIns = totalAttIns > 0
+        ? (totalRevenue * (totalAttIns / Math.max(totalAttended, 1))) / totalAttIns
+        : ticketInsurance;
+      return calculateIDEA(syntheticData, safeCap, weightedTicketPriv, weightedTicketIns);
     }
     return null;
-  }, [checkinData, todayCheckin, dailyCapacity, ticketPrivate, ticketInsurance, consolidated]);
+  }, [checkinData, todayCheckin, dailyCapacity, ticketPrivate, ticketInsurance, consolidated, allTodayCheckins]);
 
   const yesterdayScore = yesterdayCheckin
     ? calculateIDEA(toCheckinData(yesterdayCheckin), (yesterdayCheckin as any).appointments_scheduled + ((yesterdayCheckin as any).extra_appointments ?? 0) || dailyCapacity, ticketPrivate, ticketInsurance)
