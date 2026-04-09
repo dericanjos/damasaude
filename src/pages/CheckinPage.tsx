@@ -73,7 +73,7 @@ const EMPTY_FORM: FormData = {
   notes: '',
 };
 
-function Stepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+function Stepper({ value, onChange, label }: { value: number; onChange: (v: number) => void; label?: string }) {
   return (
     <div className="flex items-center justify-center gap-3">
       <button
@@ -87,6 +87,7 @@ function Stepper({ value, onChange }: { value: number; onChange: (v: number) => 
         type="number"
         min={0}
         value={value}
+        aria-label={label || 'Valor'}
         onChange={e => {
           const raw = e.target.value;
           if (raw === '') { onChange(0); return; }
@@ -127,7 +128,7 @@ function CheckinField({
           {label}
         </Label>
       </div>
-      <Stepper value={value} onChange={v => onChange(max !== undefined ? Math.min(v, max) : v)} />
+      <Stepper value={value} onChange={v => onChange(max !== undefined ? Math.min(v, max) : v)} label={label} />
       {hint && (
         <p className="text-[10px] text-idea-attention flex items-center gap-1">
           <AlertCircle className="h-3 w-3 shrink-0" />
@@ -236,7 +237,7 @@ export default function CheckinPage() {
       // New checkin: only pre-fill scheduling info, losses start at zero
       setForm(EMPTY_FORM);
     }
-  }, [existing?.id]);
+  }, [existing?.id, (existing as any)?.updated_at, editMode]);
 
   // Auto-open section from URL param (e.g. /checkin?section=encaixes)
   useEffect(() => {
@@ -745,7 +746,7 @@ export default function CheckinPage() {
     return (
       <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
         <div className="flex items-center gap-3">
-          <button onClick={() => setActiveSection(null)} className="flex h-10 w-10 items-center justify-center rounded-2xl bg-card border border-border/60">
+          <button onClick={() => setActiveSection(null)} aria-label="Voltar" className="flex h-10 w-10 items-center justify-center rounded-2xl bg-card border border-border/60">
             <ChevronRight className="h-5 w-5 text-foreground rotate-180" />
           </button>
           <div>
@@ -799,7 +800,7 @@ export default function CheckinPage() {
     return (
       <div className="mx-auto max-w-lg px-4 py-5 space-y-4">
         <div className="flex items-center gap-3">
-          <button onClick={() => setActiveSection(null)} className="flex h-10 w-10 items-center justify-center rounded-2xl bg-card border border-border/60">
+          <button onClick={() => setActiveSection(null)} aria-label="Voltar" className="flex h-10 w-10 items-center justify-center rounded-2xl bg-card border border-border/60">
             <ChevronRight className="h-5 w-5 text-foreground rotate-180" />
           </button>
           <div>
