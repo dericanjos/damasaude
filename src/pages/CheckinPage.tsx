@@ -9,14 +9,14 @@ import { useGenerateInsight } from '@/hooks/useInsights';
 import { useTodayLocations, useLocationSchedules, useLocationFinancial, type Location } from '@/hooks/useLocations';
 import { useCheckinProtocols, useSaveCheckinProtocols, type ProtocolEntry } from '@/hooks/useProtocols';
 import CheckinProtocolSection from '@/components/CheckinProtocolSection';
-import { calculateIDEA, generateInsightText, getIdeaStatus, getIdeaLabel, getTopLossSources, totalAttended, totalNoshows, calculateLossMap } from '@/lib/idea';
-import { calculateRevenue, formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET_PRIVATE, DEFAULT_TICKET_INSURANCE } from '@/lib/revenue';
+import { calculateIDEA, generateInsightText, getIdeaStatus, getIdeaLabel, getTopLossSources, calculateLossMap } from '@/lib/idea';
+import { calculateRevenue, formatBRL, formatPercent, DEFAULT_TICKET_PRIVATE, DEFAULT_TICKET_INSURANCE } from '@/lib/revenue';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { toast } from 'sonner';
 import {
   ClipboardCheck, CheckCircle2, TrendingDown, TrendingUp, ChevronRight,

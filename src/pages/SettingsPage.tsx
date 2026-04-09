@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClinic, useUpdateClinic } from '@/hooks/useClinic';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,14 +13,14 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Settings, LogOut, CreditCard, ExternalLink, Percent, MapPin, Plus, Pencil, Bell, MessageSquare, Crown, Building } from 'lucide-react';
+import { Settings, LogOut, ExternalLink, Percent, MapPin, Plus, Pencil, MessageSquare, Crown, Building } from 'lucide-react';
 import FeedbackModal from '@/components/FeedbackModal';
 import FounderBadge from '@/components/FounderBadge';
 import ProtocolManager from '@/components/ProtocolManager';
 import NotificationSettings from '@/components/NotificationSettings';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { DAY_KEYS, DAY_LABELS, DAY_SHORT_LABELS, parseDailyCapacities, type DailyCapacities } from '@/lib/days';
+
 
 const statusLabels: Record<string, string> = {
   testando: 'Período de teste',

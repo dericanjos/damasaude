@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useWeekCheckins, useCheckinRange, useAllCheckins } from '@/hooks/useCheckin';
 import { useClinic } from '@/hooks/useClinic';
 import { useLocationFilter } from '@/hooks/useLocationFilter';
@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { startOfWeek, subWeeks, subDays, format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO, getDay, getDaysInMonth, isWeekend } from 'date-fns';
+import { startOfWeek, subWeeks, subDays, format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Sparkles, TrendingDown, Zap, ArrowUpRight, ArrowDownRight,
