@@ -12,18 +12,15 @@ export function useTodayCheckin(locationId?: string) {
   return useQuery({
     queryKey: ['checkin', clinic?.id, today, locationId || 'any'],
     queryFn: async () => {
-      if (!clinic) return null;
-      let query = supabase
+      if (!clinic || !locationId) return null;
+
+      const { data, error } = await supabase
         .from('daily_checkins')
         .select('*')
         .eq('clinic_id', clinic.id)
-        .eq('date', today);
-      
-      if (locationId) {
-        query = query.eq('location_id', locationId);
-      }
-
-      const { data, error } = await query.maybeSingle();
+        .eq('date', today)
+        .eq('location_id', locationId)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -59,18 +56,15 @@ export function useYesterdayCheckin(locationId?: string) {
   return useQuery({
     queryKey: ['checkin', clinic?.id, yesterday, locationId || 'any'],
     queryFn: async () => {
-      if (!clinic) return null;
-      let query = supabase
+      if (!clinic || !locationId) return null;
+
+      const { data, error } = await supabase
         .from('daily_checkins')
         .select('*')
         .eq('clinic_id', clinic.id)
-        .eq('date', yesterday);
-
-      if (locationId) {
-        query = query.eq('location_id', locationId);
-      }
-
-      const { data, error } = await query.maybeSingle();
+        .eq('date', yesterday)
+        .eq('location_id', locationId)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -237,6 +231,9 @@ export function useSaveCheckin() {
       queryClient.invalidateQueries({ queryKey: ['checkins-today-all'] });
       queryClient.invalidateQueries({ queryKey: ['checkins-all'] });
       queryClient.invalidateQueries({ queryKey: ['checkins-range'] });
+      queryClient.invalidateQueries({ queryKey: ['checkin-last'] });
+      queryClient.invalidateQueries({ queryKey: ['last7-checkins'] });
+      queryClient.invalidateQueries({ queryKey: ['monthly-checkins'] });
     },
   });
 }

@@ -258,7 +258,7 @@ export function useSaveChecklist() {
           if (lvl === currentLevel && cid) uniqueIds.add(cid);
         });
 
-        const threshold = currentLevel === 1 ? 5 : currentLevel === 2 ? 6 : 999;
+        const threshold = CHECKLISTS_TO_UNLOCK_NEXT;
         if (uniqueIds.size >= threshold && currentLevel < 3) {
           await supabase
             .from('profiles')
