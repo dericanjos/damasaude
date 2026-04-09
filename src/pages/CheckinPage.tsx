@@ -215,7 +215,7 @@ export default function CheckinPage() {
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
 
   useEffect(() => {
-    if (existing) {
+    if (existing && !editMode) {
       const e = existing as any;
       setForm({
         appointments_scheduled: e.appointments_scheduled,
@@ -233,8 +233,7 @@ export default function CheckinPage() {
         followup_done: e.followup_done,
         notes: e.notes ?? '',
       });
-    } else {
-      // New checkin: only pre-fill scheduling info, losses start at zero
+    } else if (!existing) {
       setForm(EMPTY_FORM);
     }
   }, [existing?.id, (existing as any)?.updated_at, editMode]);
