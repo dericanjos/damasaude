@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { lovable } from '@/integrations/lovable/index';
 import logoTagline from '@/assets/logo-dama-tagline.png';
@@ -40,6 +41,8 @@ export default function AuthPage() {
   const [clinicName, setClinicName] = useState('');
   const [phone, setPhone] = useState('');
   const [phoneConfirm, setPhoneConfirm] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [referralCode, setReferralCode] = useState('');
 
@@ -66,6 +69,32 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
+        if (!doctorName.trim()) {
+          toast.error('Seu nome é obrigatório para começar');
+          setLoading(false);
+          return;
+        }
+        if (!clinicName.trim()) {
+          toast.error('O nome da clínica é obrigatório');
+          setLoading(false);
+          return;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.trim())) {
+          toast.error('Verifique o formato do seu e-mail (ex: seu@email.com)');
+          setLoading(false);
+          return;
+        }
+        if (password.length < 6) {
+          toast.error('Sua senha precisa ter pelo menos 6 caracteres');
+          setLoading(false);
+          return;
+        }
+        if (password !== passwordConfirm) {
+          toast.error('As senhas não coincidem');
+          setLoading(false);
+          return;
+        }
         const phoneDigits = phone.replace(/\D/g, '');
         if (phoneDigits.length < 10) {
           toast.error('Informe um telefone válido com DDD');
@@ -195,17 +224,55 @@ export default function AuthPage() {
               )}
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-white/90">Senha</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="border-white/20 bg-white/10 text-white placeholder:text-white/40"
-                  minLength={6}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="border-white/20 bg-white/10 text-white placeholder:text-white/40 pr-10"
+                    minLength={6}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80 p-1"
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
+
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="passwordConfirm" className="text-white/90">Confirme sua senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="passwordConfirm"
+                      type={showPassword ? 'text' : 'password'}
+                      value={passwordConfirm}
+                      onChange={(e) => setPasswordConfirm(e.target.value)}
+                      placeholder="••••••••"
+                      className={`border-white/20 bg-white/10 text-white placeholder:text-white/40 pr-10 ${isSignUp && passwordConfirm && password !== passwordConfirm ? 'border-red-500' : ''}`}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80 p-1"
+                      aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {isSignUp && passwordConfirm && password !== passwordConfirm && (
+                    <p className="text-xs text-red-400">As senhas não coincidem</p>
+                  )}
+                </div>
+              )}
 
               {isSignUp && (
                 <div className="space-y-2">
