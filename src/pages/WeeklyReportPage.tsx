@@ -5,7 +5,7 @@ import { calculateIDEA, getIdeaStatus, getIdeaLabel, type CheckinData } from '@/
 import { formatBRL, formatPercent, DEFAULT_DAILY_CAPACITY } from '@/lib/revenue';
 import { useClinic } from '@/hooks/useClinic';
 import { useLocationFilter } from '@/hooks/useLocationFilter';
-import { useActiveLocations, useAllLocationFinancials, useAllLocationSchedules } from '@/hooks/useLocations';
+import { useActiveLocations, useAllLocationFinancials, useAllLocationSchedules, useLocationFinancial } from '@/hooks/useLocations';
 import LocationSelector from '@/components/LocationSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
@@ -47,6 +47,7 @@ export default function WeeklyReportPage() {
   const dailyCapacity = (clinic as any)?.daily_capacity ?? DEFAULT_DAILY_CAPACITY;
   const workingDays: string[] = Array.isArray((clinic as any)?.working_days) ? (clinic as any).working_days : ['seg', 'ter', 'qua', 'qui', 'sex'];
 
+  const { data: selectedLocFinancial } = useLocationFinancial(selectedLocationId || undefined);
   const targetFillRate = clinic?.target_fill_rate ?? 0.85;
   const targetNoShowRate = clinic?.target_noshow_rate ?? 0.05;
 
@@ -172,9 +173,12 @@ export default function WeeklyReportPage() {
   const scores = checkins.map(c => {
     const data = toCheckinData(c);
     const dayCap = getCapacityForDate(c.date, caps) || dailyCapacity;
-    // For IDEA we still use clinic-level tickets as it's a composite score
-    const ticketP = (clinic as any)?.ticket_private ?? 250;
-    const ticketI = (clinic as any)?.ticket_insurance ?? 100;
+    const ticketP = selectedLocationId && (selectedLocFinancial as any)?.ticket_private != null
+      ? (selectedLocFinancial as any).ticket_private
+      : ((clinic as any)?.ticket_private ?? 250);
+    const ticketI = selectedLocationId && (selectedLocFinancial as any)?.ticket_insurance != null
+      ? (selectedLocFinancial as any).ticket_insurance
+      : ((clinic as any)?.ticket_insurance ?? 100);
     return { date: c.date, score: calculateIDEA(data, dayCap, ticketP, ticketI), data };
   });
 

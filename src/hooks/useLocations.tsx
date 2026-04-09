@@ -168,31 +168,37 @@ export function useCreateLocation() {
         .single();
       if (locError) throw locError;
 
-      // Create financial
-      const { error: finError } = await supabase
-        .from('location_financials')
-        .insert({
-          user_id: user.id,
-          location_id: loc.id,
-          ticket_avg: input.ticket_avg || 250,
-          ticket_private: input.ticket_private || 250,
-          ticket_insurance: input.ticket_insurance || 100,
-        } as any);
-      if (finError) throw finError;
-
-      // Create schedules
-      if (input.schedules && input.schedules.length > 0) {
-        const { error: schedError } = await supabase
-          .from('location_schedules')
-          .insert(input.schedules.map(s => ({
+      try {
+        // Create financial
+        const { error: finError } = await supabase
+          .from('location_financials')
+          .insert({
             user_id: user.id,
             location_id: loc.id,
-            weekday: s.weekday,
-            start_time: s.start_time,
-            end_time: s.end_time,
-            daily_capacity: s.daily_capacity,
-          })) as any);
-        if (schedError) throw schedError;
+            ticket_avg: input.ticket_avg || 250,
+            ticket_private: input.ticket_private || 250,
+            ticket_insurance: input.ticket_insurance || 100,
+          } as any);
+        if (finError) throw finError;
+
+        // Create schedules
+        if (input.schedules && input.schedules.length > 0) {
+          const { error: schedError } = await supabase
+            .from('location_schedules')
+            .insert(input.schedules.map(s => ({
+              user_id: user.id,
+              location_id: loc.id,
+              weekday: s.weekday,
+              start_time: s.start_time,
+              end_time: s.end_time,
+              daily_capacity: s.daily_capacity,
+            })) as any);
+          if (schedError) throw schedError;
+        }
+      } catch (err) {
+        // Rollback: delete the orphan location
+        await supabase.from('locations').delete().eq('id', loc.id);
+        throw err;
       }
 
       return loc as Location;
