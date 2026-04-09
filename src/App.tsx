@@ -12,7 +12,7 @@ import AppLayout from "@/components/AppLayout";
 import AuthPage from "@/pages/AuthPage";
 import Dashboard from "@/pages/Dashboard";
 import CheckinPage from "@/pages/CheckinPage";
-import LossReasonsPage from "@/pages/LossReasonsPage";
+
 import WeeklyReportPage from "@/pages/WeeklyReportPage";
 import SettingsPage from "@/pages/SettingsPage";
 import SubscriptionPage from "@/pages/SubscriptionPage";
@@ -54,7 +54,7 @@ function ProtectedRoutes() {
         <Route path="/checkin" element={<CheckinPage />} />
         <Route path="/noticias" element={<MedicalNewsPage />} />
         <Route path="/idea" element={<IdeaPage />} />
-        <Route path="/motivos" element={<LossReasonsPage />} />
+        
         <Route path="/relatorio" element={<WeeklyReportPage />} />
         <Route path="/insights" element={<InsightsPage />} />
         <Route path="/indicar" element={<ReferralPage />} />
