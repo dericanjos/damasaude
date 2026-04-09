@@ -167,11 +167,15 @@ export default function OnboardingPage() {
         if (locError) throw locError;
 
         const ticketAvg = paymentType === 'ambos' ? Math.round((tp + ti) / 2) : (paymentType === 'particular' ? tp : ti);
-        await supabase.from('location_financials').insert({
+        const { error: finError } = await supabase.from('location_financials').insert({
           user_id: user.id, location_id: newLoc.id, ticket_avg: ticketAvg,
           ticket_private: paymentType === 'convenio' ? 0 : tp,
           ticket_insurance: paymentType === 'particular' ? 0 : ti,
         } as any);
+        if (finError) {
+          await supabase.from('locations').delete().eq('id', newLoc.id);
+          throw finError;
+        }
 
         const scheduleRows = selectedDays.map(d => ({
           user_id: user.id,
@@ -181,7 +185,12 @@ export default function OnboardingPage() {
           start_time: '08:00',
           end_time: '18:00',
         }));
-        await supabase.from('location_schedules').insert(scheduleRows as any);
+        const { error: schedError } = await supabase.from('location_schedules').insert(scheduleRows as any);
+        if (schedError) {
+          await supabase.from('location_financials').delete().eq('location_id', newLoc.id);
+          await supabase.from('locations').delete().eq('id', newLoc.id);
+          throw schedError;
+        }
       }
 
       const { error: authUpdateError } = await supabase.auth.updateUser({
