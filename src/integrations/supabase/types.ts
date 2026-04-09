@@ -588,8 +588,9 @@ export type Database = {
       medical_news: {
         Row: {
           category: string
+          content: string | null
           created_at: string
-          external_url: string
+          external_url: string | null
           id: string
           image_url: string | null
           is_active: boolean
@@ -600,8 +601,9 @@ export type Database = {
         }
         Insert: {
           category: string
+          content?: string | null
           created_at?: string
-          external_url: string
+          external_url?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -612,8 +614,9 @@ export type Database = {
         }
         Update: {
           category?: string
+          content?: string | null
           created_at?: string
-          external_url?: string
+          external_url?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
