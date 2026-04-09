@@ -1104,11 +1104,9 @@ export default function Dashboard() {
       {/* ── MEDICAL NEWS BANNER ── */}
       {latestMedicalNews ? (
         <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
-          <a
-            href={latestMedicalNews.external_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block p-4 text-left transition-all hover:bg-accent/5 active:scale-[0.99]"
+          <button
+            onClick={() => navigate(`/noticia/${latestMedicalNews.id}`)}
+            className="block w-full p-4 text-left transition-all hover:bg-accent/5 active:scale-[0.99]"
           >
             <div className="flex items-start gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
@@ -1121,7 +1119,7 @@ export default function Dashboard() {
                 <p className="text-[10px] text-primary/70 font-medium mt-1">{latestMedicalNews.source}</p>
               </div>
             </div>
-          </a>
+          </button>
           {medicalNewsCount > 1 && (
             <button
               onClick={() => navigate('/noticias')}
