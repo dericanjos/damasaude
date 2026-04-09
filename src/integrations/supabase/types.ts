@@ -254,6 +254,7 @@ export type Database = {
           noshows_private: number
           notes: string | null
           rescheduled: number
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -279,6 +280,7 @@ export type Database = {
           noshows_private?: number
           notes?: string | null
           rescheduled?: number
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -304,6 +306,7 @@ export type Database = {
           noshows_private?: number
           notes?: string | null
           rescheduled?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
