@@ -12,18 +12,15 @@ export function useTodayCheckin(locationId?: string) {
   return useQuery({
     queryKey: ['checkin', clinic?.id, today, locationId || 'any'],
     queryFn: async () => {
-      if (!clinic) return null;
-      let query = supabase
+      if (!clinic || !locationId) return null;
+
+      const { data, error } = await supabase
         .from('daily_checkins')
         .select('*')
         .eq('clinic_id', clinic.id)
-        .eq('date', today);
-      
-      if (locationId) {
-        query = query.eq('location_id', locationId);
-      }
-
-      const { data, error } = await query.maybeSingle();
+        .eq('date', today)
+        .eq('location_id', locationId)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
