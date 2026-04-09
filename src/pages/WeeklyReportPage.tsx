@@ -17,7 +17,7 @@ import { exportReportPdf } from '@/lib/exportReportPdf';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
-import { aggregateCheckins, getWorstLeaker, getMostEfficient } from '@/lib/aggregation';
+import { aggregateCheckins, getWorstLeaker } from '@/lib/aggregation';
 
 /** Helper to convert a DB checkin row to CheckinData */
 function toCheckinData(c: any): CheckinData {

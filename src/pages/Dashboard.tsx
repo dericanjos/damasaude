@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Info, MapPin, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { LineChart, Line, Area, AreaChart, ResponsiveContainer, Dot } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer } from 'recharts';
 
 import { useTodayCheckin, useYesterdayCheckin, useTodayCheckins } from '@/hooks/useCheckin';
 import { useTodayProtocolRevenue } from '@/hooks/useProtocols';
