@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAllMedicalNews } from '@/hooks/useMedicalNews';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
@@ -54,12 +54,10 @@ export default function MedicalNewsPage() {
       {news?.map((item) => {
         const colorClass = categoryColors[item.category] || 'bg-muted text-muted-foreground border-border';
         return (
-          <a
+          <button
             key={item.id}
-            href={item.external_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block rounded-2xl bg-card border border-border/60 shadow-card p-4 transition-all hover:shadow-elevated hover:border-primary/30 active:scale-[0.99]"
+            onClick={() => navigate(`/noticia/${item.id}`)}
+            className="block w-full text-left rounded-2xl bg-card border border-border/60 shadow-card p-4 transition-all hover:shadow-elevated hover:border-primary/30 active:scale-[0.99]"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
@@ -75,9 +73,9 @@ export default function MedicalNewsPage() {
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.summary}</p>
                 <p className="text-[10px] text-primary/70 font-medium mt-1.5">{item.source}</p>
               </div>
-              <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground/50 mt-1" />
+              <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground/50 mt-1" />
             </div>
-          </a>
+          </button>
         );
       })}
 

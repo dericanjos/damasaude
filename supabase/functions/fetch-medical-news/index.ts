@@ -58,10 +58,10 @@ serve(async (req) => {
 
     const prompt = `Gere 3 notícias médicas REAIS e ATUAIS do Brasil com data de hoje (${today}). Cada notícia deve ter:
 - title: manchete concisa (máximo 80 caracteres)
-- summary: resumo informativo (máximo 150 caracteres)  
+- summary: resumo de 1 linha (máximo 150 caracteres)
+- content: texto completo da notícia em 3-4 parágrafos curtos (400-600 caracteres no total), com quebras de linha entre parágrafos usando \\n\\n. Foque em informação útil e acionável para o médico.
 - source: fonte real (ex: CFM, CRM, Ministério da Saúde, Anvisa, ANS, CBHPM)
 - category: uma dessas categorias EXATAS: "Legislação", "Tecnologia", "Mercado", "Telemedicina", "Pesquisa"
-- external_url: URL plausível da fonte (pode ser genérico como https://portal.cfm.org.br)
 
 Foque em temas relevantes para médicos brasileiros:
 - Novas resoluções do CFM ou CRM
@@ -70,8 +70,8 @@ Foque em temas relevantes para médicos brasileiros:
 - Tecnologia médica e prontuário eletrônico
 - Gestão de clínicas e consultórios
 
-Retorne APENAS um JSON válido, sem markdown, sem explicações. Formato:
-[{"title":"...","summary":"...","source":"...","category":"...","external_url":"..."}]`;
+IMPORTANTE: Não invente URLs. Retorne APENAS um JSON válido, sem markdown, sem explicações. Formato:
+[{"title":"...","summary":"...","content":"...","source":"...","category":"..."}]`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -107,9 +107,9 @@ Retorne APENAS um JSON válido, sem markdown, sem explicações. Formato:
     let newsItems: Array<{
       title: string;
       summary: string;
+      content: string;
       source: string;
       category: string;
-      external_url: string;
     }>;
 
     try {
@@ -124,19 +124,20 @@ Retorne APENAS um JSON válido, sem markdown, sem explicações. Formato:
     }
 
     // Insert news items
-    const toInsert = newsItems.slice(0, 3).map((item) => ({
-      title: (item.title || "").slice(0, 120),
-      summary: (item.summary || "").slice(0, 200),
-      source: item.source || "Fonte médica",
-      category: item.category || "Mercado",
-      external_url: item.external_url || "https://portal.cfm.org.br",
-      is_active: true,
-      published_at: new Date().toISOString(),
-    }));
-
     const { error: insertError } = await supabase
       .from("medical_news")
-      .insert(toInsert);
+      .insert(
+        newsItems.slice(0, 3).map((item) => ({
+          title: (item.title || "").slice(0, 120),
+          summary: (item.summary || "").slice(0, 200),
+          content: item.content || null,
+          source: item.source || "Fonte médica",
+          category: item.category || "Mercado",
+          external_url: null,
+          published_at: new Date().toISOString(),
+          is_active: true,
+        }))
+      );
 
     if (insertError) throw insertError;
 
@@ -148,10 +149,10 @@ Retorne APENAS um JSON válido, sem markdown, sem explicações. Formato:
       .update({ is_active: false })
       .lt("published_at", thirtyDaysAgo.toISOString());
 
-    console.log(`Successfully generated ${toInsert.length} medical news items`);
+    console.log(`Successfully generated ${newsItems.slice(0, 3).length} medical news items`);
 
     return new Response(
-      JSON.stringify({ success: true, count: toInsert.length }),
+      JSON.stringify({ success: true, count: newsItems.slice(0, 3).length }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
