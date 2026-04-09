@@ -54,7 +54,7 @@ function ProtectedRoutes() {
         <Route path="/checkin" element={<CheckinPage />} />
         <Route path="/noticias" element={<MedicalNewsPage />} />
         <Route path="/idea" element={<IdeaPage />} />
-        <Route path="/motivos" element={<LossReasonsPage />} />
+        
         <Route path="/relatorio" element={<WeeklyReportPage />} />
         <Route path="/insights" element={<InsightsPage />} />
         <Route path="/indicar" element={<ReferralPage />} />
