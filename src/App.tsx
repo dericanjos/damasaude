@@ -25,6 +25,7 @@ import MedicalNewsPage from "@/pages/MedicalNewsPage";
 import IdeaPage from "@/pages/IdeaPage";
 import CalculadoraPage from "@/pages/CalculadoraPage";
 import ReferralPage from "@/pages/ReferralPage";
+import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import NotFound from "./pages/NotFound";
 import RedefinirSenhaPage from "@/pages/RedefinirSenhaPage";
 
@@ -62,6 +63,7 @@ function ProtectedRoutes() {
         <Route path="/insights" element={<InsightsPage />} />
         <Route path="/indicar" element={<ReferralPage />} />
         <Route path="/config" element={<SettingsPage />} />
+        <Route path="/privacidade" element={<PrivacyPolicyPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AppLayout>
