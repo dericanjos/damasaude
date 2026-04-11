@@ -22,6 +22,7 @@ export function useOnboardingStatus() {
         const { error: createProfileError } = await supabase.from('profiles').upsert(
           {
             user_id: user.id,
+            email: user.email ?? null,
             onboarding_completed: false,
           } as any,
           { onConflict: 'user_id' }
