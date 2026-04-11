@@ -74,7 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.from('profiles').upsert(
       {
         user_id: userId,
-        email,
         display_name: doctorName,
         phone,
         onboarding_completed: false,
