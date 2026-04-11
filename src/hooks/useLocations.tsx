@@ -302,8 +302,3 @@ export function useTodayLocations() {
   return { todayLocations: todayLocs, allLocations: activeLocations };
 }
 
-/** Get capacity for a location on a specific weekday */
-export function getLocationCapacity(schedules: LocationSchedule[], weekday: number): number {
-  const sched = schedules.find(s => s.weekday === weekday && s.is_active);
-  return sched?.daily_capacity ?? 16;
-}

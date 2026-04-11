@@ -6,7 +6,7 @@ import { format, startOfWeek, endOfWeek, subDays } from 'date-fns';
 import { calculateChecklistPoints, isTodayWorkingDay, type ChecklistRecord, CHECKLISTS_TO_UNLOCK_NEXT } from '@/lib/checklist';
 
 /** Get all checklists from DB */
-export function useAllChecklists() {
+function useAllChecklists() {
   return useQuery({
     queryKey: ['checklists-all'],
     queryFn: async () => {
@@ -66,7 +66,7 @@ function useCompletedCountByLevel() {
 }
 
 /** Get the max unlocked level */
-export function useUnlockedLevel() {
+function useUnlockedLevel() {
   const { data: counts } = useCompletedCountByLevel();
   const { data: clinic } = useClinic();
 
