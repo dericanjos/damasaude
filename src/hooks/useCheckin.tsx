@@ -234,6 +234,7 @@ export function useSaveCheckin() {
       queryClient.invalidateQueries({ queryKey: ['checkin-last'] });
       queryClient.invalidateQueries({ queryKey: ['last7-checkins'] });
       queryClient.invalidateQueries({ queryKey: ['monthly-checkins'] });
+      queryClient.invalidateQueries({ queryKey: ['loss-radar'] });
     },
   });
 }
