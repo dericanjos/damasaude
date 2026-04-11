@@ -21,7 +21,7 @@ import InstitucionalPage from "@/pages/InstitucionalPage";
 import OnboardingPage from "@/pages/OnboardingPage";
 import VersePage from "@/pages/VersePage";
 import MedicalNewsPage from "@/pages/MedicalNewsPage";
-import NewsArticlePage from "@/pages/NewsArticlePage";
+
 import IdeaPage from "@/pages/IdeaPage";
 import CalculadoraPage from "@/pages/CalculadoraPage";
 import ReferralPage from "@/pages/ReferralPage";
@@ -55,7 +55,7 @@ function ProtectedRoutes() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/checkin" element={<CheckinPage />} />
         <Route path="/noticias" element={<MedicalNewsPage />} />
-        <Route path="/noticia/:id" element={<NewsArticlePage />} />
+        
         <Route path="/idea" element={<IdeaPage />} />
         
         <Route path="/relatorio" element={<WeeklyReportPage />} />

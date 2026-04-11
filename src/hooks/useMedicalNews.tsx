@@ -60,19 +60,3 @@ export function useMedicalNewsCount() {
   });
 }
 
-export function useMedicalNewsById(id: string | undefined) {
-  return useQuery({
-    queryKey: ['medical_news', 'by-id', id],
-    queryFn: async () => {
-      if (!id) return null;
-      const { data, error } = await supabase
-        .from('medical_news')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
-      if (error) throw error;
-      return data as unknown as MedicalNewsItem | null;
-    },
-    enabled: !!id,
-  });
-}
