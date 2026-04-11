@@ -201,7 +201,6 @@ export default function OnboardingPage() {
       const { error: profileError } = await supabase.from('profiles').upsert(
         {
           user_id: user.id,
-          email: user.email ?? null,
           onboarding_completed: true,
           display_name: doctorName,
           source: source || null,
