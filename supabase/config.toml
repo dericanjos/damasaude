@@ -4,10 +4,10 @@ project_id = "rhlmgtvppszwqavcjnuq"
 verify_jwt = false
 
 [functions.check-subscription]
-verify_jwt = false
+verify_jwt = true
 
 [functions.customer-portal]
-verify_jwt = false
+verify_jwt = true
 
 [functions.stripe-webhook]
 verify_jwt = false
@@ -19,10 +19,10 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.generate-weekly-report]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-monthly-report]
-verify_jwt = false
+verify_jwt = true
 
 [functions.scheduled-monthly-report]
 verify_jwt = false

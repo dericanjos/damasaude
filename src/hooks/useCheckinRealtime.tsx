@@ -27,6 +27,7 @@ export function useCheckinRealtime() {
         () => {
           queryClient.invalidateQueries({ queryKey: ['checkin'] });
           queryClient.invalidateQueries({ queryKey: ['checkins-today-all'] });
+          queryClient.invalidateQueries({ queryKey: ['checkin-last'] });
           queryClient.invalidateQueries({ queryKey: ['checkins-week'] });
           queryClient.invalidateQueries({ queryKey: ['checkins-all'] });
           queryClient.invalidateQueries({ queryKey: ['checkins-range'] });
