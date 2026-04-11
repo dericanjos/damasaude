@@ -15,7 +15,7 @@ export function useCheckinRealtime() {
     if (!user) return;
 
     const channel = supabase
-      .channel(`checkin-realtime-${user.id}`)
+      .channel(`checkin-realtime-${user.id}`, { config: { private: true } })
       .on(
         'postgres_changes',
         {
