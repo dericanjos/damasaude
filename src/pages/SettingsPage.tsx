@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Settings, LogOut, ExternalLink, Percent, MapPin, Plus, Pencil, MessageSquare, Crown, Building } from 'lucide-react';
+import { Settings, LogOut, ExternalLink, Percent, MapPin, Plus, Pencil, MessageSquare, Crown, Building, Shield } from 'lucide-react';
 import FeedbackModal from '@/components/FeedbackModal';
 import FounderBadge from '@/components/FounderBadge';
 import ProtocolManager from '@/components/ProtocolManager';
@@ -609,6 +609,20 @@ export default function SettingsPage() {
           <div>
             <p className="text-sm font-semibold text-foreground">Sobre a DAMA</p>
             <p className="text-xs text-muted-foreground">Conheça nossos serviços</p>
+          </div>
+        </button>
+      </div>
+
+      {/* Política de Privacidade */}
+      <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
+        <button
+          onClick={() => navigate('/privacidade')}
+          className="flex items-center gap-3 w-full text-left"
+        >
+          <Shield className="h-4 w-4 text-muted-foreground" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">Política de Privacidade</p>
+            <p className="text-xs text-muted-foreground">LGPD e proteção dos seus dados</p>
           </div>
         </button>
       </div>
