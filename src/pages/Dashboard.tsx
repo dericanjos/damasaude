@@ -234,17 +234,23 @@ export default function Dashboard() {
   // Use location-specific capacity when a single location is selected
   const todayWeekdayDash = new Date().getDay();
 
-  const { dailyCapacity, capacityIsFallback } = useMemo(() => {
+  const { dailyCapacity, capacityIsFallback, isNonWorkingDay } = useMemo(() => {
     if (selectedLocationId) {
       const sched = allSchedules.find(
         s => s.location_id === selectedLocationId && s.weekday === todayWeekdayDash && s.is_active
       );
-      if (sched) return { dailyCapacity: Math.max(sched.daily_capacity, 1), capacityIsFallback: false };
-      // Fallback: use clinic capacity or default 16
+      if (sched) return { dailyCapacity: Math.max(sched.daily_capacity, 1), capacityIsFallback: false, isNonWorkingDay: false };
+      // Check if THIS LOCATION has any schedule at all (if no schedules exist, we don't know — use fallback)
+      const hasAnySchedule = allSchedules.some(s => s.location_id === selectedLocationId && s.is_active);
+      if (hasAnySchedule) {
+        // Has schedules but not for today → today is a non-working day
+        return { dailyCapacity: 0, capacityIsFallback: false, isNonWorkingDay: true };
+      }
+      // No schedules at all for this location → fallback to clinic-level capacity
       const fallback = Math.max(clinicCapacity, DEFAULT_DAILY_CAPACITY);
-      return { dailyCapacity: fallback, capacityIsFallback: true };
+      return { dailyCapacity: fallback, capacityIsFallback: true, isNonWorkingDay: false };
     }
-    return { dailyCapacity: Math.max(clinicCapacity, 1), capacityIsFallback: false };
+    return { dailyCapacity: Math.max(clinicCapacity, 1), capacityIsFallback: false, isNonWorkingDay: false };
   }, [selectedLocationId, allSchedules, todayWeekdayDash, clinicCapacity]);
 
   // ── Consolidated check-in status (X/Y locais) ──
