@@ -61,6 +61,17 @@ export function useGenerateActions() {
       const ticketAvg = (fin as any)?.ticket_avg ?? 250;
       const actions = generateActions(checkinData, clinic.target_noshow_rate, ideaScore, hasSecretary, ticketPrivate, ticketInsurance, ticketAvg);
 
+      // If no actions to generate, just clear today's actions and return
+      if (actions.length === 0) {
+        await supabase
+          .from('daily_actions')
+          .delete()
+          .eq('clinic_id', clinic.id)
+          .eq('date', today)
+          .eq('location_id', locationId);
+        return [];
+      }
+
       // Insert new actions first, then delete old ones only on success
       const { data: newActions, error: insertError } = await supabase
         .from('daily_actions')
@@ -79,15 +90,24 @@ export function useGenerateActions() {
       if (insertError) throw insertError;
 
       // Delete old actions only after successful insert
-      // Use the IDs of the new actions to exclude them from deletion
       const newIds = (newActions || []).map(a => a.id);
-      await supabase
-        .from('daily_actions')
-        .delete()
-        .eq('clinic_id', clinic.id)
-        .eq('date', today)
-        .eq('location_id', locationId)
-        .not('id', 'in', `(${newIds.join(',')})`);
+      if (newIds.length > 0) {
+        await supabase
+          .from('daily_actions')
+          .delete()
+          .eq('clinic_id', clinic.id)
+          .eq('date', today)
+          .eq('location_id', locationId)
+          .not('id', 'in', `(${newIds.join(',')})`);
+      } else {
+        // Fallback: if insert succeeded but returned no rows, clear all old
+        await supabase
+          .from('daily_actions')
+          .delete()
+          .eq('clinic_id', clinic.id)
+          .eq('date', today)
+          .eq('location_id', locationId);
+      }
 
       return newActions;
     },
