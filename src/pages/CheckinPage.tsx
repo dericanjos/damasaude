@@ -888,7 +888,7 @@ export default function CheckinPage() {
           </button>
           <div>
             <h1 className="text-lg font-bold text-foreground">Consultas não realizadas</h1>
-            <p className="text-xs text-muted-foreground">Registre no-shows e cancelamentos</p>
+            <p className="text-xs text-muted-foreground">Etapa final do dia · Confirma seu check-in</p>
           </div>
         </div>
 
@@ -897,6 +897,24 @@ export default function CheckinPage() {
             <MapPin className="h-3 w-3" /> {selectedLocation.name}
           </div>
         )}
+
+        {/* Explainer card — orienta o médico sobre QUANDO e POR QUE preencher */}
+        <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4 space-y-2">
+          <div className="flex items-start gap-2">
+            <span className="text-base shrink-0">🌙</span>
+            <div className="space-y-1.5">
+              <p className="text-xs font-bold text-foreground">
+                Preencha esta tela ao final do dia
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Aqui você registra o que NÃO aconteceu como planejado: pacientes que faltaram (no-shows) ou cancelaram. Sem esses dados, os insights e relatórios não conseguem mostrar o panorama real.
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                <strong className="text-foreground">Dia sem perdas?</strong> Mantenha tudo em zero e clique em "Confirmar e finalizar dia".
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div className="rounded-2xl bg-card border border-border/60 p-5 shadow-card space-y-5">
           {hasValidationError && (
@@ -983,7 +1001,7 @@ export default function CheckinPage() {
           onClick={() => handleSaveSection('perdas')}
           disabled={saveCheckin.isPending || hasValidationError}
         >
-          {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : 'Salvar consultas não realizadas'}
+          {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : '✓ Confirmar e finalizar dia'}
         </Button>
       </div>
     );
