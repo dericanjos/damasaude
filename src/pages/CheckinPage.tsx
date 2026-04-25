@@ -946,7 +946,7 @@ export default function CheckinPage() {
               label="No-show"
               value={paymentType === 'particular' ? form.noshows_private : form.noshows_insurance}
               onChange={v => setField(paymentType === 'particular' ? 'noshows_private' : 'noshows_insurance', v)}
-              max={Math.max(0, maxNoshowsTotal)}
+              max={scheduledTotal}
             />
           )}
           <p className="text-sm font-extrabold text-foreground uppercase tracking-wider mt-4 pt-4 border-t border-border/40">🚫 Cancelamentos</p>
@@ -970,7 +970,7 @@ export default function CheckinPage() {
               label="Cancelamentos"
               value={paymentType === 'particular' ? form.cancellations_private : form.cancellations_insurance}
               onChange={v => setField(paymentType === 'particular' ? 'cancellations_private' : 'cancellations_insurance', v)}
-              max={Math.max(0, maxCancellationsTotal)}
+              max={scheduledTotal}
             />
           )}
           {/* Buracos auto */}
@@ -1489,7 +1489,7 @@ export default function CheckinPage() {
                   label="No-show"
                   value={paymentType === 'particular' ? form.noshows_private : form.noshows_insurance}
                   onChange={v => setField(paymentType === 'particular' ? 'noshows_private' : 'noshows_insurance', v)}
-                  max={Math.max(0, maxNoshowsTotal)}
+                  max={scheduledTotal}
                 />
               )}
               <p className="text-sm font-extrabold text-foreground uppercase tracking-wider mt-4 pt-4 border-t border-border/40">🚫 Cancelamentos</p>
@@ -1513,7 +1513,7 @@ export default function CheckinPage() {
                   label="Cancelamentos"
                   value={paymentType === 'particular' ? form.cancellations_private : form.cancellations_insurance}
                   onChange={v => setField(paymentType === 'particular' ? 'cancellations_private' : 'cancellations_insurance', v)}
-                  max={Math.max(0, maxCancellationsTotal)}
+                  max={scheduledTotal}
                 />
               )}
               {/* Buracos auto */}
