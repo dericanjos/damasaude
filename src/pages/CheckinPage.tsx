@@ -280,7 +280,7 @@ export default function CheckinPage() {
 
   // Get capacity from location schedule (0 means no schedule for today — don't block)
   const todayWeekday = new Date().getDay();
-  const todaySchedule = schedules.find(s => s.weekday === todayWeekday);
+  const todaySchedule = schedules.find(s => s.weekday === todayWeekday && s.is_active);
 
   // Non-working day confirmation dialog
   const [showNonWorkingDayDialog, setShowNonWorkingDayDialog] = useState(false);
@@ -810,6 +810,17 @@ export default function CheckinPage() {
   const handleSaveSection = async (sectionName: string) => {
     if (!selectedLocationId) return;
     try {
+      // For "perdas" section, ensure a measurable time delta between
+      // created_at and updated_at by waiting briefly. This makes
+      // isCheckinComplete reliable even for "perfect day" with all zeros.
+      if (sectionName === 'perdas' && existing) {
+        const created = new Date((existing as any).created_at).getTime();
+        const now = Date.now();
+        if (now - created < 2_000) {
+          await new Promise(resolve => setTimeout(resolve, 2_000 - (now - created)));
+        }
+      }
+
       await saveCheckin.mutateAsync({
         ...form,
         cancellations: form.cancellations_private + form.cancellations_insurance,
@@ -817,7 +828,7 @@ export default function CheckinPage() {
         appointments_done: form.attended_private + form.attended_insurance,
         no_show: form.noshows_private + form.noshows_insurance,
       });
-      toast.success(sectionName === 'encaixes' ? 'Encaixes salvos!' : 'Perdas salvas!');
+      toast.success(sectionName === 'encaixes' ? 'Encaixes salvos!' : sectionName === 'perdas' ? 'Check-in confirmado e finalizado!' : 'Salvo!');
       setActiveSection(null);
     } catch (err: any) {
       toast.error(err.message || 'Erro ao salvar');
