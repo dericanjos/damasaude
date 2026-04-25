@@ -452,11 +452,18 @@ export default function CheckinPage() {
 
       const isEdit = !!existing;
       const hasSecretary = selectedLocation?.has_secretary ?? (clinic as any)?.has_secretary ?? false;
-      generateMicroInsight([submitData], 'micro', hasSecretary).then((micro) => {
-        if (micro) {
-          toast.success(`${isEdit ? 'Check-in atualizado' : 'Check-in salvo'}! ✨ Dica do dia: ${micro}`, { duration: 8000 });
-        }
-      });
+      generateMicroInsight([submitData], 'micro', hasSecretary)
+        .then((micro) => {
+          if (micro) {
+            toast.success(`${isEdit ? 'Check-in atualizado' : 'Check-in salvo'}! ✨ Dica do dia: ${micro}`, { duration: 8000 });
+          } else {
+            toast.success(`${isEdit ? 'Check-in atualizado' : 'Check-in salvo'}! ✅`);
+          }
+        })
+        .catch((err) => {
+          console.error('Erro ao gerar micro insight:', err);
+          toast.success(`${isEdit ? 'Check-in atualizado' : 'Check-in salvo'}! ✅`);
+        });
     } catch (err: any) {
       toast.error(err.message || 'Erro ao salvar');
     }
