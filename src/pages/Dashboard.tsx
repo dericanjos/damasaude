@@ -296,7 +296,12 @@ export default function Dashboard() {
     if (!isConsolidated) return null;
     return aggregateCheckins(allTodayCheckins, allFinancials, (c) => {
       const sched = allSchedules.find(s => s.location_id === c.location_id && s.weekday === todayWeekdayDash && s.is_active);
-      return sched?.daily_capacity ?? Math.max(clinicCapacity, DEFAULT_DAILY_CAPACITY);
+      if (sched) return sched.daily_capacity;
+      // If location has any schedule but not for today → 0 (non-working day)
+      const hasAnySchedule = allSchedules.some(s => s.location_id === c.location_id && s.is_active);
+      if (hasAnySchedule) return 0;
+      // No schedules at all → fallback
+      return Math.max(clinicCapacity, DEFAULT_DAILY_CAPACITY);
     });
   }, [isConsolidated, allTodayCheckins, allFinancials, allSchedules, todayWeekdayDash, clinicCapacity]);
 
