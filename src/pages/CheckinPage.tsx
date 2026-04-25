@@ -280,7 +280,7 @@ export default function CheckinPage() {
 
   // Get capacity from location schedule (0 means no schedule for today — don't block)
   const todayWeekday = new Date().getDay();
-  const todaySchedule = schedules.find(s => s.weekday === todayWeekday);
+  const todaySchedule = schedules.find(s => s.weekday === todayWeekday && s.is_active);
 
   // Non-working day confirmation dialog
   const [showNonWorkingDayDialog, setShowNonWorkingDayDialog] = useState(false);
