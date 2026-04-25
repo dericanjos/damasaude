@@ -473,20 +473,48 @@ export default function CheckinPage() {
     setForm(prev => {
       const next = { ...prev, [key]: value };
 
-      if (typeof value === 'number') {
+      if (
+        typeof value === 'number' && (
+          key === 'noshows_private' ||
+          key === 'noshows_insurance' ||
+          key === 'cancellations_private' ||
+          key === 'cancellations_insurance'
+        )
+      ) {
+        // When user increases a loss field (no-show or cancellation),
+        // auto-decrement attended of the same payment type if there's
+        // no remaining capacity. Logic: a no-show patient is one that
+        // was NOT attended.
         const scheduledTotal = next.appointments_scheduled + next.extra_appointments;
+        const allLossFields = ['noshows_private', 'noshows_insurance', 'cancellations_private', 'cancellations_insurance'] as const;
+        const otherFields = ['attended_private', 'attended_insurance', ...allLossFields.filter(f => f !== key)];
+        const sumOfOthers = otherFields.reduce((s, f) => s + (next[f as keyof typeof next] as number), 0);
+        const totalSum = sumOfOthers + (next[key] as number);
 
-        const clampLoss = (field: 'noshows_private' | 'noshows_insurance' | 'cancellations_private' | 'cancellations_insurance') => {
-          const otherFields: Array<keyof typeof next> = ['attended_private', 'attended_insurance', 'noshows_private', 'noshows_insurance', 'cancellations_private', 'cancellations_insurance'];
-          const others = otherFields.filter(f => f !== field).reduce((s, f) => s + (next[f] as number), 0);
-          const maxAllowed = Math.max(0, scheduledTotal - others);
-          next[field] = Math.min(next[field] as number, maxAllowed);
-        };
+        if (totalSum > scheduledTotal) {
+          const overflow = totalSum - scheduledTotal;
+          const isPrivate = key === 'noshows_private' || key === 'cancellations_private';
+          const attendedField: 'attended_private' | 'attended_insurance' = isPrivate ? 'attended_private' : 'attended_insurance';
 
-        if (key === 'noshows_private') clampLoss('noshows_private');
-        else if (key === 'noshows_insurance') clampLoss('noshows_insurance');
-        else if (key === 'cancellations_private') clampLoss('cancellations_private');
-        else if (key === 'cancellations_insurance') clampLoss('cancellations_insurance');
+          if ((next[attendedField] as number) >= overflow) {
+            next[attendedField] = (next[attendedField] as number) - overflow;
+          } else {
+            const decrementFromSame = next[attendedField] as number;
+            next[attendedField] = 0;
+            const remainingOverflow = overflow - decrementFromSame;
+            const otherAttendedField: 'attended_private' | 'attended_insurance' = isPrivate ? 'attended_insurance' : 'attended_private';
+
+            if ((next[otherAttendedField] as number) >= remainingOverflow) {
+              next[otherAttendedField] = (next[otherAttendedField] as number) - remainingOverflow;
+            } else {
+              const totalAttendedAvailable = (next.attended_private as number) + (next.attended_insurance as number);
+              next.attended_private = 0;
+              next.attended_insurance = 0;
+              const maxAllowed = scheduledTotal - (sumOfOthers - (next[attendedField] as number) - (next[otherAttendedField] as number)) + totalAttendedAvailable;
+              next[key] = Math.max(0, Math.min(next[key] as number, maxAllowed));
+            }
+          }
+        }
       }
 
       return next;
