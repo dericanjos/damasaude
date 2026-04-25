@@ -140,7 +140,9 @@ function CheckinField({
       </div>
       <Stepper value={value} onChange={v => onChange(max !== undefined ? Math.min(v, max) : v)} label={label} />
       {hint && (
-        <p className="text-[10px] text-idea-attention flex items-center gap-1">
+        <p className={`text-[10px] flex items-center gap-1 ${
+          hint.startsWith('⚠️') ? 'text-warning font-medium' : 'text-idea-attention'
+        }`}>
           <AlertCircle className="h-3 w-3 shrink-0" />
           {hint}
         </p>
