@@ -891,13 +891,13 @@ export default function CheckinPage() {
                 label="No-shows Particular"
                 value={form.noshows_private}
                 onChange={v => setField('noshows_private', v)}
-                max={maxNoshowPrivate}
+                max={scheduledTotal}
               />
               <CheckinField
                 label="No-shows Convênio"
                 value={form.noshows_insurance}
                 onChange={v => setField('noshows_insurance', v)}
-                max={maxNoshowInsurance}
+                max={scheduledTotal}
               />
             </>
           ) : (
@@ -915,13 +915,13 @@ export default function CheckinPage() {
                 label="Cancelamentos Particular"
                 value={form.cancellations_private}
                 onChange={v => setField('cancellations_private', v)}
-                max={maxCancelPrivate}
+                max={scheduledTotal}
               />
               <CheckinField
                 label="Cancelamentos Convênio"
                 value={form.cancellations_insurance}
                 onChange={v => setField('cancellations_insurance', v)}
-                max={maxCancelInsurance}
+                max={scheduledTotal}
               />
             </>
           ) : (
@@ -1430,13 +1430,13 @@ export default function CheckinPage() {
                     label="No-shows Particular"
                     value={form.noshows_private}
                     onChange={v => setField('noshows_private', v)}
-                    max={maxNoshowPrivate}
+                    max={scheduledTotal}
                   />
                   <CheckinField
                     label="No-shows Convênio"
                     value={form.noshows_insurance}
                     onChange={v => setField('noshows_insurance', v)}
-                    max={maxNoshowInsurance}
+                    max={scheduledTotal}
                   />
                 </>
               ) : (
@@ -1454,13 +1454,13 @@ export default function CheckinPage() {
                     label="Cancelamentos Particular"
                     value={form.cancellations_private}
                     onChange={v => setField('cancellations_private', v)}
-                    max={maxCancelPrivate}
+                    max={scheduledTotal}
                   />
                   <CheckinField
                     label="Cancelamentos Convênio"
                     value={form.cancellations_insurance}
                     onChange={v => setField('cancellations_insurance', v)}
-                    max={maxCancelInsurance}
+                    max={scheduledTotal}
                   />
                 </>
               ) : (
