@@ -903,7 +903,7 @@ export default function Dashboard() {
       )}
 
       {/* Banner when check-in exists but is not complete (no end-of-day losses confirmed) */}
-      {!isFirstAccess && !displayRevenue && !checkinLoading && !allCheckinsLoading && (todayCheckin || allTodayCheckins.length > 0) && !isTodayComplete && (
+      {!isFirstAccess && !displayRevenue && !checkinLoading && !allCheckinsLoading && (todayCheckin || allTodayCheckins.length > 0) && !isTodayComplete && !isNonWorkingDay && (
         <div className="rounded-2xl border border-warning/40 bg-warning/10 p-5 space-y-3">
           <p className="text-sm font-semibold text-warning-foreground">⏳ Check-in em andamento</p>
           <p className="text-xs text-muted-foreground leading-relaxed">
