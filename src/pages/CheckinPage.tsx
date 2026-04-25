@@ -258,6 +258,22 @@ export default function CheckinPage() {
   // Get capacity from location schedule (0 means no schedule for today — don't block)
   const todayWeekday = new Date().getDay();
   const todaySchedule = schedules.find(s => s.weekday === todayWeekday);
+
+  // Non-working day confirmation dialog
+  const [showNonWorkingDayDialog, setShowNonWorkingDayDialog] = useState(false);
+  const [nonWorkingDayConfirmed, setNonWorkingDayConfirmed] = useState(false);
+
+  useEffect(() => {
+    if (
+      selectedLocationId &&
+      !todaySchedule &&
+      !nonWorkingDayConfirmed &&
+      !existing &&
+      schedules.length > 0
+    ) {
+      setShowNonWorkingDayDialog(true);
+    }
+  }, [selectedLocationId, todaySchedule, schedules.length, existing, nonWorkingDayConfirmed]);
   const rawDailyCapacity = todaySchedule?.daily_capacity ?? getCapacityForDate(new Date(), parseDailyCapacities((clinic as any)?.daily_capacities));
   // When capacity is 0 (no schedule), use appointments_scheduled as effective or fallback 16
   const dailyCapacity = rawDailyCapacity > 0 ? rawDailyCapacity : (form.appointments_scheduled > 0 ? form.appointments_scheduled : 16);
