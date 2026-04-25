@@ -1346,11 +1346,10 @@ export default function CheckinPage() {
                 label="Agendados"
                 value={form.appointments_scheduled}
                 onChange={v => setField('appointments_scheduled', v)}
+                max={rawDailyCapacity > 0 ? dailyCapacity : undefined}
                 hint={
-                  rawDailyCapacity > 0 && form.appointments_scheduled > dailyCapacity
-                    ? `⚠️ Você marcou ${form.appointments_scheduled} agendamentos, mas a capacidade configurada do dia é ${dailyCapacity}. Confira se está correto.`
-                    : rawDailyCapacity > 0 && form.appointments_scheduled === dailyCapacity
-                    ? 'Agenda lotada! Use "Encaixes" para consultas extras.'
+                  rawDailyCapacity > 0 && form.appointments_scheduled >= dailyCapacity
+                    ? `⚠️ Capacidade do dia atingida (${dailyCapacity} vagas). Para registrar mais consultas, use o campo "Encaixes" abaixo — eles serão contabilizados como consultas extras.`
                     : undefined
                 }
               />
