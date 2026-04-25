@@ -84,14 +84,30 @@ const EMPTY_FORM: FormData = {
 };
 
 function Stepper({ value, onChange, label }: { value: number; onChange: (v: number) => void; label?: string }) {
+  // Use both onClick AND onTouchEnd for iOS Capacitor compatibility.
+  // Some Capacitor/iOS configurations have unreliable click events on rounded buttons.
+  const handleDecrement = (e?: React.SyntheticEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    onChange(Math.max(0, value - 1));
+  };
+  const handleIncrement = (e?: React.SyntheticEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    onChange(value + 1);
+  };
+
   return (
     <div className="flex items-center justify-center gap-3">
       <button
         type="button"
-        onClick={() => onChange(Math.max(0, value - 1))}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
+        onClick={handleDecrement}
+        onTouchEnd={handleDecrement}
+        style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', WebkitUserSelect: 'none', userSelect: 'none' }}
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent active:bg-accent active:scale-95 transition-transform select-none cursor-pointer"
+        aria-label={`Diminuir ${label || 'valor'}`}
       >
-        <Minus className="h-4 w-4" />
+        <Minus className="h-5 w-5 pointer-events-none" />
       </button>
       <input
         type="number"
@@ -104,14 +120,19 @@ function Stepper({ value, onChange, label }: { value: number; onChange: (v: numb
           const n = Number(raw);
           if (!isNaN(n)) onChange(Math.max(0, Math.floor(n)));
         }}
-        className="w-14 text-center text-2xl font-bold bg-transparent border-none outline-none text-foreground"
+        style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
+        className="w-16 text-center text-2xl font-bold bg-transparent border-none outline-none text-foreground"
+        inputMode="numeric"
       />
       <button
         type="button"
-        onClick={() => onChange(value + 1)}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent transition-colors active:scale-95"
+        onClick={handleIncrement}
+        onTouchEnd={handleIncrement}
+        style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', WebkitUserSelect: 'none', userSelect: 'none' }}
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-accent active:bg-accent active:scale-95 transition-transform select-none cursor-pointer"
+        aria-label={`Aumentar ${label || 'valor'}`}
       >
-        <Plus className="h-4 w-4" />
+        <Plus className="h-5 w-5 pointer-events-none" />
       </button>
     </div>
   );
@@ -1325,11 +1346,10 @@ export default function CheckinPage() {
                 label="Agendados"
                 value={form.appointments_scheduled}
                 onChange={v => setField('appointments_scheduled', v)}
+                max={rawDailyCapacity > 0 ? dailyCapacity : undefined}
                 hint={
-                  rawDailyCapacity > 0 && form.appointments_scheduled > dailyCapacity
-                    ? `⚠️ Você marcou ${form.appointments_scheduled} agendamentos, mas a capacidade configurada do dia é ${dailyCapacity}. Confira se está correto.`
-                    : rawDailyCapacity > 0 && form.appointments_scheduled === dailyCapacity
-                    ? 'Agenda lotada! Use "Encaixes" para consultas extras.'
+                  rawDailyCapacity > 0 && form.appointments_scheduled >= dailyCapacity
+                    ? `⚠️ Capacidade do dia atingida (${dailyCapacity} vagas). Para registrar mais consultas, use o campo "Encaixes" abaixo — eles serão contabilizados como consultas extras.`
                     : undefined
                 }
               />
