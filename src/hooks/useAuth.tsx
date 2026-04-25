@@ -98,8 +98,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, rememberMe = true) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    // If rememberMe is false, move the session token from localStorage to sessionStorage
+    // so it expires when the browser/tab is closed.
+    if (!error && !rememberMe && typeof window !== 'undefined') {
+      try {
+        const projectRef = (import.meta.env.VITE_SUPABASE_PROJECT_ID as string) ||
+          (import.meta.env.VITE_SUPABASE_URL || '').replace(/^https?:\/\//, '').split('.')[0];
+        const tokenKey = `sb-${projectRef}-auth-token`;
+        const stored = window.localStorage.getItem(tokenKey);
+        if (stored) {
+          window.sessionStorage.setItem(tokenKey, stored);
+          window.localStorage.removeItem(tokenKey);
+        }
+      } catch (e) {
+        console.warn('Failed to move auth token to sessionStorage', e);
+      }
+    }
+
     return { error };
   };
 
