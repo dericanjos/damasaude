@@ -1492,6 +1492,35 @@ export default function CheckinPage() {
           {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : existing ? 'Atualizar check-in' : 'Salvar agenda do dia'}
         </Button>
       </form>
+
+      <AlertDialog open={showNonWorkingDayDialog} onOpenChange={setShowNonWorkingDayDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Dia sem atendimento configurado</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hoje não está configurado como dia de atendimento nesta localização. Você não precisa fazer check-in. Deseja continuar mesmo assim?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setShowNonWorkingDayDialog(false);
+                navigate('/');
+              }}
+            >
+              Voltar para o Dashboard
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setNonWorkingDayConfirmed(true);
+                setShowNonWorkingDayDialog(false);
+              }}
+            >
+              Sim, fazer check-in
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
