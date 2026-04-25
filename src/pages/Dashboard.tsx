@@ -18,6 +18,7 @@ import { calculateIDEA, getIdeaStatus, getIdeaLabel, totalAttended, totalNoshows
 import { calculateRevenue, formatBRL, formatPercent, safePercent, DEFAULT_DAILY_CAPACITY, DEFAULT_TICKET_PRIVATE, DEFAULT_TICKET_INSURANCE } from '@/lib/revenue';
 import { getCapacityForDate, parseDailyCapacities } from '@/lib/days';
 import { aggregateCheckins, getWorstLeaker, getMostEfficient } from '@/lib/aggregation';
+import { isCheckinComplete, isAnyCheckinComplete } from '@/lib/checkin-complete';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -383,8 +384,19 @@ export default function Dashboard() {
       })
     : null;
 
+  // Check whether today's check-in is "complete" (doctor confirmed end-of-day)
+  const isTodayComplete = useMemo(() => {
+    if (consolidated && allTodayCheckins.length > 0) {
+      return isAnyCheckinComplete(allTodayCheckins);
+    }
+    return isCheckinComplete(todayCheckin);
+  }, [todayCheckin, allTodayCheckins, consolidated]);
+
   // Use consolidated metrics when in "Todos" mode, otherwise use single-location revenue
   const displayRevenue = useMemo(() => {
+    // Don't show revenue/insights until the check-in is confirmed complete
+    if (!isTodayComplete) return null;
+
     if (consolidated) {
       return {
         estimated: consolidated.totalRevenueEstimated + protocolRevenue,
@@ -408,7 +420,7 @@ export default function Dashboard() {
       };
     }
     return null;
-  }, [consolidated, revenue, checkinData, dailyCapacity, protocolRevenue]);
+  }, [consolidated, revenue, checkinData, dailyCapacity, protocolRevenue, isTodayComplete]);
 
   const ideaStatus = todayScore != null ? getIdeaStatus(todayScore) : null;
 
@@ -878,6 +890,25 @@ export default function Dashboard() {
           </Button>
         </div>
       )}
+
+      {/* Banner when check-in exists but is not complete (no end-of-day losses confirmed) */}
+      {!isFirstAccess && !displayRevenue && !checkinLoading && !allCheckinsLoading && (todayCheckin || allTodayCheckins.length > 0) && !isTodayComplete && (
+        <div className="rounded-2xl border border-warning/40 bg-warning/10 p-5 space-y-3">
+          <p className="text-sm font-semibold text-warning-foreground">⏳ Check-in em andamento</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Volte ao final do dia para registrar consultas não realizadas (no-shows, cancelamentos) e confirmar seu check-in. Seus insights aparecerão depois disso.
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl border-warning/50 hover:bg-warning/20"
+            onClick={() => navigate('/checkin?section=perdas')}
+          >
+            Completar check-in
+          </Button>
+        </div>
+      )}
+
       {displayRevenue && (
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-card border border-border/60 p-4 shadow-card">
