@@ -129,7 +129,7 @@ export default function ReferralPage() {
           <Gift className="h-8 w-8 text-[#D4AF37] mx-auto" />
           <h1 className="text-xl font-bold text-foreground">Indique e ganhe!</h1>
           <p className="text-sm text-muted-foreground">
-            Para cada colega que assinar, você ganha <span className="text-[#D4AF37] font-semibold">1 mês grátis</span>. Sem limite!
+            Para cada colega que assinar, você ganha <span className="text-[#D4AF37] font-semibold">1 mês grátis</span>. Acumule até <span className="text-[#D4AF37] font-semibold">2 meses</span> grátis.
           </p>
         </div>
 
@@ -173,10 +173,19 @@ export default function ReferralPage() {
           </div>
           <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-3 text-center">
             <Gift className="h-4 w-4 text-[#D4AF37] mx-auto mb-1" />
-            <p className="text-xl font-bold text-foreground">{credits}</p>
+            <p className="text-xl font-bold text-foreground">{Math.min(credits, 2)}<span className="text-xs text-muted-foreground font-normal">/2</span></p>
             <p className="text-[10px] text-muted-foreground">meses grátis</p>
           </div>
         </div>
+
+        {credits >= 2 && (
+          <div className="rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 p-4 text-center">
+            <p className="text-sm font-semibold text-[#D4AF37]">🎉 Você atingiu o máximo!</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Continue indicando para fortalecer a comunidade DAMA. Os próximos meses gratuitos serão considerados em campanhas futuras.
+            </p>
+          </div>
+        )}
 
         {/* Referral list */}
         {referredReferrals.length > 0 && (
@@ -212,7 +221,7 @@ export default function ReferralPage() {
             {[
               { n: '1', text: 'Compartilhe seu link com colegas médicos' },
               { n: '2', text: 'Seu colega cria a conta e usa o app por 21 dias grátis' },
-              { n: '3', text: 'Quando ele pagar a 1ª mensalidade, você ganha 1 mês grátis' },
+              { n: '3', text: 'Quando ele pagar a 1ª mensalidade, você ganha 1 mês grátis (limite: 2 meses acumulados)' },
             ].map(({ n, text }) => (
               <div key={n} className="flex items-start gap-3">
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-xs font-bold">
