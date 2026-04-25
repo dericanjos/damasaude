@@ -140,7 +140,9 @@ function CheckinField({
       </div>
       <Stepper value={value} onChange={v => onChange(max !== undefined ? Math.min(v, max) : v)} label={label} />
       {hint && (
-        <p className="text-[10px] text-idea-attention flex items-center gap-1">
+        <p className={`text-[10px] flex items-center gap-1 ${
+          hint.startsWith('⚠️') ? 'text-warning font-medium' : 'text-idea-attention'
+        }`}>
           <AlertCircle className="h-3 w-3 shrink-0" />
           {hint}
         </p>
@@ -1323,8 +1325,13 @@ export default function CheckinPage() {
                 label="Agendados"
                 value={form.appointments_scheduled}
                 onChange={v => setField('appointments_scheduled', v)}
-                max={rawDailyCapacity > 0 ? dailyCapacity : undefined}
-                hint={rawDailyCapacity > 0 && form.appointments_scheduled >= dailyCapacity ? 'Agenda lotada! Use "Encaixes" para consultas extras.' : undefined}
+                hint={
+                  rawDailyCapacity > 0 && form.appointments_scheduled > dailyCapacity
+                    ? `⚠️ Você marcou ${form.appointments_scheduled} agendamentos, mas a capacidade configurada do dia é ${dailyCapacity}. Confira se está correto.`
+                    : rawDailyCapacity > 0 && form.appointments_scheduled === dailyCapacity
+                    ? 'Agenda lotada! Use "Encaixes" para consultas extras.'
+                    : undefined
+                }
               />
             </div>
 
