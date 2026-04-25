@@ -873,8 +873,8 @@ export default function Dashboard() {
         </>
       )}
 
-      {/* Placeholder when no checkin exists and loading is done */}
-      {!isFirstAccess && !displayRevenue && !checkinLoading && !allCheckinsLoading && todayScore == null && (
+      {/* Placeholder when today IS a working day but no checkin yet */}
+      {!isFirstAccess && !displayRevenue && !checkinLoading && !allCheckinsLoading && todayScore == null && !isNonWorkingDay && (
         <div className="rounded-2xl bg-card border border-border/60 p-6 shadow-card text-center space-y-3">
           <ClipboardCheck className="h-8 w-8 text-muted-foreground mx-auto" />
           <p className="text-sm font-semibold text-foreground">Confirme seu check-in diário</p>
@@ -888,6 +888,17 @@ export default function Dashboard() {
           >
             Fazer check-in agora
           </Button>
+        </div>
+      )}
+
+      {/* Placeholder when today is NOT a working day for the selected location */}
+      {!isFirstAccess && !displayRevenue && !checkinLoading && !allCheckinsLoading && isNonWorkingDay && (
+        <div className="rounded-2xl bg-card border border-border/60 p-6 shadow-card text-center space-y-3">
+          <span className="text-3xl">🌴</span>
+          <p className="text-sm font-semibold text-foreground">Hoje não é dia de atendimento</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Esta localização não está configurada para atendimento hoje. Aproveite seu dia! Seus relatórios e insights continuam disponíveis para os dias trabalhados.
+          </p>
         </div>
       )}
 
