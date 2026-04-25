@@ -617,8 +617,8 @@ export default function Dashboard() {
         </button>
       )}
 
-      {/* Single location mode: original check-in prompt */}
-      {!isFirstAccess && (selectedLocationId || locations.length <= 1) && todayScore == null && (
+      {/* Single location mode: original check-in prompt (não aparece em dia sem atendimento) */}
+      {!isFirstAccess && (selectedLocationId || locations.length <= 1) && todayScore == null && !isNonWorkingDay && (
         <button
           onClick={() => navigate('/checkin')}
           className="w-full rounded-2xl gradient-primary p-5 text-left shadow-premium transition-transform active:scale-[0.99]"
