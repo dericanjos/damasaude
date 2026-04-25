@@ -16,6 +16,16 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 import { toast } from 'sonner';
 import {
@@ -248,6 +258,22 @@ export default function CheckinPage() {
   // Get capacity from location schedule (0 means no schedule for today — don't block)
   const todayWeekday = new Date().getDay();
   const todaySchedule = schedules.find(s => s.weekday === todayWeekday);
+
+  // Non-working day confirmation dialog
+  const [showNonWorkingDayDialog, setShowNonWorkingDayDialog] = useState(false);
+  const [nonWorkingDayConfirmed, setNonWorkingDayConfirmed] = useState(false);
+
+  useEffect(() => {
+    if (
+      selectedLocationId &&
+      !todaySchedule &&
+      !nonWorkingDayConfirmed &&
+      !existing &&
+      schedules.length > 0
+    ) {
+      setShowNonWorkingDayDialog(true);
+    }
+  }, [selectedLocationId, todaySchedule, schedules.length, existing, nonWorkingDayConfirmed]);
   const rawDailyCapacity = todaySchedule?.daily_capacity ?? getCapacityForDate(new Date(), parseDailyCapacities((clinic as any)?.daily_capacities));
   // When capacity is 0 (no schedule), use appointments_scheduled as effective or fallback 16
   const dailyCapacity = rawDailyCapacity > 0 ? rawDailyCapacity : (form.appointments_scheduled > 0 ? form.appointments_scheduled : 16);
@@ -1466,6 +1492,35 @@ export default function CheckinPage() {
           {saveCheckin.isPending ? 'Salvando...' : hasValidationError ? 'Corrija os valores acima' : existing ? 'Atualizar check-in' : 'Salvar agenda do dia'}
         </Button>
       </form>
+
+      <AlertDialog open={showNonWorkingDayDialog} onOpenChange={setShowNonWorkingDayDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Dia sem atendimento configurado</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hoje não está configurado como dia de atendimento nesta localização. Você não precisa fazer check-in. Deseja continuar mesmo assim?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setShowNonWorkingDayDialog(false);
+                navigate('/');
+              }}
+            >
+              Voltar para o Dashboard
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setNonWorkingDayConfirmed(true);
+                setShowNonWorkingDayDialog(false);
+              }}
+            >
+              Sim, fazer check-in
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
