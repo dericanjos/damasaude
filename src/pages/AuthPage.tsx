@@ -141,7 +141,7 @@ export default function AuthPage() {
           toast.success('Conta criada com sucesso!');
         }
       } else {
-        const { error } = await signIn(email, password);
+        const { error } = await signIn(email, password, rememberMe);
         if (error) {
           toast.error('E-mail ou senha incorretos');
         }
