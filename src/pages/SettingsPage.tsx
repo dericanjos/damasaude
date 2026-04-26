@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Settings, LogOut, ExternalLink, Percent, MapPin, Plus, Pencil, MessageSquare, Crown, Building, Shield } from 'lucide-react';
+import { Settings, LogOut, Percent, MapPin, Plus, Pencil, MessageSquare, Crown, Building, Shield } from 'lucide-react';
 import FeedbackModal from '@/components/FeedbackModal';
 import FounderBadge from '@/components/FounderBadge';
 import ProtocolManager from '@/components/ProtocolManager';
@@ -277,7 +277,6 @@ export default function SettingsPage() {
   const { subscriptionStatus, subscriptionEnd } = useSubscription();
   const { data: locations = [], refetch: refetchLocations } = useLocations();
   const updateLocation = useUpdateLocation();
-  const [portalLoading, setPortalLoading] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   // Profile tier
@@ -361,23 +360,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleManageSubscription = async () => {
-    setPortalLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      if (error) throw error;
-      if (data?.error === 'no_customer') {
-        toast.info(data.message || 'Você ainda não possui uma assinatura ativa.');
-        return;
-      }
-      if (data?.url) window.location.href = data.url;
-    } catch (err: any) {
-      toast.error(err.message || 'Erro ao abrir portal');
-    } finally {
-      setPortalLoading(false);
-    }
-  };
-
   const handleToggleLocation = async (loc: Location) => {
     try {
       await updateLocation.mutateAsync({ id: loc.id, is_active: !loc.is_active });
@@ -432,10 +414,6 @@ export default function SettingsPage() {
               </span>
             </div>
           )}
-          <Button variant="outline" className="w-full rounded-xl" onClick={handleManageSubscription} disabled={portalLoading}>
-            <ExternalLink className="h-4 w-4 mr-2" />
-            {portalLoading ? 'Abrindo...' : 'Gerenciar assinatura'}
-          </Button>
         </div>
       </div>
 

@@ -15,7 +15,6 @@ import CheckinPage from "@/pages/CheckinPage";
 
 import WeeklyReportPage from "@/pages/WeeklyReportPage";
 import SettingsPage from "@/pages/SettingsPage";
-import SubscriptionPage from "@/pages/SubscriptionPage";
 import InsightsPage from "@/pages/InsightsPage";
 import InstitucionalPage from "@/pages/InstitucionalPage";
 import OnboardingPage from "@/pages/OnboardingPage";
@@ -86,15 +85,6 @@ function OnboardingRoute() {
   return <OnboardingPage />;
 }
 
-function SubscriptionRoute() {
-  const { user, loading } = useAuth();
-  const { subscribed, subscriptionStatus, loading: subLoading } = useSubscription();
-  if (loading || subLoading) return null;
-  if (!user) return <Navigate to="/auth" replace />;
-  if (subscribed) return <Navigate to="/" replace />;
-  return <SubscriptionPage reason={subscriptionStatus} />;
-}
-
 function AuthRoute() {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -116,7 +106,6 @@ const App = () => {
                 <Route path="/auth" element={<AuthRoute />} />
                 <Route path="/onboarding" element={<OnboardingRoute />} />
                 <Route path="/versiculo" element={<VerseRoute />} />
-                <Route path="/assinatura" element={<SubscriptionRoute />} />
                 <Route path="/institucional" element={<InstitucionalPage />} />
                 <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
                 <Route path="/calculadora" element={<CalculadoraPage />} />
